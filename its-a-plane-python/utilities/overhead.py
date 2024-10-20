@@ -20,7 +20,7 @@ except (ModuleNotFoundError, NameError, ImportError):
 RETRIES = 3
 RATE_LIMIT_DELAY = 1
 MAX_FLIGHT_LOOKUP = 5
-MAX_ALTITUDE = 100000  # feet
+MAX_ALTITUDE = 50000  # feet
 EARTH_RADIUS_M = 3958.8  # Earth's radius in miles
 BLANK_FIELDS = ["", "N/A", "NONE"]
 
@@ -322,6 +322,8 @@ class Overhead:
                                 "distance_destination": distance_destination,
                                 "distance": distance_from_flight_to_home(flight),
                                 "direction": degrees_to_cardinal(plane_bearing(flight)),
+                                "ground_speed": flight.ground_speed,
+                                "altitude": flight.altitude
                             }
                         )
                     

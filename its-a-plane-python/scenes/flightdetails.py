@@ -1,15 +1,15 @@
 from utilities.animator import Animator
 from setup import colours, fonts, screen
 
-from rgbmatrix import graphics
+from RGBMatrixEmulator import graphics
 
 # Setup
 FLIGHT_NO_DISTANCE_FROM_TOP = 24
 FLIGHT_NO_TEXT_HEIGHT = 8  # based on font size
 FLIGHT_NO_FONT = fonts.small
 
-FLIGHT_NUMBER_ALPHA_COLOUR = colours.LIGHT_PURPLE
-FLIGHT_NUMBER_NUMERIC_COLOUR = colours.LIGHT_ORANGE
+FLIGHT_NUMBER_ALPHA_COLOUR = colours.TROPICAL_GREEN
+FLIGHT_NUMBER_NUMERIC_COLOUR = colours.TROPICAL_YELLOW
 
 DATA_INDEX_POSITION = (52, 24)
 DATA_INDEX_TEXT_HEIGHT = 7
@@ -58,9 +58,7 @@ class FlightDetailsScene(object):
                     FLIGHT_NO_FONT,
                     self.flight_position + flight_no_text_length,
                     FLIGHT_NO_DISTANCE_FROM_TOP,
-                    FLIGHT_NUMBER_NUMERIC_COLOUR
-                    if ch.isnumeric()
-                    else FLIGHT_NUMBER_ALPHA_COLOUR,
+                    FLIGHT_NUMBER_NUMERIC_COLOUR if ch.isnumeric() else FLIGHT_NUMBER_ALPHA_COLOUR,
                     ch,
                 )
                 flight_no_text_length += ch_length

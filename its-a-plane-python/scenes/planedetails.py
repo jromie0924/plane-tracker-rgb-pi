@@ -1,11 +1,13 @@
-from rgbmatrix import graphics
+from RGBMatrixEmulator import graphics
 from utilities.animator import Animator
 from setup import colours, fonts, screen
 from config import DISTANCE_UNITS
 
 # Setup
-PLANE_COLOUR = colours.LIGHT_MID_BLUE
-PLANE_DISTANCE_COLOUR = colours.LIGHT_PINK
+PLANE_COLOUR = colours.TROPICAL_PINK
+GROUND_SPEED_COLOUR = colours.TEAL
+PLANE_DISTANCE_COLOUR = colours.TROPICAL_ORANGE
+ALTITUDE_COLOUR = colours.GREEN
 PLANE_DISTANCE_FROM_TOP = 31
 PLANE_TEXT_HEIGHT = 6
 PLANE_FONT = fonts.small
@@ -26,15 +28,23 @@ class PlaneDetailsScene(object):
         plane_data = self._data[self._data_index]
         plane_name = plane_data["plane"]
         distance = plane_data["distance"]
+        # ground_speed = plane_data["ground_speed"]
+        # altitude = plane_data["altitude"]
         direction = plane_data["direction"]
         distance_units = "mi" if DISTANCE_UNITS == "imperial" else "KM"
 
         # Construct the plane details strings
         plane_name_text = f'{plane_name} '
-        distance_text = f'{distance:.2f}{distance_units} {direction}'
+        distance_text = f'{distance:.2f}{distance_units} {direction} '
+
+        # ground_speed_text = f' {ground_speed} mph '
+
+        # altitude_text = f' {altitude} ft '
 
         # Calculate the widths of each section
         plane_name_width = len(plane_name_text) * 5
+        # ground_speed_width = len(ground_speed_text) * 5
+        # altitude_width = len(altitude_text) * 5
         distance_direction_text_width = max(len(distance_text) * 5, screen.WIDTH)
 
         # Draw background
@@ -64,6 +74,24 @@ class PlaneDetailsScene(object):
             PLANE_DISTANCE_COLOUR,  # Set the color for distance/direction
             distance_text,
         )
+
+        # ground_speed_text_width = graphics.DrawText(
+        #     self.canvas,
+        #     PLANE_FONT,
+        #     self.plane_position + plane_name_width + ground_speed_width,
+        #     PLANE_DISTANCE_FROM_TOP,
+        #     GROUND_SPEED_COLOUR,
+        #     ground_speed_text
+        # )
+
+        # altitude_text_width = graphics.DrawText(
+        #     self.canvas,
+        #     PLANE_FONT,
+        #     self.plane_position + plane_name_width + ground_speed_width + altitude_width,
+        #     PLANE_DISTANCE_FROM_TOP,
+        #     ALTITUDE_COLOUR,
+        #     altitude_text
+        # )
 
         # Calculate the total width of the text string
         total_text_width = plane_name_width + distance_text_width

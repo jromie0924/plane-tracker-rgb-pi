@@ -1,6 +1,6 @@
 from time import sleep
 
-DELAY_DEFAULT = 0.01
+DELAY_DEFAULT = 0.1
 
 
 class Animator(object):

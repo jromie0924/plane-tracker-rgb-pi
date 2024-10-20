@@ -4,18 +4,18 @@ from setup import frames
 from utilities.animator import Animator
 from utilities.overhead import Overhead
 
-from scenes.temperature import TemperatureScene
+# from scenes.temperature import TemperatureScene
 from scenes.flightdetails import FlightDetailsScene
 from scenes.flightlogo import FlightLogoScene
 from scenes.journey import JourneyScene
 from scenes.loadingpulse import LoadingPulseScene
 from scenes.clock import ClockScene
 from scenes.planedetails import PlaneDetailsScene
-from scenes.daysforecast import DaysForecastScene
+# from scenes.daysforecast import DaysForecastScene
 from scenes.date import DateScene
 
-from rgbmatrix import graphics
-from rgbmatrix import RGBMatrix, RGBMatrixOptions
+from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics
+# from rgbmatrix import RGBMatrix, RGBMatrixOptions
 
 
 def flight_updated(flights_a, flights_b):
@@ -69,14 +69,14 @@ def adjust_brightness(matrix):
         matrix.brightness = new_brightness
         
 class Display(
-    TemperatureScene,
+    # TemperatureScene,
     FlightDetailsScene,
     FlightLogoScene,
     JourneyScene,
     LoadingPulseScene,
     PlaneDetailsScene,
     ClockScene,
-    DaysForecastScene,
+    # DaysForecastScene,
     DateScene,
     Animator,
 ):
