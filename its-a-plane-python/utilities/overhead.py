@@ -1,39 +1,45 @@
 from FlightRadar24.api import FlightRadar24API
 from threading import Thread, Lock
 from time import sleep
-import math
 from typing import Optional, Tuple
 from config import DISTANCE_UNITS
+from geopy.geocoders import Nominatim
+
+import math
+import time
+import geopy.distance as geodistance
 
 from requests.exceptions import ConnectionError
 from urllib3.exceptions import NewConnectionError
 from urllib3.exceptions import MaxRetryError
 
-try:
-    # Attempt to load config data
-    from config import MIN_ALTITUDE
-
-except (ModuleNotFoundError, NameError, ImportError):
-    # If there's no config data
-    MIN_ALTITUDE = 0  # feet
+from config import CITY, RADIUS, MIN_ALTITUDE, MAX_ALTITUDE
 
 RETRIES = 3
 RATE_LIMIT_DELAY = 1
 MAX_FLIGHT_LOOKUP = 5
-MAX_ALTITUDE = 50000  # feet
 EARTH_RADIUS_M = 3958.8  # Earth's radius in miles
 BLANK_FIELDS = ["", "N/A", "NONE"]
+NW = 315 #degrees
+SE = 135 #degrees
 
+timelogs = []
+
+# Calculate the zone where we want to see flight data.
+ZONE = {}
 try:
-    # Attempt to load config data
-    from config import ZONE_HOME, LOCATION_HOME
-
-    ZONE_DEFAULT = ZONE_HOME
-    LOCATION_DEFAULT = LOCATION_HOME
-
-except (ModuleNotFoundError, NameError, ImportError):
-    # If there's no config data
-    ZONE_DEFAULT = {"tl_y": 62.61, "tl_x": -13.07, "br_y": 49.71, "br_x": 3.46}
+    geolocator = Nominatim(user_agent="plane_tracker")
+    location = geolocator.geocode(CITY)
+    distance_obj = geodistance.geodesic(miles=RADIUS)
+    top_left = distance_obj.destination(point=location, bearing=NW)
+    bottom_right = distance_obj.destination(point=location, bearing=SE)
+    ZONE["tl_y"] = top_left.latitude
+    ZONE["tl_x"] = top_left.longitude
+    ZONE["br_y"] = bottom_right.latitude
+    ZONE["br_x"] = bottom_right.longitude
+    LOCATION_DEFAULT = [location.latitude, location.longitude]
+except Exception:
+    ZONE = {"tl_y": 41.9267684604688, "tl_x": -87.69301898128884, "br_y": 41.82431337321679, "br_x": -87.55593288861269}
     LOCATION_DEFAULT = [51.509865, -0.118092, EARTH_RADIUS_M]
     
 def polar_to_cartesian(lat, long, alt):
@@ -185,7 +191,7 @@ class Overhead:
 
         # Grab flight details
         try:
-            bounds = self._api.get_bounds(ZONE_DEFAULT)
+            bounds = self._api.get_bounds(ZONE)
             flights = self._api.get_flights(bounds=bounds)
 
             # Sort flights by closest first
