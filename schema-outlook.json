@@ -1,0 +1,49 @@
+{
+  "ac": [
+    {
+      "hex": "a3e5fa",
+      "type": "adsb_icao",
+      "flight": "DAL2413 ", // callsign - need for routeset
+      "r": "N350NA", // registration
+      "t": "A320",
+      "alt_baro": 3475, // barometric altitude
+      "alt_geom": 3450, // altitude
+      "gs": 165.1, // ground speed (kts)
+      "track": 267.92,
+      "baro_rate": -1024,
+      "squawk": "6050",
+      "emergency": "none",
+      "category": "A3",
+      "nav_qnh": 1012.0,
+      "nav_altitude_mcp": 3008,
+      "nav_heading": 0.0,
+      "lat": 41.988629, // latitude - need for routeset
+      "lon": -87.704049, // longitude - need for routeset
+      "nic": 8,
+      "rc": 186,
+      "seen_pos": 0.218,
+      "version": 2,
+      "nic_baro": 1,
+      "nac_p": 10,
+      "nac_v": 2,
+      "sil": 3,
+      "sil_type": "perhour",
+      "gva": 2,
+      "sda": 2,
+      "alert": 0,
+      "spi": 0,
+      "mlat": [],
+      "tisb": [],
+      "messages": 67771,
+      "seen": 0.2,
+      "rssi": -12.4,
+      "dst": 3.705, // distance from ME
+      "dir": 321.1 // direction from ME
+    }
+  ],
+  "msg": "No error",
+  "now": 1729649064001,
+  "total": 1,
+  "ctime": 1729649064001,
+  "ptime": 0
+}
