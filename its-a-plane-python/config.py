@@ -22,7 +22,7 @@ HAT_PWM_ENABLED = True
 FORECAST_DAYS = 3 # today plus the next two days
 
 LOCATION = "Chicago, IL"
-RADIUS = 5 # miles (sort of - we use a box rather than a circle to represent the area we query for flights)
+RADIUS = 5 # nautical miles
 
 LIVE = False # True for live data, False for sandbox
 
