@@ -1,19 +1,20 @@
-from FlightRadar24.api import FlightRadar24API
+from service.adsbTracker import AdsbTrackerService
 from threading import Thread, Lock
 from time import sleep
 from typing import Optional, Tuple
-from config import DISTANCE_UNITS
 from geopy.geocoders import Nominatim
+from geoUtils import GeoUtils
 
 import math
 import time
 import geopy.distance as geodistance
+import config
 
 from requests.exceptions import ConnectionError
 from urllib3.exceptions import NewConnectionError
 from urllib3.exceptions import MaxRetryError
 
-from config import CITY, RADIUS, MIN_ALTITUDE, MAX_ALTITUDE
+from config import LOCATION, RADIUS, MIN_ALTITUDE, MAX_ALTITUDE
 
 RETRIES = 3
 RATE_LIMIT_DELAY = 1
@@ -29,7 +30,7 @@ timelogs = []
 ZONE = {}
 try:
     geolocator = Nominatim(user_agent="plane_tracker")
-    location = geolocator.geocode(CITY)
+    location = geolocator.geocode(LOCATION)
     distance_obj = geodistance.geodesic(miles=RADIUS)
     top_left = distance_obj.destination(point=location, bearing=NW)
     bottom_right = distance_obj.destination(point=location, bearing=SE)
@@ -68,12 +69,7 @@ def distance_from_flight_to_home(flight, home=LOCATION_DEFAULT):
         # Haversine distance in miles using the defined Earth radius
         dist_miles = EARTH_RADIUS_M * c
 
-        # Convert distance units if needed
-        if DISTANCE_UNITS == "metric":
-            dist_km = dist_miles * 1.609  # Convert miles to kilometers
-            return dist_km
-        else:
-            return dist_miles
+        return dist_miles
 
     except AttributeError:
         # on error say it's far away
@@ -125,12 +121,7 @@ def distance_from_flight_to_origin(flight, origin_latitude, origin_longitude, or
             # Haversine distance in miles using the defined Earth radius
             dist_miles = EARTH_RADIUS_M * c
 
-            # Convert distance units if needed
-            if DISTANCE_UNITS == "metric":
-                dist_km = dist_miles * 1.609  # Convert miles to kilometers
-                return dist_km
-            else:
-                return dist_miles
+            return dist_miles
         except Exception as e:
             print("Error:", e)
             return None
@@ -156,12 +147,7 @@ def distance_from_flight_to_destination(flight, destination_latitude, destinatio
             # Haversine distance in miles using the defined Earth radius
             dist_miles = EARTH_RADIUS_M * c
 
-            # Convert distance units if needed
-            if DISTANCE_UNITS == "metric":
-                dist_km = dist_miles * 1.609  # Convert miles to kilometers
-                return dist_km
-            else:
-                return dist_miles
+            return dist_miles
         except Exception as e:
             print("Error:", e)
             return None
@@ -172,11 +158,12 @@ def distance_from_flight_to_destination(flight, destination_latitude, destinatio
 
 class Overhead:
     def __init__(self):
-        self._api = FlightRadar24API()
+        self._api = AdsbTrackerService()
         self._lock = Lock()
         self._data = []
         self._new_data = False
         self._processing = False
+        self.geo = GeoUtils()
 
     def grab_data(self):
         Thread(target=self._grab_data).start()
@@ -191,14 +178,14 @@ class Overhead:
 
         # Grab flight details
         try:
-            bounds = self._api.get_bounds(ZONE)
-            flights = self._api.get_flights(bounds=bounds)
+            flights = self._api.get_nearby_flight(self.geo.location.latitude, self.geo.location.longitude, config.RADIUS)
+
 
             # Sort flights by closest first
             flights = [
                 f
                 for f in flights
-                if f.altitude < MAX_ALTITUDE and f.altitude > MIN_ALTITUDE
+                if f.altitude < config.MAX_ALTITUDE and f.altitude > config.MIN_ALTITUDE
             ]
             flights = sorted(flights, key=lambda f: distance_from_flight_to_home(f))
 

@@ -2,13 +2,15 @@ import http.client
 import config
 import json
 
-from authentication import AuthenticationService
+# from authentication import AuthenticationService
 
 
 class AdsbTrackerService():
   def __init__(self):
-    auth = AuthenticationService()
-    self._fr24_api_token = auth.flightradar24_token
+    # # TODO: Uncomment, and fill the token value with the auth token in the auth service.
+    # # This won't be necessary until the adsb.lol service requires API tokens.
+    # auth = AuthenticationService()
+    # self._fr24_api_token = auth.flightradar24_token
     self.conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
 
   def decode_response_payload(self, data: bytes):
@@ -20,24 +22,28 @@ class AdsbTrackerService():
       'Accept': 'application/json'
     }
   
-  def _get_closest_flight_url(self, lat, long, radius):
-    return f'/v2/closest/{lat}/{long}/{radius}'
+  def _get_nearby_flight_url(self, lat, long, radius):
+    return f'/v2/point/{lat}/{long}/{radius}'
   
 
-  def _get_routeset_url(self, lat, long, callsign):
+  def _get_routeset_url(self):
     return '/api/0/routeset'
   
 
-  def get_closest_flight(self, lat, long, radius):
+  def get_nearby_flight(self, lat, long, radius):
     self.conn.request('GET',
-                      self._get_closest_flight_url(lat, long, radius),
+                      self._get_nearby_flight_url(lat, long, radius),
                       payload='',
                       headers=self._get_headers())
     response = self.conn.getresponse()
-    return self.decode_response_payload(response.read())
+    data = self.decode_response_payload(response.read())
+    
+    data = [x for x in data['ac'] if x['hex'][0] != '~' and x['alt_baro'] != 'ground']
+
+    return sorted(data, key=lambda aircraft: aircraft['dst'])
 
 
-  def get_routeset(self, lat, long, callsign: str):
+  def get_routeset(self, lat, long, callsign):
     payload = {
       "planes": [
         {
@@ -49,7 +55,7 @@ class AdsbTrackerService():
     }
 
     self.conn.request('POST',
-                      self._get_closest_flight_url(lat, long, callsign),
+                      self._get_routeset_url(),
                       payload=payload,
                       headers=self._get_headers())
     

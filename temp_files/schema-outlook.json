@@ -9,8 +9,8 @@
       "alt_baro": 3475, // barometric altitude
       "alt_geom": 3450, // altitude
       "gs": 165.1, // ground speed (kts)
-      "track": 267.92,
-      "baro_rate": -1024,
+      "track": 267.92, // Heading
+      "baro_rate": -1024, // vertical speed ?
       "squawk": "6050",
       "emergency": "none",
       "category": "A3",
