@@ -6,6 +6,7 @@ from typing import Optional, Tuple
 from geopy.geocoders import Nominatim
 from .geoUtils import GeoUtils
 
+import threading
 import math
 import time
 import geopy.distance as geodistance
