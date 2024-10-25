@@ -8,7 +8,7 @@ ZONE_HOME = {
 
 DISTANCE_UNITS = "imperial"
 CLOCK_FORMAT = "24hr" #use 12hr or 24hr
-MIN_ALTITUDE = 2600 #feet
+MIN_ALTITUDE = 2500 #feet
 MAX_ALTITUDE = 50000  # feet
 BRIGHTNESS = 100
 BRIGHTNESS_NIGHT = 50
@@ -22,7 +22,7 @@ HAT_PWM_ENABLED = True
 FORECAST_DAYS = 3 # today plus the next two days
 
 LOCATION = "3232 N Clark St, Chicago, IL 60657"
-RADIUS = 5 # nautical miles
+RADIUS = 15 # nautical miles
 
 LIVE = False # True for live data, False for sandbox
 

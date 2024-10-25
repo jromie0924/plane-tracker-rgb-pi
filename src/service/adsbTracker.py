@@ -28,7 +28,7 @@ class AdsbTrackerService():
     }
   
   def _get_nearby_flight_url(self, lat, long, radius):
-    return f'/v2/closest/{lat}/{long}/{radius}'
+    return f'/v2/point/{lat}/{long}/{radius}'
   
 
   def _get_routeset_url(self):
@@ -39,6 +39,7 @@ class AdsbTrackerService():
   def get_nearby_flight(self, lat, long, radius):
     # self.logger.info(f'Retrieving nearby flight information for latitude {lat}, longitude {long}, radius {radius}')
     print(f'Thread ID {threading.current_thread().ident} inside get_nearby_flight()')
+    print(f'number of threads: {threading.active_count()}')
     conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
     conn.request('GET',
                       self._get_nearby_flight_url(lat, long, radius),
@@ -47,11 +48,12 @@ class AdsbTrackerService():
     response = conn.getresponse()
     data = self.decode_response_payload(response.read())
 
-    conn.close()
-    
-    data = [x for x in data['ac'] if x['hex'][0] != '~' and x['alt_baro'] != 'ground']
+    # data = [x for x in data['ac'] if x['hex'][0] != '~' and x['alt_baro'] != 'ground']
+    data = [x for x in data['ac'] if type(x['alt_baro']) is int]
 
-    return sorted(data, key=lambda aircraft: aircraft['dst'])
+    conn.close()
+
+    return sorted(data, key=lambda x: x['alt_baro'])
 
 
   # Attempts to get the route of an airplane by callsign
@@ -59,6 +61,7 @@ class AdsbTrackerService():
   def get_routeset(self, lat=0, long=0, callsign=''):
     # self.logger.info(f'Retrieving route for flight {callsign}')
     print(f'Thread ID {threading.current_thread().ident} inside get_routeset()')
+    print(f'number of threads: {threading.active_count()}')
     if not callsign:
       return self._default_routeset
     

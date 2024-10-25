@@ -173,189 +173,199 @@ class Overhead:
 
         # Grab flight details
         try:
-            flights = self._api.get_nearby_flight(self.geo.get_home_lat(), self.geo.get_home_lon(), config.RADIUS)
-
             with self._lock:
                 self._new_data = False
                 self._processing = True
+            print(f'thread {threading.current_thread().ident} obtained lock')
 
+            flights = self._api.get_nearby_flight(self.geo.get_home_lat(), self.geo.get_home_lon(), config.RADIUS)
+
+            flight = None
+            for flt in flights:
+                if flt['alt_baro'] <= config.MAX_ALTITUDE and flt['alt_baro'] >= config.MIN_ALTITUDE:
+                    flight = flt
+                    break
 
             # Sort flights by closest first
-            flights = [
-                f
-                for f in flights
-                if f['alt_geom'] < config.MAX_ALTITUDE and f['alt_geom'] > config.MIN_ALTITUDE
-            ]
+            # print(f'thread {threading.current_thread().ident} sorting flights')
+
+            # flights = [f for f in flights if f['alt_geom'] <= config.MAX_ALTITUDE and f['alt_geom'] >= config.MIN_ALTITUDE]
+
+            # print(f'thread {threading.current_thread().ident} finished sorting flights')
             # flights = sorted(flights, key=lambda f: distance_from_flight_to_home(f))
 
-            for flight in flights[:MAX_FLIGHT_LOOKUP]:
-                retries = RETRIES
+            # print(f'thread {threading.current_thread().ident} processing {len(flights)} flights')
+            # for flight in flights[:MAX_FLIGHT_LOOKUP]:
+            retries = RETRIES
 
-                while retries:
-                    # Rate limit protection
-                    sleep(RATE_LIMIT_DELAY)
+            while retries:
+                # Rate limit protection
+                print(f'thread {threading.current_thread().ident} sleeping...')
+                sleep(RATE_LIMIT_DELAY)
+                print(f'thread {threading.current_thread().ident} waking up...')
 
-                    # Grab and store details
+                # Grab and store details
+                try:
+                    # details = self._api.get_flight_details(flight) # TODO: remove this line, and instead call the routeset endpoint
+                    print(f'thread {threading.current_thread().ident} getting routeset for {flight["flight"]}')
+                    details = self._api.get_routeset(flight['lat'], flight['lon'], flight['flight'])
+                    print(f'thread {threading.current_thread().ident} finished getting routeset for flight {flight["flight"]}')
+
+                    # Get plane type
                     try:
-                        # details = self._api.get_flight_details(flight) # TODO: remove this line, and instead call the routeset endpoint
-                        details = self._api.get_routeset(flight['lat'], flight['lon'], flight['flight'])
+                        # plane = details["aircraft"]["model"]["code"]
+                        plane = flight['t']
+                    except (KeyError, TypeError):
+                        plane = ""
 
-                        # Get plane type
-                        try:
-                            # plane = details["aircraft"]["model"]["code"]
-                            plane = flight['t']
-                        except (KeyError, TypeError):
-                            plane = ""
+                    # Tidy up what we pass along
+                    plane = plane if not (plane.upper() in BLANK_FIELDS) else ""
 
-                        # Tidy up what we pass along
-                        plane = plane if not (plane.upper() in BLANK_FIELDS) else ""
+                    # origin = (
+                    #     flight.origin_airport_iata
+                    #     if not (flight.origin_airport_iata.upper() in BLANK_FIELDS)
+                    #     else ""
+                    # )
 
-                        # origin = (
-                        #     flight.origin_airport_iata
-                        #     if not (flight.origin_airport_iata.upper() in BLANK_FIELDS)
-                        #     else ""
-                        # )
+                    # origin = details['_airports'][len(details['_airports']) - 2:][0]
+                    airport_details = details['_airports'][len(details['_airports']) - 2:]
 
-                        # origin = details['_airports'][len(details['_airports']) - 2:][0]
-                        airport_details = details['_airports'][len(details['_airports']) - 2:]
+                    if len(airport_details):
+                        origin = airport_details[0]
+                        destination = airport_details[1]
+                    else:
+                        origin = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
+                        destination = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
 
-                        if len(airport_details):
-                            origin = airport_details[0]
-                            destination = airport_details[1]
-                        else:
-                            origin = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
-                            destination = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
-
-                        # destination = (
-                        #     flight.destination_airport_iata
-                        #     if not (flight.destination_airport_iata.upper() in BLANK_FIELDS)
-                        #     else ""
-                        # )
-                        
-                        # destination = details['_airports'][len(details['_airports']) - 2:][1]
-
-                        # callsign = (
-                        #     flight.callsign
-                        #     if not (flight.callsign.upper() in BLANK_FIELDS)
-                        #     else ""
-                        # )
-                        callsign: str = flight['flight']
-                        if callsign.upper() in BLANK_FIELDS:
-                            callsign = ''
-
-                        # Get airline type
-                        # try:
-                        #     airline = details["airline"]["name"]
-                        # except (KeyError, TypeError):
-                        #     airline = ""
-
-                        if (details['airline_code']):
-                            airline = self._airline_lookup.lookup(details['airline_code'])
-                        else:
-                            airline = ''
-
-                            
-                        # Get departure and arrival times
-                        try:
-                            time_scheduled_departure = details["time"]["scheduled"]["departure"]
-                            time_scheduled_arrival = details["time"]["scheduled"]["arrival"]
-                            time_real_departure = details["time"]["real"]["departure"]
-                            time_estimated_arrival = details["time"]["estimated"]["arrival"]
-                        except (KeyError, TypeError):
-                            time_scheduled_departure = None
-                            time_scheduled_arrival = None
-                            time_real_departure = None
-                            time_estimated_arrival = None
-                            
-                        # Extract origin airport coordinates
-                        # origin_latitude = None
-                        # origin_longitude = None
-                        # origin_altitude = None
-                        # if details['airport']['origin'] is not None:
-                        #     origin_latitude = details['airport']['origin']['position']['latitude']
-                        #     origin_longitude = details['airport']['origin']['position']['longitude']
-                        #     origin_altitude = details['airport']['origin']['position']['altitude']
-                            #print("Origin Coordinates:", origin_latitude, origin_longitude, origin_altitude)
-
-                        # Extract destination airport coordinates
-                        # destination_latitude = None
-                        # destination_longitude = None
-                        # destination_altitude = None
-                        # if details['airport']['destination'] is not None:
-                        #     destination_latitude = details['airport']['destination']['position']['latitude']
-                        #     destination_longitude = details['airport']['destination']['position']['longitude']
-                        #     destination_altitude = details['airport']['destination']['position']['altitude']
-                            #print("Destination Coordinates:", destination_latitude, destination_longitude, destination_altitude)
-
-                        # Calculate distances using modified functions
-                        distance_origin = 0
-                        distance_destination = 0
-
-                        # if origin_latitude is not None:
-                        #     distance_origin = distance_from_flight_to_origin(
-                        #         flight,
-                        #         origin_latitude,
-                        #         origin_longitude,
-                        #         origin_altitude
-                        #     )
-
-                        distance_origin = distance_from_flight_to_location(flight,
-                                                                         origin['lat'],
-                                                                         origin['lon'],
-                                                                         origin['alt_feet'])
-
-                        # if destination_latitude is not None:
-                        #     distance_destination = distance_from_flight_to_origin(
-                        #         flight,
-                        #         destination_latitude,
-                        #         destination_longitude,
-                        #         destination_altitude
-                        #     )
-
-                        distance_destination = distance_from_flight_to_location(flight,
-                                                                                   destination['lat'],
-                                                                                   destination['lon'],
-                                                                                   destination['alt_feet'])
-                            
-
-                        # Get owner icao
-                        owner_icao = details['airline_code']
-
-                        # owner_iata = flight.airline_iata or "N/A"
-                        owner_iata = airline or 'N/A'
-
-                        try:
-                            vertical_speed = flight['baro_rate']
-                        except KeyError:
-                            try:
-                                vertical_speed = flight['geom_rate']
-                            except KeyError:
-                                vertical_speed = 0
-                            
-                        data.append(
-                            {
-                                "airline": airline,
-                                "plane": plane,
-                                "origin": origin['iata'],
-                                "owner_iata":owner_iata,
-                                "owner_icao": owner_icao,
-                                "destination": destination['iata'],
-                                "vertical_speed": vertical_speed,
-                                "callsign": callsign,
-                                "distance_origin": distance_origin,
-                                "distance_destination": distance_destination,
-                                "distance": flight['dst'],
-                                "direction": degrees_to_cardinal(plane_bearing(flight)),
-                                "ground_speed": flight['gs'],
-                                "altitude": flight['alt_geom']
-                            }
-                        )
+                    # destination = (
+                    #     flight.destination_airport_iata
+                    #     if not (flight.destination_airport_iata.upper() in BLANK_FIELDS)
+                    #     else ""
+                    # )
                     
-                        break
+                    # destination = details['_airports'][len(details['_airports']) - 2:][1]
 
-                    except (KeyError, AttributeError) as e:
-                        retries -= 1
-                        raise e
+                    # callsign = (
+                    #     flight.callsign
+                    #     if not (flight.callsign.upper() in BLANK_FIELDS)
+                    #     else ""
+                    # )
+                    callsign: str = flight['flight']
+                    if callsign.upper() in BLANK_FIELDS:
+                        callsign = ''
+
+                    # Get airline type
+                    # try:
+                    #     airline = details["airline"]["name"]
+                    # except (KeyError, TypeError):
+                    #     airline = ""
+
+                    if (details['airline_code']):
+                        airline = self._airline_lookup.lookup(details['airline_code'])
+                    else:
+                        airline = ''
+
+                        
+                    # Get departure and arrival times
+                    try:
+                        time_scheduled_departure = details["time"]["scheduled"]["departure"]
+                        time_scheduled_arrival = details["time"]["scheduled"]["arrival"]
+                        time_real_departure = details["time"]["real"]["departure"]
+                        time_estimated_arrival = details["time"]["estimated"]["arrival"]
+                    except (KeyError, TypeError):
+                        time_scheduled_departure = None
+                        time_scheduled_arrival = None
+                        time_real_departure = None
+                        time_estimated_arrival = None
+                        
+                    # Extract origin airport coordinates
+                    # origin_latitude = None
+                    # origin_longitude = None
+                    # origin_altitude = None
+                    # if details['airport']['origin'] is not None:
+                    #     origin_latitude = details['airport']['origin']['position']['latitude']
+                    #     origin_longitude = details['airport']['origin']['position']['longitude']
+                    #     origin_altitude = details['airport']['origin']['position']['altitude']
+                        #print("Origin Coordinates:", origin_latitude, origin_longitude, origin_altitude)
+
+                    # Extract destination airport coordinates
+                    # destination_latitude = None
+                    # destination_longitude = None
+                    # destination_altitude = None
+                    # if details['airport']['destination'] is not None:
+                    #     destination_latitude = details['airport']['destination']['position']['latitude']
+                    #     destination_longitude = details['airport']['destination']['position']['longitude']
+                    #     destination_altitude = details['airport']['destination']['position']['altitude']
+                        #print("Destination Coordinates:", destination_latitude, destination_longitude, destination_altitude)
+
+                    # Calculate distances using modified functions
+                    distance_origin = 0
+                    distance_destination = 0
+
+                    # if origin_latitude is not None:
+                    #     distance_origin = distance_from_flight_to_origin(
+                    #         flight,
+                    #         origin_latitude,
+                    #         origin_longitude,
+                    #         origin_altitude
+                    #     )
+
+                    distance_origin = distance_from_flight_to_location(flight,
+                                                                        origin['lat'],
+                                                                        origin['lon'],
+                                                                        origin['alt_feet'])
+
+                    # if destination_latitude is not None:
+                    #     distance_destination = distance_from_flight_to_origin(
+                    #         flight,
+                    #         destination_latitude,
+                    #         destination_longitude,
+                    #         destination_altitude
+                    #     )
+
+                    distance_destination = distance_from_flight_to_location(flight,
+                                                                                destination['lat'],
+                                                                                destination['lon'],
+                                                                                destination['alt_feet'])
+                        
+
+                    # Get owner icao
+                    owner_icao = details['airline_code']
+
+                    # owner_iata = flight.airline_iata or "N/A"
+                    owner_iata = airline or 'N/A'
+
+                    try:
+                        vertical_speed = flight['baro_rate']
+                    except KeyError:
+                        try:
+                            vertical_speed = flight['geom_rate']
+                        except KeyError:
+                            vertical_speed = 0
+                        
+                    data.append(
+                        {
+                            "airline": airline,
+                            "plane": plane,
+                            "origin": origin['iata'],
+                            "owner_iata":owner_iata,
+                            "owner_icao": owner_icao,
+                            "destination": destination['iata'],
+                            "vertical_speed": vertical_speed,
+                            "callsign": callsign,
+                            "distance_origin": distance_origin,
+                            "distance_destination": distance_destination,
+                            "distance": flight['dst'],
+                            "direction": degrees_to_cardinal(plane_bearing(flight)),
+                            "ground_speed": flight['gs'],
+                            "altitude": flight['alt_geom']
+                        }
+                    )
+                
+                    break
+
+                except (KeyError, AttributeError) as e:
+                    retries -= 1
 
             with self._lock:
                 self._new_data = True
