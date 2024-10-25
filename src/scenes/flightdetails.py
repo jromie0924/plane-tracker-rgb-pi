@@ -67,7 +67,7 @@ class FlightDetailsScene(object):
         if len(self._data) > 1:
             # Clear are where N of M might have been
             self.draw_square(
-                DATA_INDEX_POSITION[0],
+                DATA_INDEX_POSITION[1],
                 FLIGHT_NO_DISTANCE_FROM_TOP - FLIGHT_NO_TEXT_HEIGHT,
                 screen.WIDTH,
                 FLIGHT_NO_DISTANCE_FROM_TOP,
@@ -75,26 +75,26 @@ class FlightDetailsScene(object):
             )
 
             # Draw text
-            text_length = graphics.DrawText(
-                self.canvas,
-                fonts.extrasmall,
-                DATA_INDEX_POSITION[0],
-                DATA_INDEX_POSITION[1],
-                DATA_INDEX_COLOUR,
-                f"{self._data_index + 1}/{len(self._data)}",
-            )
+            # text_length = graphics.DrawText(
+            #     self.canvas,
+            #     fonts.extrasmall,
+            #     DATA_INDEX_POSITION[0],
+            #     DATA_INDEX_POSITION[1],
+            #     DATA_INDEX_COLOUR,
+            #     f"{self._data_index + 1}/{len(self._data)}",
+            # )
 
             # Count the whole line length
-            flight_no_text_length += text_length
+            # flight_no_text_length += text_length
 
         # Handle scrolling
         self.flight_position -= 1
         if self.flight_position + flight_no_text_length < 0:
             self.flight_position = screen.WIDTH
-            if len(self._data) > 1:
-                self._data_index = (self._data_index + 1) % len(self._data)
-                self._data_all_looped = (not self._data_index) or self._data_all_looped
-                self.reset_scene()
+            # if len(self._data) > 1:
+            #     self._data_index = (self._data_index + 1) % len(self._data)
+            #     self._data_all_looped = (not self._data_index) or self._data_all_looped
+            #     self.reset_scene()
 
     @Animator.KeyFrame.add(0)
     def reset_scrolling(self):

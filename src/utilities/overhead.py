@@ -168,15 +168,15 @@ class Overhead:
 
     def _grab_data(self):
         # Mark data as old
-        with self._lock:
-            self._new_data = False
-            self._processing = True
-
         data = []
 
         # Grab flight details
         try:
             flights = self._api.get_nearby_flight(self.geo.get_home_lat(), self.geo.get_home_lon(), config.RADIUS)
+
+            with self._lock:
+                self._new_data = False
+                self._processing = True
 
 
             # Sort flights by closest first
@@ -339,10 +339,6 @@ class Overhead:
                                 "owner_iata":owner_iata,
                                 "owner_icao": owner_icao,
                                 "destination": destination['iata'],
-                                # "time_scheduled_departure": time_scheduled_departure,
-                                # "time_scheduled_arrival": time_scheduled_arrival,
-                                # "time_real_departure": time_real_departure,
-                                # "time_estimated_arrival": time_estimated_arrival,
                                 "vertical_speed": vertical_speed,
                                 "callsign": callsign,
                                 "distance_origin": distance_origin,
@@ -366,6 +362,7 @@ class Overhead:
                 self._data = data
 
         except (ConnectionError, NewConnectionError, MaxRetryError):
+            print("HERE")
             self._new_data = False
             self._processing = False
 

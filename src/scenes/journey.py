@@ -47,10 +47,6 @@ class JourneyScene(object):
         # Guard against no data
         if len(self._data) == 0:
             return
-            
-        # Retrieve distance values from the Overhead scene and round to the nearest integer
-        distance_origin = int(self._data[self._data_index]["distance_origin"])
-        distance_destination = int(self._data[self._data_index]["distance_destination"])
 
         # Convert distance to either miles or kilometers based on UNITS configuration
         if DISTANCE_UNITS == "imperial":
@@ -67,59 +63,8 @@ class JourneyScene(object):
         # Grab Airport codes
         origin = self._data[self._data_index]["origin"]
         destination = self._data[self._data_index]["destination"]
-        
-        # Additional time-related data
-        # time_scheduled_departure = self._data[self._data_index]["time_scheduled_departure"]
-        # time_real_departure = self._data[self._data_index]["time_real_departure"]
-        # time_scheduled_arrival = self._data[self._data_index]["time_scheduled_arrival"]
-        # time_estimated_arrival = self._data[self._data_index]["time_estimated_arrival"]
-        
-        # Calculate departure and arrival delays in minutes
-        # departure_delay_minutes = (
-        #     (time_real_departure - time_scheduled_departure) / 60
-        #     if time_real_departure is not None and time_scheduled_departure is not None
-        #     else 0
-        # )
-        # arrival_delay_minutes = (
-        #     (time_estimated_arrival - time_scheduled_arrival) / 60
-        #     if time_estimated_arrival is not None and time_scheduled_arrival is not None
-        #     else 0
-        # )
-        
-        # Print time differences for debugging
-        #print("Departure Delay (minutes):", departure_delay_minutes)
-        #print("Arrival Delay (minutes):", arrival_delay_minutes)
-        
-        # Set colors based on departure and arrival delays
-        # if departure_delay_minutes <= 20:
-        #     origin_color = colours.LIMEGREEN
-        # elif 20 < departure_delay_minutes <= 40:
-        #     origin_color = colours.YELLOW
-        # elif 40 < departure_delay_minutes <= 60:
-        #     origin_color = colours.ORANGE
-        # elif 60 < departure_delay_minutes <= 240:
-        #     origin_color = colours.RED
-        # elif 240 < departure_delay_minutes <= 480:
-        #     origin_color = colours.PINK_DARK
-        # else:
-        #     origin_color = colours.BLUE
 
         origin_color = colours.BLUE_LIGHT
-        
-        # Adjust colors for arrival delays
-        # if arrival_delay_minutes <= 0:
-        #     destination_color = colours.LIMEGREEN
-        # elif 0 < arrival_delay_minutes <= 30:
-        #     destination_color = colours.YELLOW
-        # elif 30 < arrival_delay_minutes <= 60:
-        #     destination_color = colours.ORANGE
-        # elif 60 < arrival_delay_minutes <= 240:
-        #     destination_color = colours.RED
-        # elif 240 < arrival_delay_minutes <= 480:
-        #     destination_color = colours.PINK_DARK
-        # else:
-        #     destination_color = colours.BLUE
-
         destination_color = colours.BLUE_LIGHT
         
         # Draw background with the chosen color
