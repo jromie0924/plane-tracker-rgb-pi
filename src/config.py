@@ -21,7 +21,7 @@ JOURNEY_BLANK_FILLER = " ? "
 HAT_PWM_ENABLED = True
 FORECAST_DAYS = 3 # today plus the next two days
 
-LOCATION = "Chicago, IL"
+LOCATION = "3232 N Clark St, Chicago, IL 60657"
 RADIUS = 5 # nautical miles
 
 LIVE = False # True for live data, False for sandbox

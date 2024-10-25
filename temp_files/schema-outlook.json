@@ -5,7 +5,7 @@
       "type": "adsb_icao",
       "flight": "DAL2413 ", // callsign - need for routeset
       "r": "N350NA", // registration
-      "t": "A320",
+      "t": "A320", // aicraft type
       "alt_baro": 3475, // barometric altitude
       "alt_geom": 3450, // altitude
       "gs": 165.1, // ground speed (kts)

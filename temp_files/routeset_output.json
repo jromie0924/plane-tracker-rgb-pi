@@ -1,0 +1,34 @@
+[
+  {
+    "_airport_codes_iata": "ORD-FSD",
+    "_airports": [
+      {
+        "alt_feet": 672,
+        "alt_meters": 204.83,
+        "countryiso2": "US",
+        "iata": "ORD",
+        "icao": "KORD",
+        "lat": 41.9786,
+        "location": "Chicago",
+        "lon": -87.9048,
+        "name": "Chicago O'Hare International Airport"
+      },
+      {
+        "alt_feet": 1429,
+        "alt_meters": 435.56,
+        "countryiso2": "US",
+        "iata": "FSD",
+        "icao": "KFSD",
+        "lat": 43.582001,
+        "location": "Sioux Falls",
+        "lon": -96.741898,
+        "name": "Joe Foss Field Airport"
+      }
+    ],
+    "airline_code": "SKW",
+    "airport_codes": "KORD-KFSD",
+    "callsign": "SKW5458",
+    "number": "5458",
+    "plausible": 1
+  }
+]

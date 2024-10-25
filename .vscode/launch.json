@@ -5,10 +5,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python Debugger: Current File",
+      "name": "Python Debugger: application",
       "type": "debugpy",
       "request": "launch",
-      "program": "its-a-plane-python/its-a-plane.py",
+      "program": "src/its-a-plane.py",
       "console": "integratedTerminal"
     }
   ]

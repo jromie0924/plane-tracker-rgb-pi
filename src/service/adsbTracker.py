@@ -1,6 +1,7 @@
 import http.client
 import config
 import json
+import logging
 
 # from authentication import AuthenticationService
 
@@ -12,6 +13,9 @@ class AdsbTrackerService():
     # auth = AuthenticationService()
     # self._fr24_api_token = auth.flightradar24_token
     self.conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
+    self.logger = logging.getLogger(__name__)
+    with open('src/app_data/loc_default.json', 'r') as f:
+      self._default_routeset = json.load(f)
 
   def decode_response_payload(self, data: bytes):
     data_str = data.decode('utf-8')
@@ -31,10 +35,11 @@ class AdsbTrackerService():
   
 
   def get_nearby_flight(self, lat, long, radius):
+    self.logger.info(f'Retrieving nearby flight information for latitude {lat}, longitude {long}, radius {radius}')
     self.conn.request('GET',
                       self._get_nearby_flight_url(lat, long, radius),
-                      payload='',
-                      headers=self._get_headers())
+                      '',
+                      self._get_headers())
     response = self.conn.getresponse()
     data = self.decode_response_payload(response.read())
     
@@ -43,21 +48,30 @@ class AdsbTrackerService():
     return sorted(data, key=lambda aircraft: aircraft['dst'])
 
 
-  def get_routeset(self, lat, long, callsign):
+  def get_routeset(self, lat=0, long=0, callsign=''):
+    self.logger.info(f'Retrieving route for flight {callsign}')
+    if not callsign:
+      return self._default_routeset
+
     payload = {
       "planes": [
         {
-          "callsign": callsign,
+          "callsign": callsign.strip(),
           "lat": lat,
-          "long": long
+          "lng": long
         }
       ]
     }
 
     self.conn.request('POST',
                       self._get_routeset_url(),
-                      payload=payload,
-                      headers=self._get_headers())
+                      json.dumps(payload),
+                      self._get_headers())
     
     response = self.conn.getresponse()
-    return self.decode_response_payload(response.read())
+    data = self.decode_response_payload(response.read())
+
+    if len(data[0]['_airports']) == 0:
+      return self._default_routeset
+    
+    return data[0]
