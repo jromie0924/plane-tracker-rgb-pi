@@ -5,6 +5,7 @@ from RGBMatrixEmulator import graphics
 
 # Setup
 FLIGHT_NO_DISTANCE_FROM_TOP = 24
+PLANE_DISTANCE_FROM_TOP = 31
 FLIGHT_NO_TEXT_HEIGHT = 8  # based on font size
 FLIGHT_NO_FONT = fonts.small
 
@@ -41,8 +42,17 @@ class FlightDetailsScene(object):
             colours.BLACK,
         )
 
+        self.draw_square(
+            0,
+            PLANE_DISTANCE_FROM_TOP - FLIGHT_NO_TEXT_HEIGHT,
+            screen.WIDTH,
+            PLANE_DISTANCE_FROM_TOP,
+            colours.BLACK,
+        )
+
         # Draw flight number if available
         flight_no_text_length = 0
+        plane_details_text_length = 0
         callsign = self._data[self._data_index]["callsign"]
         plane_data = self._data[self._data_index]['plane']
         direction = self._data[self._data_index]['direction']
@@ -60,9 +70,10 @@ class FlightDetailsScene(object):
             if self._data[self._data_index]["airline"] != "":
                 flight_no = f"{self._data[self._data_index]['airline']} {flight_no}"
 
-            full_text = f'{flight_no}\n{plane_name_text}{distance_text}'
+            # full_text = f'{flight_no}\n{plane_name_text}{distance_text}'
+            plane_details_text = f'{plane_name_text}{distance_text}'
 
-            for ch in full_text:
+            for ch in flight_no:
                 ch_length = graphics.DrawText(
                     self.canvas,
                     FLIGHT_NO_FONT,
@@ -72,6 +83,19 @@ class FlightDetailsScene(object):
                     ch,
                 )
                 flight_no_text_length += ch_length
+            
+            # for ch in plane_details_text:
+            plane_details_text_length = graphics.DrawText(
+                self.canvas,
+                FLIGHT_NO_FONT,
+                self.flight_position + plane_details_text_length,
+                PLANE_DISTANCE_FROM_TOP,
+                colours.TROPICAL_ORANGE,
+                plane_details_text,
+            )
+                # plane_details_text_length += ch_length
+
+            text_length = max(plane_details_text_length, flight_no_text_length)
 
         # Draw bar
         if len(self._data) > 1:
@@ -100,7 +124,7 @@ class FlightDetailsScene(object):
 
         # Handle scrolling
         self.flight_position -= 1
-        if self.flight_position + flight_no_text_length < 0:
+        if self.flight_position + text_length < 0:
             self.flight_position = screen.WIDTH
             # if len(self._data) > 1:
             #     self._data_index = (self._data_index + 1) % len(self._data)
