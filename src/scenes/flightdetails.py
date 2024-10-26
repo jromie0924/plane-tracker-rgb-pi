@@ -44,6 +44,13 @@ class FlightDetailsScene(object):
         # Draw flight number if available
         flight_no_text_length = 0
         callsign = self._data[self._data_index]["callsign"]
+        plane_data = self._data[self._data_index]['plane']
+        direction = self._data[self._data_index]['direction']
+        distance = self._data[self._data_index]['distance']
+        distance_units = 'mi'
+
+        plane_name_text = f'{plane_data} '
+        distance_text = f'{distance:.2f}{distance_units} {direction} '
 
         if callsign and callsign != "N/A":
             # Remove icao from flight number
@@ -53,7 +60,9 @@ class FlightDetailsScene(object):
             if self._data[self._data_index]["airline"] != "":
                 flight_no = f"{self._data[self._data_index]['airline']} {flight_no}"
 
-            for ch in flight_no:
+            full_text = f'{flight_no}\n{plane_name_text}{distance_text}'
+
+            for ch in full_text:
                 ch_length = graphics.DrawText(
                     self.canvas,
                     FLIGHT_NO_FONT,

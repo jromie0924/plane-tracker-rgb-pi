@@ -74,7 +74,7 @@ class Display(
     FlightLogoScene,
     JourneyScene,
     LoadingPulseScene,
-    PlaneDetailsScene,
+    # PlaneDetailsScene,
     ClockScene,
     # DaysForecastScene,
     DateScene,
