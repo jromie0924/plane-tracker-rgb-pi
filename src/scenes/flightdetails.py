@@ -23,6 +23,7 @@ class FlightDetailsScene(object):
         super().__init__()
         self.flight_position = screen.WIDTH
         self._data_all_looped = False
+        self.flight_details_length = 0
 
     @Animator.KeyFrame.add(1)
     def flight_details(self, count):
@@ -86,6 +87,7 @@ class FlightDetailsScene(object):
 
             # Count the whole line length
             # flight_no_text_length += text_length
+        self.flight_details_length = flight_no_text_length
 
         # Handle scrolling
         self.flight_position -= 1

@@ -17,7 +17,7 @@ class PlaneDetailsScene(object):
         super().__init__()
         self.plane_position = screen.WIDTH
         self._data_all_looped = False
-        self.flight_details_length = 0
+        self.plane_details_length = 0
 
     @Animator.KeyFrame.add(1)
     def plane_details(self, count):
@@ -96,11 +96,12 @@ class PlaneDetailsScene(object):
 
         # Calculate the total width of the text string
         total_text_width = plane_name_width + distance_text_width
-        self.flight_details_length = total_text_width
+        self.plane_details_length = total_text_width
 
         # Handle scrolling
         self.plane_position -= 1
 
+        # TODO: check the flightdetails position as well
         # Check if the text has completely scrolled off the screen
         if self.plane_position + total_text_width < 0:
             self.plane_position = screen.WIDTH

@@ -131,6 +131,7 @@ class Display(
         # a screen reset
         self.canvas.Clear()
 
+    # TODO: this looks like it'll scroll 5 times? figure it out
     @Animator.KeyFrame.add(frames.PER_SECOND * 5)
     def check_for_loaded_data(self, count):
         if self.overhead.new_data:
@@ -163,7 +164,7 @@ class Display(
     def sync(self, count):
         # Redraw screen every frame
         _ = self.matrix.SwapOnVSync(self.canvas)
-        
+        # TODO: how to get flight details and plane details to line up?
     
         # Adjust brightness
         adjust_brightness(self.matrix)
