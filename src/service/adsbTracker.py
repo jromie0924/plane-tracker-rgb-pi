@@ -4,6 +4,8 @@ import json
 import logging
 import threading
 
+from time import sleep
+
 # from authentication import AuthenticationService
 
 
@@ -37,7 +39,7 @@ class AdsbTrackerService():
 
   # Gets nearby flights given a latitude, longitude, and radius in nautical miles.
   def get_nearby_flight(self, lat, long, radius):
-    # self.logger.info(f'Retrieving nearby flight information for latitude {lat}, longitude {long}, radius {radius}')
+    sleep(5)
     print(f'Thread ID {threading.current_thread().ident} inside get_nearby_flight()')
     print(f'number of threads: {threading.active_count()}')
     conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
@@ -58,7 +60,7 @@ class AdsbTrackerService():
 
     conn.close()
 
-    return sorted(data, key=lambda x: x['alt_baro'])
+    return sorted(data, key=lambda x: x['dst'])
 
 
   # Attempts to get the route of an airplane by callsign

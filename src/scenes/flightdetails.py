@@ -53,25 +53,34 @@ class FlightDetailsScene(object):
         # Draw flight number if available
         flight_no_text_length = 0
         plane_details_text_length = 0
-        callsign = self._data[self._data_index]["callsign"]
+        callsign = self._data[self._data_index]["callsign"].replace('N/A', '')
+        registration = self._data[self._data_index]['registration'].replace('N/A', '')
         plane_data = self._data[self._data_index]['plane']
+        speed = self._data[self._data_index]['ground_speed']
+        altitude = self._data[self._data_index]['altitude']
         direction = self._data[self._data_index]['direction']
         distance = self._data[self._data_index]['distance']
         distance_units = 'mi'
 
         plane_name_text = f'{plane_data} '
         distance_text = f'{distance:.2f}{distance_units} {direction} '
+        altitude_text = f'{altitude}ft '
+        speed_text = f'{speed}kts '
 
-        if callsign and callsign != "N/A":
+        if callsign or registration:
             # Remove icao from flight number
-            flight_no = callsign[len(self._data[self._data_index]["owner_icao"]):]
-            
+            # flight_no = callsign[len(self._data[self._data_index]["owner_icao"]):]
+            if callsign:
+                flight_no = callsign[len(self._data[self._data_index]["owner_icao"]):].strip() or callsign
+            else:
+                flight_no = registration
+
             # Add airline name if there is one
             if self._data[self._data_index]["airline"] != "":
                 flight_no = f"{self._data[self._data_index]['airline']} {flight_no}"
 
             # full_text = f'{flight_no}\n{plane_name_text}{distance_text}'
-            plane_details_text = f'{plane_name_text}{distance_text}'
+            plane_details_text = f'{plane_name_text}{distance_text}{altitude_text}{speed_text}'
 
             for ch in flight_no:
                 ch_length = graphics.DrawText(

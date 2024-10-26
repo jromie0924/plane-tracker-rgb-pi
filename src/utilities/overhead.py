@@ -163,6 +163,7 @@ class Overhead:
         self._new_data = False
         self._processing = False
         self.geo = GeoUtils()
+        self.dupe_tracker = {}
 
     def grab_data(self):
         Thread(target=self._grab_data).start()
@@ -183,7 +184,14 @@ class Overhead:
             flight = None
             for flt in flights:
                 if flt['alt_baro'] <= config.MAX_ALTITUDE and flt['alt_baro'] >= config.MIN_ALTITUDE:
-                    flight = flt
+                    if flt['hex'] in self.dupe_tracker:
+                        timestamp = round(time.time() * 1000)
+                        if timestamp - self.dupe_tracker[flt['hex']] > config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000:
+                            flight = flt
+                            self.dupe_tracker[flt['hex']] = timestamp
+                    else:
+                        flight = flt
+                        self.dupe_tracker[flt['hex']] = round(time.time() * 1000)
                     break
 
             # Sort flights by closest first
@@ -204,12 +212,12 @@ class Overhead:
                 sleep(RATE_LIMIT_DELAY)
                 print(f'thread {threading.current_thread().ident} waking up...')
 
+                if flight is None:
+                    break
+
                 # Grab and store details
                 try:
-                    # details = self._api.get_flight_details(flight) # TODO: remove this line, and instead call the routeset endpoint
-                    print(f'thread {threading.current_thread().ident} getting routeset for {flight["flight"]}')
                     details = self._api.get_routeset(flight['lat'], flight['lon'], flight['flight'])
-                    print(f'thread {threading.current_thread().ident} finished getting routeset for flight {flight["flight"]}')
 
                     # Get plane type
                     try:
@@ -353,6 +361,7 @@ class Overhead:
                             "destination": destination['iata'],
                             "vertical_speed": vertical_speed,
                             "callsign": callsign,
+                            "registration": flight['r'],
                             "distance_origin": distance_origin,
                             "distance_destination": distance_destination,
                             "distance": flight['dst'],
