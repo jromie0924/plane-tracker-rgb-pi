@@ -60,7 +60,8 @@ class AdsbTrackerService():
 
     conn.close()
 
-    return sorted(data, key=lambda x: x['dst'])
+    # return sorted(data, key=lambda x: x['dst'])
+    return data
 
 
   # Attempts to get the route of an airplane by callsign

@@ -180,6 +180,7 @@ class Overhead:
             print(f'thread {threading.current_thread().ident} obtained lock')
 
             flights = self._api.get_nearby_flight(self.geo.get_home_lat(), self.geo.get_home_lon(), config.RADIUS)
+            flights = sorted(flights, key=lambda f: distance_from_flight_to_home(f))
 
             flight = None
             for flt in flights:
@@ -217,7 +218,9 @@ class Overhead:
 
                 # Grab and store details
                 try:
+                    print(f'thread {threading.current_thread().ident} getting route for {flight["flight"]}')
                     details = self._api.get_routeset(flight['lat'], flight['lon'], flight['flight'])
+                    print(f'thread {threading.current_thread().ident} got route for {flight["flight"]}')
 
                     # Get plane type
                     try:
