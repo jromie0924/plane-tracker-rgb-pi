@@ -165,7 +165,7 @@ class Display(
         # Redraw screen every frame
         _ = self.matrix.SwapOnVSync(self.canvas)
         # TODO: how to get flight details and plane details to line up?
-    
+
         # Adjust brightness
         adjust_brightness(self.matrix)
 

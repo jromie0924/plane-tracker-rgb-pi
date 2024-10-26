@@ -8,7 +8,7 @@
       "name": "Python Debugger: application",
       "type": "debugpy",
       "request": "launch",
-      "program": "src/its-a-plane.py",
+      "program": "src/app.py",
       "console": "integratedTerminal"
     }
   ]

@@ -34,6 +34,7 @@ class Animator(object):
         for keyframe in self.keyframes:
             if keyframe.properties["divisor"] == 0:
                 keyframe()
+            
 
     def play(self):
         while True:
