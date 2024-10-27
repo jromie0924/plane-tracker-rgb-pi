@@ -189,6 +189,13 @@ class Overhead:
             print(f'thread {threading.current_thread().ident} obtained lock')
 
             flights = self._api.get_nearby_flight(self.geo.get_home_lat(), self.geo.get_home_lon(), config.RADIUS)
+
+            if not flights:
+                with self._lock:
+                    self._new_data = False
+                    self._processing = False
+                return
+
             flights = sorted(flights, key=lambda f: distance_from_flight_to_home(f))
 
             flight = None

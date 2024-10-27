@@ -50,9 +50,12 @@ class AdsbTrackerService():
     response = conn.getresponse()
     data = self.decode_response_payload(response.read())
 
-    # data = [x for x in data['ac'] if x['hex'][0] != '~' and x['alt_baro'] != 'ground']
+    if 'ac' not in data:
+      return None
+    
     try:
-      data = [x for x in data['ac'] if type(x['alt_baro']) is int]
+      filter_field = 'alt_baro'
+      data = [x for x in data['ac'] if filter_field in x and type(x[filter_field]) is int]
     except KeyError as e:
       with open('error_log.json', 'w') as f:
         json.dump(data, f)
