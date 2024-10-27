@@ -45,7 +45,7 @@ except (ModuleNotFoundError, NameError):
     # If there's no config data
     BRIGHTNESS = 100
     GPIO_SLOWDOWN = 1
-    HAT_PWM_ENABLED = True
+    HAT_PWM_ENABLED = False
     NIGHT_BRIGHTNESS = False
 
 def adjust_brightness(matrix):
