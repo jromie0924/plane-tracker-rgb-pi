@@ -1,7 +1,8 @@
 from utilities.animator import Animator
 from setup import colours, fonts, screen
 
-from RGBMatrixEmulator import graphics
+# from RGBMatrixEmulator import graphics
+from rgbmatrix import graphics
 
 # Setup
 FLIGHT_NO_DISTANCE_FROM_TOP = 24

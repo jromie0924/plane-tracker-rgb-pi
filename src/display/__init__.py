@@ -14,8 +14,8 @@ from scenes.planedetails import PlaneDetailsScene
 # from scenes.daysforecast import DaysForecastScene
 from scenes.date import DateScene
 
-from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics
-# from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
+# from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics
+from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 
 
 def flight_updated(flights_a, flights_b):
