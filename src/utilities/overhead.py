@@ -165,12 +165,21 @@ class Overhead:
         self.geo = GeoUtils()
         self.dupe_tracker = {}
 
+    '''
+    This method is used to analyze the dupe tracker and remove any entries that are older than the TTL
+    '''
+    def analyze_dupe_tracker(self):
+        if len(self.dupe_tracker) > 1000:
+            self.dupe_tracker = {k: v for k, v in self.dupe_tracker.items() if round(time.time() * 1000) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
+
     def grab_data(self):
         Thread(target=self._grab_data).start()
 
     def _grab_data(self):
         # Mark data as old
         data = []
+
+        # TODO: call a method to clear the cache once it reaches a certain size
 
         # Grab flight details
         try:
