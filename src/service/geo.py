@@ -9,11 +9,12 @@ from service.authentication import AuthenticationService
 Default coordinates were taken from https://www.gps-coordinates.net/
 '''
 
+filepath = 'src/app_data/geo_cache.json'
+
 class GeoService():
   def __init__(self):
     try:
       self.authentication = AuthenticationService()
-      filepath = 'src/app_data/geo_cache.json'
       with open(filepath, 'r') as f:
         cached_location_data = json.load(f)
         current_timestamp = time.time() * 1000
@@ -58,8 +59,14 @@ class GeoService():
       else:
         self._location = config.LOCATION_COORDINATES_DEFAULT
     except Exception as e:
-      self._location = config.LOCATION_COORDINATES_DEFAULT
-      print(f"Error getting location data: {e}")  
+      try:
+        with open(filepath, 'r') as f:
+          print(f'Error getting location data. Falling back to expired cache...')
+          cached_location_data = json.load(f)
+          self._location = [float(x) for x in cached_location_data['location']]
+      except FileNotFoundError:
+        self._location = config.LOCATION_COORDINATES_DEFAULT
+        print(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
 
     with open('src/app_data/geo_cache.json', 'w') as f:
       json.dump({'location': self._location, 'timestamp': time.time() * 1000}, f)
