@@ -148,6 +148,8 @@ class Overhead:
             retries = RETRIES
 
             while retries:
+                print(f'thread {threading.current_thread().ident} retries {retries}')
+                sleep(RATE_LIMIT_DELAY)
                 if flight is None:
                     break
 
@@ -234,7 +236,7 @@ class Overhead:
                     retries -= 1
 
             with self._lock:
-                self._new_data = True
+                self._new_data = len(data) > 0
                 self._processing = False
                 self._data = data
 

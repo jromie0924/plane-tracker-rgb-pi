@@ -21,8 +21,12 @@ class AdsbTrackerService():
       self._default_routeset = json.load(f)
 
   def decode_response_payload(self, data: bytes):
-    data_str = data.decode('utf-8')
-    return json.loads(data_str)
+    try:
+      data_str = data.decode('utf-8')
+      return json.loads(data_str)
+    except json.JSONDecodeError as e:
+      self.logger.error(f'Error decoding response payload: {e}')
+      return None
   
   def _get_headers(self):
     return {
@@ -48,9 +52,13 @@ class AdsbTrackerService():
                       '',
                       self._get_headers())
     response = conn.getresponse()
+
+    if response.status != 200:
+      return None
+    
     data = self.decode_response_payload(response.read())
 
-    if 'ac' not in data:
+    if data is None or 'ac' not in data:
       return None
     
     try:
@@ -98,7 +106,7 @@ class AdsbTrackerService():
 
     conn.close()
 
-    if len(data[0]['_airports']) == 0:
+    if data is None or len(data[0]['_airports']) == 0:
       return self._default_routeset
     
     return data[0]
