@@ -16,7 +16,7 @@ class GeoUtils():
       with open(filepath, 'r') as f:
         cached_location_data = json.load(f)
         current_timestamp = time.time() * 1000
-        if round((current_timestamp - cached_location_data['timestamp']) / 1000 / 60) > config.LOCATION_CACHE_TIMEOUT: # TODO: fix this
+        if round((current_timestamp - cached_location_data['timestamp']) / 1000 / 60) > config.LOCATION_CACHE_TIMEOUT:
           self._location = self.update_cache()
         else:
           self._location = cached_location_data['location']
@@ -28,6 +28,7 @@ class GeoUtils():
       # Default coordinates
       self._location = [41.8755616, -87.6244212]
 
+  # TODO use a try-catch to fall back onto the cache file if it exists.
   def update_cache(self):
     user_agent = 'bad_hombres_flight_tracker'
     geolocator = Nominatim(user_agent=user_agent)
