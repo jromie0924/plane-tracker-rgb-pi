@@ -4,7 +4,7 @@ from threading import Thread, Lock
 from time import sleep
 from typing import Optional, Tuple
 from geopy.geocoders import Nominatim
-from .geoUtils import GeoUtils
+from service.geo import GeoService
 
 import threading
 import math
@@ -16,8 +16,6 @@ from requests.exceptions import ConnectionError
 from urllib3.exceptions import NewConnectionError
 from urllib3.exceptions import MaxRetryError
 
-from config import LOCATION, RADIUS, MIN_ALTITUDE, MAX_ALTITUDE
-
 RETRIES = 3
 RATE_LIMIT_DELAY = 1
 MAX_FLIGHT_LOOKUP = 5
@@ -27,23 +25,6 @@ NW = 315 #degrees
 SE = 135 #degrees
 
 timelogs = []
-
-# Calculate the zone where we want to see flight data.
-ZONE = {}
-try:
-    geolocator = Nominatim(user_agent="plane_tracker")
-    location = geolocator.geocode(LOCATION)
-    distance_obj = geodistance.geodesic(miles=RADIUS)
-    top_left = distance_obj.destination(point=location, bearing=NW)
-    bottom_right = distance_obj.destination(point=location, bearing=SE)
-    ZONE["tl_y"] = top_left.latitude
-    ZONE["tl_x"] = top_left.longitude
-    ZONE["br_y"] = bottom_right.latitude
-    ZONE["br_x"] = bottom_right.longitude
-    LOCATION_DEFAULT = [location.latitude, location.longitude]
-except Exception:
-    ZONE = {"tl_y": 41.9267684604688, "tl_x": -87.69301898128884, "br_y": 41.82431337321679, "br_x": -87.55593288861269}
-    LOCATION_DEFAULT = [51.509865, -0.118092, EARTH_RADIUS_M]
     
 def polar_to_cartesian(lat, long, alt):
         DEG2RAD = math.pi / 180
@@ -54,7 +35,7 @@ def polar_to_cartesian(lat, long, alt):
         ]
 
 # TODO: this doesn't seem to be correct. https://community.esri.com/t5/coordinate-reference-systems-blog/distance-on-a-sphere-the-haversine-formula/ba-p/902128
-def distance_from_flight_to_home(flight, home=LOCATION_DEFAULT):
+def distance_from_flight_to_home(flight, home=config.LOCATION_COORDINATES_DEFAULT):
     try:
         # Convert latitude and longitude from degrees to radians
         lat1, lon1 = math.radians(flight['lat']), math.radians(flight['lon'])
@@ -77,7 +58,7 @@ def distance_from_flight_to_home(flight, home=LOCATION_DEFAULT):
         # on error say it's far away
         return 1e6
                
-def plane_bearing(flight, home=LOCATION_DEFAULT):
+def plane_bearing(flight, home=config.LOCATION_COORDINATES_DEFAULT):
   # Convert latitude and longitude to radians
   lat1 = math.radians(home[0])
   long1 = math.radians(home[1])
@@ -156,13 +137,13 @@ def distance_from_flight_to_location(flight, location_lat, location_lon, destina
 
 class Overhead:
     def __init__(self):
-        self._api = AdsbTrackerService()
+        self._adsb_api = AdsbTrackerService()
+        self._geo_api = GeoService()
         self._airline_lookup = AirlineLookupService()
         self._lock = Lock()
         self._data = []
         self._new_data = False
         self._processing = False
-        self.geo = GeoUtils()
         self.dupe_tracker = {}
 
     '''
@@ -173,6 +154,9 @@ class Overhead:
             self.dupe_tracker = {k: v for k, v in self.dupe_tracker.items() if int(time.time() * 1000) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
 
     def grab_data(self):
+        while not self._geo_api._location:
+            print("Waiting for location data...")
+            sleep(1)
         Thread(target=self._grab_data).start()
 
     def _grab_data(self):
@@ -189,7 +173,7 @@ class Overhead:
                 self._processing = True
             print(f'thread {threading.current_thread().ident} obtained lock')
 
-            flights = self._api.get_nearby_flight(self.geo.get_home_lat(), self.geo.get_home_lon(), config.RADIUS)
+            flights = self._adsb_api.get_nearby_flight(self._geo_api.get_home_lat(), self._geo_api.get_home_lon(), config.RADIUS)
 
             if not flights:
                 with self._lock:
@@ -197,7 +181,7 @@ class Overhead:
                     self._processing = False
                 return
 
-            flights = sorted(flights, key=lambda f: distance_from_flight_to_home(f))
+            flights = sorted(flights, key=lambda f: distance_from_flight_to_home(f, [self._geo_api.get_home_lat(), self._geo_api.get_home_lon()]))
 
             flight = None
             for flt in flights:
@@ -236,7 +220,7 @@ class Overhead:
                 # Grab and store details
                 try:
                     print(f'thread {threading.current_thread().ident} getting route for {flight["flight"]}')
-                    details = self._api.get_routeset(flight['lat'], flight['lon'], flight['flight'])
+                    details = self._adsb_api.get_routeset(flight['lat'], flight['lon'], flight['flight'])
                     print(f'thread {threading.current_thread().ident} got route for {flight["flight"]}')
 
                     # Get plane type

@@ -21,19 +21,27 @@ JOURNEY_BLANK_FILLER = " ? "
 HAT_PWM_ENABLED = False
 FORECAST_DAYS = 3 # today plus the next two days
 
-LOCATION = "Chicago, IL 60657"
+STREET = ''
+CITY = "Chicago"
+ZIP_CODE = "60657"
+STATE = "IL"
+COUNTRY = "USA"
+
 LOCATION_CACHE_TIMEOUT = 30 # minutes
 RADIUS = 30 # nautical miles
+LOCATION_COORDINATES_DEFAULT = [41.8755616, -87.6244212] # Chicago, IL
 
 DUPLICATION_AVOIDANCE_TTL = 5 # minutes
 
-LIVE = False # True for live data, False for sandbox
 
 # TODO: Once the adsb.lol API requires a key, update the secret with the key, and update this field accordingly.
-API_TOKEN_KEY_NAME = 'api_key' if LIVE else 'api_key_sandbox'
+RAPIDAPI_TOKEN_KEYNAME = 'rapidapi_key'
 AWS_ACCESS_KEY_ID_NAME = 'ACCESS_KEY_ID'
 AWS_SECRET_ACCESS_KEY_NAME = 'SECRET_ACCESS_KEY'
 AWS_REGION = 'us-east-2' # Ohio
 
 ADSB_API_SECRET_NAME = '' # TODO: update this value to include the secret name from AWS secrets.
 ADSB_LOL_URL = 'api.adsb.lol'
+
+RAPIDAPI_KEY_NAME = 'plane_tracker_api_key'
+RAPIDAPI_HOST = 'forward-reverse-geocoding.p.rapidapi.com'
