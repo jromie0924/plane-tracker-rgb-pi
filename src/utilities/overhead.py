@@ -53,11 +53,11 @@ def polar_to_cartesian(lat, long, alt):
             alt * math.cos(DEG2RAD * lat) * math.cos(DEG2RAD * long),
         ]
 
-
+# TODO: this doesn't seem to be correct. https://community.esri.com/t5/coordinate-reference-systems-blog/distance-on-a-sphere-the-haversine-formula/ba-p/902128
 def distance_from_flight_to_home(flight, home=LOCATION_DEFAULT):
     try:
         # Convert latitude and longitude from degrees to radians
-        lat1, lon1 = math.radians(flight.latitude), math.radians(flight.longitude)
+        lat1, lon1 = math.radians(flight['lat']), math.radians(flight['lon'])
         lat2, lon2 = math.radians(home[0]), math.radians(home[1])
 
         # Differences in coordinates
@@ -170,7 +170,7 @@ class Overhead:
     '''
     def analyze_dupe_tracker(self):
         if len(self.dupe_tracker) > 1000:
-            self.dupe_tracker = {k: v for k, v in self.dupe_tracker.items() if round(time.time() * 1000) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
+            self.dupe_tracker = {k: v for k, v in self.dupe_tracker.items() if int(time.time() * 1000) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
 
     def grab_data(self):
         Thread(target=self._grab_data).start()
@@ -179,7 +179,8 @@ class Overhead:
         # Mark data as old
         data = []
 
-        # TODO: call a method to clear the cache once it reaches a certain size
+        print(f'Cleansing duplication mapping with {len(self.dupe_tracker)} entries.')
+        self.analyze_dupe_tracker()
 
         # Grab flight details
         try:
@@ -208,7 +209,7 @@ class Overhead:
                             self.dupe_tracker[flt['hex']] = timestamp
                     else:
                         flight = flt
-                        self.dupe_tracker[flt['hex']] = round(time.time() * 1000)
+                        self.dupe_tracker[flt['hex']] = int(time.time() * 1000)
                     break
 
             # Sort flights by closest first
@@ -383,7 +384,7 @@ class Overhead:
                             "registration": flight['r'],
                             "distance_origin": distance_origin,
                             "distance_destination": distance_destination,
-                            "distance": flight['dst'],
+                            "distance": distance_from_flight_to_home(flight),
                             "direction": degrees_to_cardinal(plane_bearing(flight)),
                             "ground_speed": flight['gs'],
                             "altitude": flight['alt_geom']

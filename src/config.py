@@ -22,6 +22,7 @@ HAT_PWM_ENABLED = False
 FORECAST_DAYS = 3 # today plus the next two days
 
 LOCATION = "Chicago, IL 60657"
+LOCATION_CACHE_TIMEOUT = 30 # minutes
 RADIUS = 30 # nautical miles
 
 DUPLICATION_AVOIDANCE_TTL = 5 # minutes
