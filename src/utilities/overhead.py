@@ -19,7 +19,7 @@ from urllib3.exceptions import MaxRetryError
 RETRIES = 3
 RATE_LIMIT_DELAY = 1
 MAX_FLIGHT_LOOKUP = 5
-EARTH_RADIUS_M = 3958.8  # Earth's radius in miles
+EARTH_RADIUS_M = 6371000 # Earth's radius in m
 BLANK_FIELDS = ["", "N/A", "NONE", "UNKNOWN"]
 NW = 315 #degrees
 SE = 135 #degrees
@@ -35,28 +35,45 @@ def polar_to_cartesian(lat, long, alt):
         ]
 
 # TODO: this doesn't seem to be correct. https://community.esri.com/t5/coordinate-reference-systems-blog/distance-on-a-sphere-the-haversine-formula/ba-p/902128
-def distance_from_flight_to_home(flight, home=config.LOCATION_COORDINATES_DEFAULT):
-    try:
-        # Convert latitude and longitude from degrees to radians
-        lat1, lon1 = math.radians(flight['lat']), math.radians(flight['lon'])
-        lat2, lon2 = math.radians(home[0]), math.radians(home[1])
+def distance_from_flight_to_location(flight, home=config.LOCATION_COORDINATES_DEFAULT):
+    lat1, lon1 = flight['lat'], flight['lon']
+    lat2, lon2 = home[0], home[1]
 
-        # Differences in coordinates
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
+    R = EARTH_RADIUS_M # Earth's radius in meters
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
 
-        # Haversine formula
-        a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
 
-        # Haversine distance in miles using the defined Earth radius
-        dist_miles = EARTH_RADIUS_M * c
+    a = math.sin(delta_phi / 2.0)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2.0)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
-        return dist_miles
+    meters = R * c # output distance in meters
+    miles = round(meters * 0.000621371, 2) # output distance in miles
+    
+    return miles
+    # try:
+    #     # Convert latitude and longitude from degrees to radians
+    #     lat1, lon1 = math.radians(flight['lat']), math.radians(flight['lon'])
+    #     lat2, lon2 = math.radians(home[0]), math.radians(home[1])
 
-    except AttributeError:
-        # on error say it's far away
-        return 1e6
+    #     # Differences in coordinates
+    #     dlat = lat2 - lat1
+    #     dlon = lon2 - lon1
+
+    #     # Haversine formula
+    #     a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+    #     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    #     # Haversine distance in miles using the defined Earth radius
+    #     dist_miles = EARTH_RADIUS_M * c
+
+    #     return dist_miles
+
+    # except AttributeError:
+    #     # on error say it's far away
+    #     return 1e6
                
 def plane_bearing(flight, home=config.LOCATION_COORDINATES_DEFAULT):
   # Convert latitude and longitude to radians
@@ -112,27 +129,27 @@ def degrees_to_cardinal(d):
 #         print("Flight data is missing required attributes: latitude, longitude, or altitude")
 #         return None
 
-def distance_from_flight_to_location(flight, location_lat, location_lon, destination_altitude):
-    try:
-        # Convert latitude and longitude from degrees to radians
-        lat1, lon1 = math.radians(flight['lat']), math.radians(flight['lon'])
-        lat2, lon2 = math.radians(location_lat), math.radians(location_lon)
+# def distance_from_flight_to_location(flight, location_lat, location_lon, destination_altitude):
+#     try:
+#         # Convert latitude and longitude from degrees to radians
+#         lat1, lon1 = math.radians(flight['lat']), math.radians(flight['lon'])
+#         lat2, lon2 = math.radians(location_lat), math.radians(location_lon)
 
-        # Differences in coordinates
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
+#         # Differences in coordinates
+#         dlat = lat2 - lat1
+#         dlon = lon2 - lon1
 
-        # Haversine formula
-        a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+#         # Haversine formula
+#         a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+#         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
-        # Haversine distance in miles using the defined Earth radius
-        dist_miles = EARTH_RADIUS_M * c
+#         # Haversine distance in miles using the defined Earth radius
+#         dist_miles = EARTH_RADIUS_M * c
 
-        return dist_miles
-    except Exception as e:
-        print("Error:", e)
-        return None
+#         return dist_miles
+#     except Exception as e:
+#         print("Error:", e)
+#         return None
 
 
 class Overhead:
@@ -181,7 +198,7 @@ class Overhead:
                     self._processing = False
                 return
 
-            flights = sorted(flights, key=lambda f: distance_from_flight_to_home(f, [self._geo_api.get_home_lat(), self._geo_api.get_home_lon()]))
+            flights = sorted(flights, key=lambda f: distance_from_flight_to_location(f, [self._geo_api.get_home_lat(), self._geo_api.get_home_lon()]))
 
             flight = None
             for flt in flights:
@@ -322,10 +339,7 @@ class Overhead:
                     #         origin_altitude
                     #     )
 
-                    distance_origin = distance_from_flight_to_location(flight,
-                                                                        origin['lat'],
-                                                                        origin['lon'],
-                                                                        origin['alt_feet'])
+                    distance_origin = distance_from_flight_to_location(flight, [origin['lat'], origin['lon']])
 
                     # if destination_latitude is not None:
                     #     distance_destination = distance_from_flight_to_origin(
@@ -335,11 +349,8 @@ class Overhead:
                     #         destination_altitude
                     #     )
 
-                    distance_destination = distance_from_flight_to_location(flight,
-                                                                                destination['lat'],
-                                                                                destination['lon'],
-                                                                                destination['alt_feet'])
-                        
+                    distance_destination = distance_from_flight_to_location(flight, [destination['lat'], destination['lon']])
+
 
                     # Get owner icao
                     owner_icao = details['airline_code']
@@ -368,7 +379,7 @@ class Overhead:
                             "registration": flight['r'],
                             "distance_origin": distance_origin,
                             "distance_destination": distance_destination,
-                            "distance": distance_from_flight_to_home(flight),
+                            "distance": distance_from_flight_to_location(flight, self._geo_api.get_home_location()),
                             "direction": degrees_to_cardinal(plane_bearing(flight)),
                             "ground_speed": flight['gs'],
                             "altitude": flight['alt_geom']

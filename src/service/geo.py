@@ -71,7 +71,9 @@ class GeoService():
     with open('src/app_data/geo_cache.json', 'w') as f:
       json.dump({'location': self._location, 'timestamp': time.time() * 1000}, f)
     
-  
+  def get_home_location(self):
+    return self._location
+
   def get_home_lat(self):
     return self._location[0]
 
