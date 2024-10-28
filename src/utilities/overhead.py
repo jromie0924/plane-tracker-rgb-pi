@@ -34,8 +34,9 @@ def polar_to_cartesian(lat, long, alt):
             alt * math.cos(DEG2RAD * lat) * math.cos(DEG2RAD * long),
         ]
 
-# TODO: this doesn't seem to be correct. https://community.esri.com/t5/coordinate-reference-systems-blog/distance-on-a-sphere-the-haversine-formula/ba-p/902128
-def distance_from_flight_to_location(flight, home=config.LOCATION_COORDINATES_DEFAULT):
+# https://community.esri.com/t5/coordinate-reference-systems-blog/distance-on-a-sphere-the-haversine-formula/ba-p/902128
+# Haversine formula
+def distance_from_flight_to_location(flight, home=[0,0]):
     lat1, lon1 = flight['lat'], flight['lon']
     lat2, lon2 = home[0], home[1]
 
@@ -53,27 +54,6 @@ def distance_from_flight_to_location(flight, home=config.LOCATION_COORDINATES_DE
     miles = round(meters * 0.000621371, 2) # output distance in miles
     
     return miles
-    # try:
-    #     # Convert latitude and longitude from degrees to radians
-    #     lat1, lon1 = math.radians(flight['lat']), math.radians(flight['lon'])
-    #     lat2, lon2 = math.radians(home[0]), math.radians(home[1])
-
-    #     # Differences in coordinates
-    #     dlat = lat2 - lat1
-    #     dlon = lon2 - lon1
-
-    #     # Haversine formula
-    #     a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
-    #     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
-    #     # Haversine distance in miles using the defined Earth radius
-    #     dist_miles = EARTH_RADIUS_M * c
-
-    #     return dist_miles
-
-    # except AttributeError:
-    #     # on error say it's far away
-    #     return 1e6
                
 def plane_bearing(flight, home=config.LOCATION_COORDINATES_DEFAULT):
   # Convert latitude and longitude to radians
@@ -102,55 +82,6 @@ def degrees_to_cardinal(d):
             "S",  "SW",  "W",  "NW",]
     ix = int((d + 22.5)/45)
     return dirs[ix % 8]
-
-# def distance_from_flight_to_origin(flight, origin_latitude, origin_longitude, origin_altitude):
-#     if hasattr(flight, 'latitude') and hasattr(flight, 'longitude') and hasattr(flight, 'altitude'):
-#         try:
-#             # Convert latitude and longitude from degrees to radians
-#             lat1, lon1 = math.radians(flight.latitude), math.radians(flight.longitude)
-#             lat2, lon2 = math.radians(origin_latitude), math.radians(origin_longitude)
-
-#             # Differences in coordinates
-#             dlat = lat2 - lat1
-#             dlon = lon2 - lon1
-
-#             # Haversine formula
-#             a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
-#             c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
-#             # Haversine distance in miles using the defined Earth radius
-#             dist_miles = EARTH_RADIUS_M * c
-
-#             return dist_miles
-#         except Exception as e:
-#             print("Error:", e)
-#             return None
-#     else:
-#         print("Flight data is missing required attributes: latitude, longitude, or altitude")
-#         return None
-
-# def distance_from_flight_to_location(flight, location_lat, location_lon, destination_altitude):
-#     try:
-#         # Convert latitude and longitude from degrees to radians
-#         lat1, lon1 = math.radians(flight['lat']), math.radians(flight['lon'])
-#         lat2, lon2 = math.radians(location_lat), math.radians(location_lon)
-
-#         # Differences in coordinates
-#         dlat = lat2 - lat1
-#         dlon = lon2 - lon1
-
-#         # Haversine formula
-#         a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
-#         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
-#         # Haversine distance in miles using the defined Earth radius
-#         dist_miles = EARTH_RADIUS_M * c
-
-#         return dist_miles
-#     except Exception as e:
-#         print("Error:", e)
-#         return None
-
 
 class Overhead:
     def __init__(self):
@@ -213,16 +144,6 @@ class Overhead:
                         self.dupe_tracker[flt['hex']] = int(time.time() * 1000)
                     break
 
-            # Sort flights by closest first
-            # print(f'thread {threading.current_thread().ident} sorting flights')
-
-            # flights = [f for f in flights if f['alt_geom'] <= config.MAX_ALTITUDE and f['alt_geom'] >= config.MIN_ALTITUDE]
-
-            # print(f'thread {threading.current_thread().ident} finished sorting flights')
-            # flights = sorted(flights, key=lambda f: distance_from_flight_to_home(f))
-
-            # print(f'thread {threading.current_thread().ident} processing {len(flights)} flights')
-            # for flight in flights[:MAX_FLIGHT_LOOKUP]:
             retries = RETRIES
 
             while retries:
@@ -250,12 +171,6 @@ class Overhead:
                     # Tidy up what we pass along
                     plane = plane if not (plane.upper() in BLANK_FIELDS) else ""
 
-                    # origin = (
-                    #     flight.origin_airport_iata
-                    #     if not (flight.origin_airport_iata.upper() in BLANK_FIELDS)
-                    #     else ""
-                    # )
-
                     # origin = details['_airports'][len(details['_airports']) - 2:][0]
                     airport_details = details['_airports'][len(details['_airports']) - 2:]
 
@@ -266,89 +181,20 @@ class Overhead:
                         origin = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
                         destination = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
 
-                    # destination = (
-                    #     flight.destination_airport_iata
-                    #     if not (flight.destination_airport_iata.upper() in BLANK_FIELDS)
-                    #     else ""
-                    # )
-                    
-                    # destination = details['_airports'][len(details['_airports']) - 2:][1]
-
-                    # callsign = (
-                    #     flight.callsign
-                    #     if not (flight.callsign.upper() in BLANK_FIELDS)
-                    #     else ""
-                    # )
                     callsign: str = flight['flight']
                     if callsign.upper() in BLANK_FIELDS:
                         callsign = ''
-
-                    # Get airline type
-                    # try:
-                    #     airline = details["airline"]["name"]
-                    # except (KeyError, TypeError):
-                    #     airline = ""
 
                     if (details['airline_code']):
                         airline = self._airline_lookup.lookup(details['airline_code'])
                     else:
                         airline = ''
 
-                        
-                    # Get departure and arrival times
-                    try:
-                        time_scheduled_departure = details["time"]["scheduled"]["departure"]
-                        time_scheduled_arrival = details["time"]["scheduled"]["arrival"]
-                        time_real_departure = details["time"]["real"]["departure"]
-                        time_estimated_arrival = details["time"]["estimated"]["arrival"]
-                    except (KeyError, TypeError):
-                        time_scheduled_departure = None
-                        time_scheduled_arrival = None
-                        time_real_departure = None
-                        time_estimated_arrival = None
-                        
-                    # Extract origin airport coordinates
-                    # origin_latitude = None
-                    # origin_longitude = None
-                    # origin_altitude = None
-                    # if details['airport']['origin'] is not None:
-                    #     origin_latitude = details['airport']['origin']['position']['latitude']
-                    #     origin_longitude = details['airport']['origin']['position']['longitude']
-                    #     origin_altitude = details['airport']['origin']['position']['altitude']
-                        #print("Origin Coordinates:", origin_latitude, origin_longitude, origin_altitude)
-
-                    # Extract destination airport coordinates
-                    # destination_latitude = None
-                    # destination_longitude = None
-                    # destination_altitude = None
-                    # if details['airport']['destination'] is not None:
-                    #     destination_latitude = details['airport']['destination']['position']['latitude']
-                    #     destination_longitude = details['airport']['destination']['position']['longitude']
-                    #     destination_altitude = details['airport']['destination']['position']['altitude']
-                        #print("Destination Coordinates:", destination_latitude, destination_longitude, destination_altitude)
-
                     # Calculate distances using modified functions
                     distance_origin = 0
                     distance_destination = 0
 
-                    # if origin_latitude is not None:
-                    #     distance_origin = distance_from_flight_to_origin(
-                    #         flight,
-                    #         origin_latitude,
-                    #         origin_longitude,
-                    #         origin_altitude
-                    #     )
-
                     distance_origin = distance_from_flight_to_location(flight, [origin['lat'], origin['lon']])
-
-                    # if destination_latitude is not None:
-                    #     distance_destination = distance_from_flight_to_origin(
-                    #         flight,
-                    #         destination_latitude,
-                    #         destination_longitude,
-                    #         destination_altitude
-                    #     )
-
                     distance_destination = distance_from_flight_to_location(flight, [destination['lat'], destination['lon']])
 
 
