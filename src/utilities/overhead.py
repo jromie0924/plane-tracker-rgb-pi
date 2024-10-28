@@ -130,6 +130,7 @@ class Overhead:
                 return
 
             flights = sorted(flights, key=lambda f: distance_from_flight_to_location(f, [self._geo_api.get_home_lat(), self._geo_api.get_home_lon()]))
+            print(f'Retrieved {len(flights)} flights')
 
             flight = None
             for flt in flights:
@@ -147,11 +148,6 @@ class Overhead:
             retries = RETRIES
 
             while retries:
-                # Rate limit protection
-                print(f'thread {threading.current_thread().ident} sleeping...')
-                sleep(RATE_LIMIT_DELAY)
-                print(f'thread {threading.current_thread().ident} waking up...')
-
                 if flight is None:
                     break
 
