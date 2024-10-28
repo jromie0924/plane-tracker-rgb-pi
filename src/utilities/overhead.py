@@ -121,7 +121,7 @@ class Overhead:
                 self._processing = True
             print(f'thread {threading.current_thread().ident} obtained lock')
 
-            flights = self._adsb_api.get_nearby_flight(self._geo_api.get_home_lat(), self._geo_api.get_home_lon(), config.RADIUS)
+            flights = self._adsb_api.get_nearby_flights(self._geo_api.get_home_lat(), self._geo_api.get_home_lon(), config.RADIUS)
 
             if not flights:
                 with self._lock:
