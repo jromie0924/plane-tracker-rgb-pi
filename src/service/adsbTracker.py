@@ -41,37 +41,49 @@ class AdsbTrackerService():
     return '/api/0/routeset'
   
 
+  # TODO: wrap this in a try-catch and handle failed connections gracefully.
+  #
   # Gets nearby flights given a latitude, longitude, and radius in nautical miles.
   def get_nearby_flights(self, lat, long, radius):
     print(f'Thread ID {threading.current_thread().ident} inside get_nearby_flight()')
     print(f'number of threads: {threading.active_count()}')
-    conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
-    conn.request('GET',
-                      self._get_nearby_flight_url(lat, long, radius),
-                      '',
-                      self._get_headers())
-    response = conn.getresponse()
 
-    if response.status != 200:
-      return None
-    
-    data = self.decode_response_payload(response.read())
-
-    if data is None or 'ac' not in data:
-      return None
-    
     try:
-      filter_field = 'alt_baro'
-      data = [x for x in data['ac'] if filter_field in x and type(x[filter_field]) is int]
-    except KeyError as e:
-      with open('error_log.json', 'w') as f:
-        json.dump(data, f)
+      conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
+      conn.request('GET',
+                        self._get_nearby_flight_url(lat, long, radius),
+                        '',
+                        self._get_headers())
+      response = conn.getresponse()
+
+      if response.status != 200:
+        return None
+      
+      data = self.decode_response_payload(response.read())
+
+      if data is None or 'ac' not in data:
+        return None
+      
+      try:
+        filter_field = 'alt_baro'
+        data = [x for x in data['ac'] if filter_field in x and type(x[filter_field]) is int]
+      except KeyError as e:
+        with open('error_log.json', 'w') as f:
+          json.dump(data, f)
+        return None
+
+      conn.close()
+
+      # return sorted(data, key=lambda x: x['dst'])
+      return data
+
+    except Exception as e:
+      self.logger.error(f'Error getting nearby flights: {e}')
+      try: # attempt to close the connection if it's open
+        conn.close()
+      except Exception:
+        pass
       return None
-
-    conn.close()
-
-    # return sorted(data, key=lambda x: x['dst'])
-    return data
 
 
   # Attempts to get the route of an airplane by callsign
@@ -82,34 +94,41 @@ class AdsbTrackerService():
     print(f'number of threads: {threading.active_count()}')
     if not callsign:
       return self._default_routeset
-    
-    conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
+    try:
+      conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
 
-    payload = {
-      "planes": [
-        {
-          "callsign": callsign.strip(),
-          "lat": lat,
-          "lng": long
-        }
-      ]
-    }
+      payload = {
+        "planes": [
+          {
+            "callsign": callsign.strip(),
+            "lat": lat,
+            "lng": long
+          }
+        ]
+      }
 
-    conn.request('POST',
-                      self._get_routeset_url(),
-                      json.dumps(payload),
-                      self._get_headers())
-    
-    response = conn.getresponse()
-    
-    if response.status != 200:
-      return self._default_routeset
+      conn.request('POST',
+                        self._get_routeset_url(),
+                        json.dumps(payload),
+                        self._get_headers())
+      
+      response = conn.getresponse()
+      
+      if response.status != 200:
+        return self._default_routeset
 
-    data = self.decode_response_payload(response.read())
+      data = self.decode_response_payload(response.read())
 
-    conn.close()
+      conn.close()
 
-    if data is None or len(data[0]['_airports']) == 0:
-      return self._default_routeset
-    
-    return data[0]
+      if data is None or len(data[0]['_airports']) == 0:
+        return self._default_routeset
+      
+      return data[0]
+    except Exception as e:
+      self.logger.error(f'Error getting routeset: {e}')
+      try: # attempt to close the connection if it's open
+        conn.close()
+      except Exception:
+        pass
+      return None

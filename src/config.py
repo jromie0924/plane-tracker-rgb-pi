@@ -1,15 +1,7 @@
-# TODO delete this config field
-ZONE_HOME = {
-    "tl_y": 42.039866, # Top-Left Latitude (deg) https://www.latlong.net/
-    "tl_x": -87.826548, # Top-Left Longitude (deg)
-    "br_y": 41.841827, # Bottom-Right Latitude (deg)
-    "br_x": -87.456101 # Bottom-Right Longitude (deg)
-}
-
 DISTANCE_UNITS = "imperial"
 CLOCK_FORMAT = "24hr" #use 12hr or 24hr
 MIN_ALTITUDE = 2500 #feet
-MAX_ALTITUDE = 50000  # feet
+MAX_ALTITUDE = 100000  # feet
 BRIGHTNESS = 100
 BRIGHTNESS_NIGHT = 50
 NIGHT_BRIGHTNESS = False #True for on False for off
