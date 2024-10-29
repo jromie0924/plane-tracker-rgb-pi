@@ -6,7 +6,14 @@ import time
 from service.authentication import AuthenticationService
 
 '''
-Default coordinates were taken from https://www.gps-coordinates.net/
+This class uses a cache file to store the home location coordinates.
+If the cache file is not found, or if the cache has expired, the class
+will make a request to the RapidAPI Geocoding API to get the home
+location coordinates. The class will then update the cache file with
+the new coordinates.
+
+This is to prevent making unnecessary requests to the RapidAPI
+Geocoding service.
 '''
 
 filepath = 'src/app_data/geo_cache.json'
