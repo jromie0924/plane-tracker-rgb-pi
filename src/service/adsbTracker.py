@@ -17,7 +17,7 @@ class AdsbTrackerService():
     # self._fr24_api_token = auth.flightradar24_token
     # self.conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
     self.logger = logging.getLogger(__name__)
-    with open('src/app_data/loc_default.json', 'r') as f:
+    with open('src/app_data/routeset_default.json', 'r') as f:
       self._default_routeset = json.load(f)
 
   def decode_response_payload(self, data: bytes):
@@ -90,8 +90,8 @@ class AdsbTrackerService():
   # The lat & long values are used to calculate a plausibility of the route.
   def get_routeset(self, lat=0, long=0, callsign=''):
     # self.logger.info(f'Retrieving route for flight {callsign}')
-    print(f'Thread ID {threading.current_thread().ident} inside get_routeset()')
-    print(f'number of threads: {threading.active_count()}')
+    print(f'Thread ID {threading.current_thread().ident} getting route for {callsign}')
+  
     if not callsign:
       return self._default_routeset
     try:
@@ -126,9 +126,9 @@ class AdsbTrackerService():
       
       return data[0]
     except Exception as e:
-      self.logger.error(f'Error getting routeset: {e}')
+      print(f'Error getting routeset: {e}')
       try: # attempt to close the connection if it's open
         conn.close()
       except Exception:
         pass
-      return None
+      return self._default_routeset

@@ -132,113 +132,115 @@ class Overhead:
             flights = sorted(flights, key=lambda f: distance_from_flight_to_location(f, [self._geo_api.get_home_lat(), self._geo_api.get_home_lon()]))
             print(f'Retrieved {len(flights)} flights')
 
-            flight = None
-            for flt in flights:
-                if flt['alt_baro'] <= config.MAX_ALTITUDE and flt['alt_baro'] >= config.MIN_ALTITUDE:
-                    if flt['hex'] in self.dupe_tracker:
-                        timestamp = round(time.time() * 1000)
-                        if timestamp - self.dupe_tracker[flt['hex']] > config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000:
+            # Choose a flight to display based on altitude and distance
+            # If no flights are found with plausible or existing routes, return None
+            def choose_flight(flights):
+                flight, route = None, None
+
+                # Get route details for a flight
+                def get_details(flt):
+                    return self._adsb_api.get_routeset(flt['lat'], flt['lon'], flt['flight'])
+
+                for flt in flights:
+                    if flt['alt_baro'] <= config.MAX_ALTITUDE and flt['alt_baro'] >= config.MIN_ALTITUDE:
+                        if flt['hex'] in self.dupe_tracker:
+                            timestamp = round(time.time() * 1000)
+                            if timestamp - self.dupe_tracker[flt['hex']] > config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000:
+                                flight = flt
+                                route = get_details(flt)
+                        else:
+                            self.dupe_tracker[flt['hex']] = round(time.time() * 1000)
                             flight = flt
-                            self.dupe_tracker[flt['hex']] = timestamp
+                            route = get_details(flt)
+                    if route and route['plausible']:
+                        break
                     else:
-                        flight = flt
-                        self.dupe_tracker[flt['hex']] = int(time.time() * 1000)
-                    break
+                        route = None
+                return (flight, route) if flight and route else (None, None)
 
-            retries = RETRIES
+            flight, route = choose_flight(flights)
 
-            while retries:
-                print(f'thread {threading.current_thread().ident} retries {retries}')
-                sleep(RATE_LIMIT_DELAY)
-                if flight is None:
-                    break
-
-                # Grab and store details
+            if flight and route and route['plausible']:
+                # Get plane type
                 try:
-                    print(f'thread {threading.current_thread().ident} getting route for {flight["flight"]}')
-                    details = self._adsb_api.get_routeset(flight['lat'], flight['lon'], flight['flight'])
-                    print(f'thread {threading.current_thread().ident} got route for {flight["flight"]}')
+                    # plane = details["aircraft"]["model"]["code"]
+                    plane = flight['t']
+                except (KeyError, TypeError):
+                    plane = ""
 
-                    # Get plane type
+                # Tidy up what we pass along
+                plane = plane if not (plane.upper() in BLANK_FIELDS) else ""
+
+                # origin = details['_airports'][len(details['_airports']) - 2:][0]
+                airport_details = route['_airports'][len(route['_airports']) - 2:]
+
+                if len(airport_details):
+                    origin = airport_details[0]
+                    destination = airport_details[1]
+                else:
+                    origin = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
+                    destination = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
+
+                callsign: str = flight['flight']
+                if callsign.upper() in BLANK_FIELDS:
+                    callsign = ''
+
+                if (route['airline_code']):
+                    airline = self._airline_lookup.lookup(route['airline_code'])
+                else:
+                    airline = ''
+
+                # Calculate distances using modified functions
+                distance_origin = 0
+                distance_destination = 0
+
+                distance_origin = distance_from_flight_to_location(flight, [origin['lat'], origin['lon']])
+                distance_destination = distance_from_flight_to_location(flight, [destination['lat'], destination['lon']])
+
+
+                # Get owner icao
+                owner_icao = route['airline_code']
+
+                # owner_iata = flight.airline_iata or "N/A"
+                owner_iata = airline or 'N/A'
+
+                try:
+                    vertical_speed = flight['baro_rate']
+                except KeyError:
                     try:
-                        # plane = details["aircraft"]["model"]["code"]
-                        plane = flight['t']
-                    except (KeyError, TypeError):
-                        plane = ""
-
-                    # Tidy up what we pass along
-                    plane = plane if not (plane.upper() in BLANK_FIELDS) else ""
-
-                    # origin = details['_airports'][len(details['_airports']) - 2:][0]
-                    airport_details = details['_airports'][len(details['_airports']) - 2:]
-
-                    if len(airport_details):
-                        origin = airport_details[0]
-                        destination = airport_details[1]
-                    else:
-                        origin = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
-                        destination = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
-
-                    callsign: str = flight['flight']
-                    if callsign.upper() in BLANK_FIELDS:
-                        callsign = ''
-
-                    if (details['airline_code']):
-                        airline = self._airline_lookup.lookup(details['airline_code'])
-                    else:
-                        airline = ''
-
-                    # Calculate distances using modified functions
-                    distance_origin = 0
-                    distance_destination = 0
-
-                    distance_origin = distance_from_flight_to_location(flight, [origin['lat'], origin['lon']])
-                    distance_destination = distance_from_flight_to_location(flight, [destination['lat'], destination['lon']])
-
-
-                    # Get owner icao
-                    owner_icao = details['airline_code']
-
-                    # owner_iata = flight.airline_iata or "N/A"
-                    owner_iata = airline or 'N/A'
-
-                    try:
-                        vertical_speed = flight['baro_rate']
+                        vertical_speed = flight['geom_rate']
                     except KeyError:
-                        try:
-                            vertical_speed = flight['geom_rate']
-                        except KeyError:
-                            vertical_speed = 0
-                        
-                    data.append(
-                        {
-                            "airline": airline,
-                            "plane": plane,
-                            "origin": origin['iata'],
-                            "owner_iata":owner_iata,
-                            "owner_icao": owner_icao,
-                            "destination": destination['iata'],
-                            "vertical_speed": vertical_speed,
-                            "callsign": callsign,
-                            "registration": flight['r'],
-                            "distance_origin": distance_origin,
-                            "distance_destination": distance_destination,
-                            "distance": distance_from_flight_to_location(flight, self._geo_api.get_home_location()),
-                            "direction": degrees_to_cardinal(plane_bearing(flight)),
-                            "ground_speed": flight['gs'],
-                            "altitude": flight['alt_geom']
-                        }
-                    )
-                
-                    break
+                        vertical_speed = 0
+                    
+                data.append(
+                    {
+                        "airline": airline,
+                        "plane": plane,
+                        "origin": origin['iata'],
+                        "owner_iata":owner_iata,
+                        "owner_icao": owner_icao,
+                        "destination": destination['iata'],
+                        "vertical_speed": vertical_speed,
+                        "callsign": callsign,
+                        "registration": flight['r'],
+                        "distance_origin": distance_origin,
+                        "distance_destination": distance_destination,
+                        "distance": distance_from_flight_to_location(flight, self._geo_api.get_home_location()),
+                        "direction": degrees_to_cardinal(plane_bearing(flight)),
+                        "ground_speed": flight['gs'],
+                        "altitude": flight['alt_geom']
+                    }
+                )
+                with self._lock:
+                    self._new_data = len(data) > 0
+                    self._processing = False
+                    self._data = data
+            else:
+                print(f'No IFR flight found in the area.')
+                with self._lock:
+                    self._new_data = False
+                    self._processing = False
 
-                except (KeyError, AttributeError) as e:
-                    retries -= 1
-
-            with self._lock:
-                self._new_data = len(data) > 0
-                self._processing = False
-                self._data = data
 
         except (ConnectionError, NewConnectionError, MaxRetryError):
             print("HERE")
