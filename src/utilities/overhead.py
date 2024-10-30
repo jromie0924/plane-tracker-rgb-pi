@@ -86,7 +86,7 @@ def degrees_to_cardinal(d):
 class Overhead:
     def __init__(self):
         self._adsb_api = AdsbTrackerService()
-        self._geo_api = GeoService()
+        self._geo_service = GeoService()
         self._airline_lookup = AirlineLookupService()
         self._lock = Lock()
         self._data = []
@@ -102,7 +102,7 @@ class Overhead:
             self.dupe_tracker = {k: v for k, v in self.dupe_tracker.items() if int(time.time() * 1000) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
 
     def grab_data(self):
-        while not self._geo_api._location:
+        while not self._geo_service._location:
             print("Waiting for location data...")
             sleep(1)
         Thread(target=self._grab_data).start()
@@ -121,7 +121,7 @@ class Overhead:
                 self._processing = True
             print(f'thread {threading.current_thread().ident} obtained lock')
 
-            flights = self._adsb_api.get_nearby_flights(self._geo_api.get_home_lat(), self._geo_api.get_home_lon(), config.RADIUS)
+            flights = self._adsb_api.get_nearby_flights(self._geo_service.latitude, self._geo_service.longitude, config.RADIUS)
 
             if not flights:
                 with self._lock:
@@ -129,7 +129,7 @@ class Overhead:
                     self._processing = False
                 return
 
-            flights = sorted(flights, key=lambda f: distance_from_flight_to_location(f, [self._geo_api.get_home_lat(), self._geo_api.get_home_lon()]))
+            flights = sorted(flights, key=lambda f: distance_from_flight_to_location(f, [self._geo_service.latitude, self._geo_service.longitude]))
             print(f'Retrieved {len(flights)} flights')
 
             # Choose a flight to display based on altitude and distance
@@ -225,7 +225,7 @@ class Overhead:
                         "registration": flight['r'],
                         "distance_origin": distance_origin,
                         "distance_destination": distance_destination,
-                        "distance": distance_from_flight_to_location(flight, self._geo_api.get_home_location()),
+                        "distance": distance_from_flight_to_location(flight, self._geo_service.location),
                         "direction": degrees_to_cardinal(plane_bearing(flight)),
                         "ground_speed": flight['gs'],
                         "altitude": flight['alt_geom']
