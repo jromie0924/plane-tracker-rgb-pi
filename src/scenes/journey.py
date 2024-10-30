@@ -43,7 +43,7 @@ class JourneyScene(object):
     def __init__(self):
         super().__init__()
 
-    @Animator.KeyFrame.add(0)
+    @Animator.KeyFrame.add(0, scene_name="journey")
     def journey(self):
         # Guard against no data
         if len(self._data) == 0:
@@ -139,7 +139,7 @@ class JourneyScene(object):
             )
             distance_destination_text_length += ch_length
 
-    @Animator.KeyFrame.add(0)
+    @Animator.KeyFrame.add(0, scene_name="journey")
     def journey_arrow(self):
         # Guard against no data
         if len(self._data) == 0:

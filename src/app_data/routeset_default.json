@@ -4,5 +4,6 @@
   "airline_code": "unknown",
   "airport_codes": "unknown",
   "callsign": "jl;",
-  "number": "unknown"
+  "number": "unknown",
+  "plausible": 0
 }

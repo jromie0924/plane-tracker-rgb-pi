@@ -27,7 +27,7 @@ class FlightDetailsScene(object):
         self._data_all_looped = False
         self.flight_details_length = 0
 
-    @Animator.KeyFrame.add(1)
+    @Animator.KeyFrame.add(1, scene_name="flightdetails")
     def flight_details(self, count):
 
         # Guard against no data
@@ -141,6 +141,6 @@ class FlightDetailsScene(object):
             #     self._data_all_looped = (not self._data_index) or self._data_all_looped
             #     self.reset_scene()
 
-    @Animator.KeyFrame.add(0)
+    @Animator.KeyFrame.add(0, scene_name="flightdetails")
     def reset_scrolling(self):
         self.flight_position = screen.WIDTH

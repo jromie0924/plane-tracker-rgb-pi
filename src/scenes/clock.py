@@ -50,7 +50,7 @@ class ClockScene(object):
 
     #     return self.today_sunrise, self.today_sunset
 
-    @Animator.KeyFrame.add(frames.PER_SECOND * 1)
+    @Animator.KeyFrame.add(frames.PER_SECOND * 1, scene_name="clock")
     def clock(self, count):
         if len(self._data):
             # Ensure redraw when there's new data
@@ -59,9 +59,9 @@ class ClockScene(object):
             # If there's no data to display, then draw a clock
             now = datetime.now()
             if CLOCK_FORMAT == "12hr":
-              clock_format = "%l:%M"
+                clock_format = "%l:%M"
             elif CLOCK_FORMAT == "24hr":
-              clock_format = "%H:%M"
+                clock_format = "%H:%M"
             current_time = now.strftime(clock_format)
 
             # utc_sunrise, utc_sunset = self.calculate_sunrise_sunset()

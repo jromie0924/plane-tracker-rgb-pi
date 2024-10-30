@@ -17,12 +17,16 @@ class AdsbTrackerService():
     # self._fr24_api_token = auth.flightradar24_token
     # self.conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
     self.logger = logging.getLogger(__name__)
-    with open('src/app_data/loc_default.json', 'r') as f:
+    with open('src/app_data/routeset_default.json', 'r') as f:
       self._default_routeset = json.load(f)
 
   def decode_response_payload(self, data: bytes):
-    data_str = data.decode('utf-8')
-    return json.loads(data_str)
+    try:
+      data_str = data.decode('utf-8')
+      return json.loads(data_str)
+    except json.JSONDecodeError as e:
+      self.logger.error(f'Error decoding response payload: {e}')
+      return None
   
   def _get_headers(self):
     return {
@@ -37,68 +41,93 @@ class AdsbTrackerService():
     return '/api/0/routeset'
   
 
+  # TODO: wrap this in a try-catch and handle failed connections gracefully.
+  #
   # Gets nearby flights given a latitude, longitude, and radius in nautical miles.
-  def get_nearby_flight(self, lat, long, radius):
-    sleep(5)
-    print(f'Thread ID {threading.current_thread().ident} inside get_nearby_flight()')
-    print(f'number of threads: {threading.active_count()}')
-    conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
-    conn.request('GET',
-                      self._get_nearby_flight_url(lat, long, radius),
-                      '',
-                      self._get_headers())
-    response = conn.getresponse()
-    data = self.decode_response_payload(response.read())
+  def get_nearby_flights(self, lat, long, radius):
+    print(f'Thread ID {threading.current_thread().ident} getting nearby flights')
 
-    if 'ac' not in data:
-      return None
-    
     try:
-      filter_field = 'alt_baro'
-      data = [x for x in data['ac'] if filter_field in x and type(x[filter_field]) is int]
-    except KeyError as e:
-      with open('error_log.json', 'w') as f:
-        json.dump(data, f)
-      raise e
+      conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
+      conn.request('GET',
+                        self._get_nearby_flight_url(lat, long, radius),
+                        '',
+                        self._get_headers())
+      response = conn.getresponse()
 
-    conn.close()
+      if response.status != 200:
+        return None
+      
+      data = self.decode_response_payload(response.read())
 
-    # return sorted(data, key=lambda x: x['dst'])
-    return data
+      if data is None or 'ac' not in data:
+        return None
+      
+      try:
+        filter_field = 'alt_baro'
+        data = [x for x in data['ac'] if filter_field in x and type(x[filter_field]) is int]
+      except KeyError as e:
+        with open('error_log.json', 'w') as f:
+          json.dump(data, f)
+        return None
+
+      conn.close()
+
+      # return sorted(data, key=lambda x: x['dst'])
+      return data
+
+    except Exception as e:
+      print(f'Error getting nearby flights: {e}')
+      try: # attempt to close the connection if it's open
+        conn.close()
+      except Exception:
+        pass
+      return None
 
 
   # Attempts to get the route of an airplane by callsign
   # The lat & long values are used to calculate a plausibility of the route.
   def get_routeset(self, lat=0, long=0, callsign=''):
     # self.logger.info(f'Retrieving route for flight {callsign}')
-    print(f'Thread ID {threading.current_thread().ident} inside get_routeset()')
-    print(f'number of threads: {threading.active_count()}')
+    print(f'Thread ID {threading.current_thread().ident} getting route for {callsign}')
+  
     if not callsign:
       return self._default_routeset
-    
-    conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
+    try:
+      conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
 
-    payload = {
-      "planes": [
-        {
-          "callsign": callsign.strip(),
-          "lat": lat,
-          "lng": long
-        }
-      ]
-    }
+      payload = {
+        "planes": [
+          {
+            "callsign": callsign.strip(),
+            "lat": lat,
+            "lng": long
+          }
+        ]
+      }
 
-    conn.request('POST',
-                      self._get_routeset_url(),
-                      json.dumps(payload),
-                      self._get_headers())
-    
-    response = conn.getresponse()
-    data = self.decode_response_payload(response.read())
+      conn.request('POST',
+                        self._get_routeset_url(),
+                        json.dumps(payload),
+                        self._get_headers())
+      
+      response = conn.getresponse()
+      
+      if response.status != 200:
+        return self._default_routeset
 
-    conn.close()
+      data = self.decode_response_payload(response.read())
 
-    if len(data[0]['_airports']) == 0:
+      conn.close()
+
+      if data is None or len(data[0]['_airports']) == 0:
+        return self._default_routeset
+      
+      return data[0]
+    except Exception as e:
+      print(f'Error getting routeset: {e}')
+      try: # attempt to close the connection if it's open
+        conn.close()
+      except Exception:
+        pass
       return self._default_routeset
-    
-    return data[0]

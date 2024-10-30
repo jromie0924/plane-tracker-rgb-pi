@@ -6,9 +6,9 @@ DELAY_DEFAULT = 0.1
 class Animator(object):
     class KeyFrame(object):
         @staticmethod
-        def add(divisor, offset=0):
+        def add(divisor, offset=0, scene_name='unknown'):
             def wrapper(func):
-                func.properties = {"divisor": divisor, "offset": offset, "count": 0}
+                func.properties = {"divisor": divisor, "offset": offset, "count": 0, "scene_name": scene_name}
                 return func
 
             return wrapper
@@ -45,14 +45,7 @@ class Animator(object):
                         keyframe()
 
                 # Otherwise perform normal operation
-                if (
-                    self.frame > 0
-                    and keyframe.properties["divisor"]
-                    and not (
-                        (self.frame - keyframe.properties["offset"])
-                        % keyframe.properties["divisor"]
-                    )
-                ):
+                elif keyframe.properties["divisor"] and not ((self.frame - keyframe.properties["offset"]) % keyframe.properties["divisor"]):
                     if keyframe(keyframe.properties["count"]):
                         keyframe.properties["count"] = 0
                     else:

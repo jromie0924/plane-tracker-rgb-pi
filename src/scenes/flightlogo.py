@@ -7,7 +7,7 @@ LOGO_SIZE = 16
 DEFAULT_IMAGE = "default"
 
 class FlightLogoScene:
-    @Animator.KeyFrame.add(0)
+    @Animator.KeyFrame.add(0, scene_name="flightlogo")
     def logo_details(self):
 
         # Guard against no data

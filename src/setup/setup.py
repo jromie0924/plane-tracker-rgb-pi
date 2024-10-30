@@ -2,7 +2,6 @@ import os
 import csv
 import config
 
-
 def setup():
   AWS_SECRETS_ENV_VAR = 'AWS_SECRET'
   AWS_ACCESS_CREDS_FILENAME = 'flight_tracker_app_accessKeys.csv'
