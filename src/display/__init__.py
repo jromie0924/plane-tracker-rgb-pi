@@ -10,7 +10,6 @@ from scenes.flightlogo import FlightLogoScene
 from scenes.journey import JourneyScene
 from scenes.loadingpulse import LoadingPulseScene
 from scenes.clock import ClockScene
-from scenes.planedetails import PlaneDetailsScene
 # from scenes.daysforecast import DaysForecastScene
 from scenes.date import DateScene
 
@@ -125,14 +124,13 @@ class Display(
             _ = graphics.DrawLine(self.canvas, x, y0, x, y1, colour)
             
 
-    @Animator.KeyFrame.add(0)
+    @Animator.KeyFrame.add(0, scene_name="display")
     def clear_screen(self):
         # First operation after
         # a screen reset
         self.canvas.Clear()
 
-    # TODO: this looks like it'll scroll 5 times? figure it out
-    @Animator.KeyFrame.add(frames.PER_SECOND * 5)
+    @Animator.KeyFrame.add(frames.PER_SECOND * 5, scene_name="display")
     def check_for_loaded_data(self, count):
         if self.overhead.new_data:
             # Check if there's data
@@ -152,24 +150,28 @@ class Display(
                 self._data = new_data
 
             # Only reset if there's flight data already
-            # on the screen, of if there's some new
+            # on the screen, or if there's some new
             # data available to draw which is different
             # from the current data
             reset_required = there_is_data and data_is_different
 
             if reset_required:
                 self.reset_scene()
+        
+        elif len(self.overhead.data) == 0:
+            self._data = self.overhead.data
+            self.reset_scene()
 
-    @Animator.KeyFrame.add(1)
+
+    @Animator.KeyFrame.add(1, scene_name="display")
     def sync(self, count):
         # Redraw screen every frame
         _ = self.matrix.SwapOnVSync(self.canvas)
-        # TODO: how to get flight details and plane details to line up?
 
         # Adjust brightness
         adjust_brightness(self.matrix)
 
-    @Animator.KeyFrame.add(frames.PER_SECOND * 30)
+    @Animator.KeyFrame.add(frames.PER_SECOND * 30, scene_name="display")
     def grab_new_data(self, count):
         # Only grab data if we're not already searching
         # for planes, or if there's new data available

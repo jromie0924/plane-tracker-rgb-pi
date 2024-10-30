@@ -102,9 +102,11 @@ class Overhead:
             self.dupe_tracker = {k: v for k, v in self.dupe_tracker.items() if int(time.time() * 1000) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
 
     def grab_data(self):
-        while not self._geo_service._location:
-            print("Waiting for location data...")
+        print('Waiting for location data...')
+        while not len(self._geo_service.location):
             sleep(1)
+        
+        print('Location data establilshed.')
         Thread(target=self._grab_data).start()
 
     def _grab_data(self):
@@ -119,14 +121,15 @@ class Overhead:
             with self._lock:
                 self._new_data = False
                 self._processing = True
-            print(f'thread {threading.current_thread().ident} obtained lock')
 
             flights = self._adsb_api.get_nearby_flights(self._geo_service.latitude, self._geo_service.longitude, config.RADIUS)
 
-            if not flights:
+            if not flights or len(flights) == 0:
                 with self._lock:
                     self._new_data = False
                     self._processing = False
+                    self._data = []
+                sleep(0.1)
                 return
 
             flights = sorted(flights, key=lambda f: distance_from_flight_to_location(f, [self._geo_service.latitude, self._geo_service.longitude]))
@@ -241,12 +244,14 @@ class Overhead:
                 with self._lock:
                     self._new_data = False
                     self._processing = False
+                    self._data = []
 
 
         except (ConnectionError, NewConnectionError, MaxRetryError):
-            print("HERE")
-            self._new_data = False
-            self._processing = False
+            with self._lock:
+                self._new_data = False
+                self._processing = False
+                self._data = []
 
     @property
     def new_data(self):
@@ -266,7 +271,8 @@ class Overhead:
 
     @property
     def data_is_empty(self):
-        return len(self._data) == 0
+        with self._lock:
+            return len(self._data) == 0
 
 
 # Main function

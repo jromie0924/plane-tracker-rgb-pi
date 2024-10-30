@@ -11,7 +11,6 @@ GPIO_SLOWDOWN = 4 # TODO - depends what Pi you have I use 2 for Pi 3 and 1 for P
 JOURNEY_CODE_SELECTED = "xxx"
 JOURNEY_BLANK_FILLER = " ? "
 HAT_PWM_ENABLED = False
-FORECAST_DAYS = 3 # today plus the next two days
 
 STREET = ''
 CITY = "Chicago"

@@ -11,7 +11,7 @@ class LoadingPulseScene(object):
     def __init__(self):
         super().__init__()
 
-    @Animator.KeyFrame.add(2)
+    @Animator.KeyFrame.add(2, scene_name="loading_pulse")
     def loading_pulse(self, count):
         reset_count = True
         if self.overhead.processing:
