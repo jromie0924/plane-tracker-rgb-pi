@@ -41,8 +41,6 @@ class AdsbTrackerService():
     return '/api/0/routeset'
   
 
-  # TODO: wrap this in a try-catch and handle failed connections gracefully.
-  #
   # Gets nearby flights given a latitude, longitude, and radius in nautical miles.
   def get_nearby_flights(self, lat, long, radius):
     print(f'Thread ID {threading.current_thread().ident} getting nearby flights')
