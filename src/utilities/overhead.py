@@ -178,6 +178,7 @@ class Overhead:
                     origin = airport_details[0]
                     destination = airport_details[1]
                 else:
+                    # TODO: is this necessary?
                     origin = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
                     destination = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
 

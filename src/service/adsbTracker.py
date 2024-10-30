@@ -45,8 +45,7 @@ class AdsbTrackerService():
   #
   # Gets nearby flights given a latitude, longitude, and radius in nautical miles.
   def get_nearby_flights(self, lat, long, radius):
-    print(f'Thread ID {threading.current_thread().ident} inside get_nearby_flight()')
-    print(f'number of threads: {threading.active_count()}')
+    print(f'Thread ID {threading.current_thread().ident} getting nearby flights')
 
     try:
       conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
@@ -78,7 +77,7 @@ class AdsbTrackerService():
       return data
 
     except Exception as e:
-      self.logger.error(f'Error getting nearby flights: {e}')
+      print(f'Error getting nearby flights: {e}')
       try: # attempt to close the connection if it's open
         conn.close()
       except Exception:
