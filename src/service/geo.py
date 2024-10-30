@@ -20,6 +20,7 @@ filepath = 'src/app_data/geo_cache.json'
 
 class GeoService():
   def __init__(self):
+    self._location = []
     try:
       self.authentication = AuthenticationService()
       with open(filepath, 'r') as f:
@@ -43,7 +44,7 @@ class GeoService():
     token = self.authentication.get_rapidapi_token()
 
     if not token:
-      return config.LOCATION_COORDINATES_DEFAULT
+      self._location = config.LOCATION_COORDINATES_DEFAULT
 
     headers = {
       'x-rapidapi-key': token,
