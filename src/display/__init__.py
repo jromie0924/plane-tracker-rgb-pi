@@ -72,7 +72,6 @@ class Display(
   FlightLogoScene,
   JourneyScene,
   ClockScene,
-  DateScene,
   Animator,
 ):
   def __init__(self):
