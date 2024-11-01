@@ -1,8 +1,8 @@
 import sys
 from datetime import datetime
 from setup import frames
-from utilities.animator import Animator
-from utilities.overhead import Overhead
+from workers.animator import Animator
+from workers.overhead import Overhead
 
 # from scenes.temperature import TemperatureScene
 from scenes.flightdetails import FlightDetailsScene

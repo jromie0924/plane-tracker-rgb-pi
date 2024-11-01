@@ -145,7 +145,6 @@ class Overhead:
                     except KeyError:
                         return False
 
-                # TODO write a validation function for flight to ensure that it contains all the necessary fields
                 # Get route details for a flight
                 def get_details(flt):
                     return self._adsb_api.get_routeset(flt['lat'], flt['lon'], flt['flight'])
@@ -180,7 +179,8 @@ class Overhead:
                             route = None
                             continue
                 return (flight, route) if flight and route else (None, None)
-
+            
+            # Grab a mutex lock to prevent race conditions
             with self._lock:
                 flight, route = choose_flight(flights)
 
