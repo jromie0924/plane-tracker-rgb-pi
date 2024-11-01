@@ -4,16 +4,16 @@ from unittest.mock import patch, MagicMock
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
-from service.adsbTracker import AdsbTrackerService
+from services.adsbTracker import AdsbTrackerService
 
 @pytest.fixture
 def mock_config():
-  with patch('service.adsbTracker.config') as mock_config:
+  with patch('services.adsbTracker.config') as mock_config:
     yield mock_config
 
 @pytest.fixture
 def mock_https_connection():
-  with patch('service.adsbTracker.http.client.HTTPSConnection') as mock_https_connection:
+  with patch('services.adsbTracker.http.client.HTTPSConnection') as mock_https_connection:
     yield mock_https_connection
 
 def test_get_nearby_flight_success(mock_config, mock_https_connection):

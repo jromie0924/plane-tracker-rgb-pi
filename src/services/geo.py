@@ -3,7 +3,7 @@ import http.client
 import json
 import time
 
-from service.authentication import AuthenticationService
+from services.authentication import AuthenticationService
 
 '''
 This class uses a cache file to store the home location coordinates.
@@ -39,7 +39,6 @@ class GeoService():
       print(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
       self._location = config.LOCATION_COORDINATES_DEFAULT
 
-  # TODO use a try-catch to fall back onto the cache file if it exists.
   def _update_cache(self):
     token = self.authentication.get_rapidapi_token()
 

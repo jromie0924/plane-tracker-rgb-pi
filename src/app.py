@@ -4,9 +4,9 @@ from setup.setup import setup
 
 
 if __name__ == "__main__":
-    # Create a display and
-    # start its animation
+  # Create a display and
+  # start its animation
 
-    setup()
-    run_text = Display()
-    run_text.run()
+  setup()
+  run_text = Display()
+  run_text.run()
