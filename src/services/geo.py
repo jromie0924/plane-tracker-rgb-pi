@@ -3,7 +3,7 @@ import http.client
 import json
 import time
 
-from service.authentication import AuthenticationService
+from services.authentication import AuthenticationService
 
 '''
 This class uses a cache file to store the home location coordinates.

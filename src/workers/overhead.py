@@ -1,10 +1,10 @@
-from service.adsbTracker import AdsbTrackerService
-from service.airlineLookup import AirlineLookupService
+from services.adsbTracker import AdsbTrackerService
+from services.airlineLookup import AirlineLookupService
 from threading import Thread, Lock
 from time import sleep
 from typing import Optional, Tuple
 from geopy.geocoders import Nominatim
-from service.geo import GeoService
+from services.geo import GeoService
 
 import threading
 import math
