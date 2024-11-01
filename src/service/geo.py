@@ -45,6 +45,7 @@ class GeoService():
 
     if not token:
       self._location = config.LOCATION_COORDINATES_DEFAULT
+      return
 
     headers = {
       'x-rapidapi-key': token,

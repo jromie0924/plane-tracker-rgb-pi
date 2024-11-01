@@ -99,14 +99,13 @@ class Overhead:
     '''
     def analyze_dupe_tracker(self):
         if len(self.dupe_tracker) > 1000:
-            self.dupe_tracker = {k: v for k, v in self.dupe_tracker.items() if int(time.time() * 1000) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
+            self.dupe_tracker = {k: v for k, v in self.dupe_tracker.items() if round(time.time() * 1000) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
 
     def grab_data(self):
-        print('Waiting for location data...')
         while not len(self._geo_service.location):
+            print('Waiting for location data...')
             sleep(1)
         
-        print('Location data establilshed.')
         Thread(target=self._grab_data).start()
 
     def _grab_data(self):
@@ -140,28 +139,50 @@ class Overhead:
             def choose_flight(flights):
                 flight, route = None, None
 
+                def validate_flight(flt):
+                    try:
+                        return flt['flight'] and flt['lat'] and flt['lon'] and flt['alt_baro'] and flt['hex'] and flt['t']
+                    except KeyError:
+                        return False
+
+                # TODO write a validation function for flight to ensure that it contains all the necessary fields
                 # Get route details for a flight
                 def get_details(flt):
                     return self._adsb_api.get_routeset(flt['lat'], flt['lon'], flt['flight'])
 
                 for flt in flights:
+                    if not validate_flight(flt):
+                        continue
                     if flt['alt_baro'] <= config.MAX_ALTITUDE and flt['alt_baro'] >= config.MIN_ALTITUDE:
-                        if flt['hex'] in self.dupe_tracker:
+                        try:
+                            flt_key = flt['hex'].strip().upper()
+                        except KeyError:
+                            continue # continue to the next flight if the current one doesn't have a hex value.
+                        if flt_key in self.dupe_tracker:
                             timestamp = round(time.time() * 1000)
-                            if timestamp - self.dupe_tracker[flt['hex']] > config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000:
+
+                            # If the flight is older than the TTL, update the timestamp
+                            if timestamp - self.dupe_tracker[flt_key] > config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000:
+                                flight_num = flt['flight']
+                                print(f'Flight {flight_num} has expired from the dupe tracker.')
                                 flight = flt
                                 route = get_details(flt)
                         else:
-                            self.dupe_tracker[flt['hex']] = round(time.time() * 1000)
                             flight = flt
                             route = get_details(flt)
-                    if route and route['plausible']:
-                        break
-                    else:
-                        route = None
+                        try:
+                            if route and route['plausible']:
+                                self.dupe_tracker[flt_key] = round(time.time() * 1000)
+                                break
+                            else:
+                                route = None
+                        except KeyError:
+                            route = None
+                            continue
                 return (flight, route) if flight and route else (None, None)
 
-            flight, route = choose_flight(flights)
+            with self._lock:
+                flight, route = choose_flight(flights)
 
             if flight and route and route['plausible']:
                 # Get plane type
@@ -215,30 +236,36 @@ class Overhead:
                         vertical_speed = flight['geom_rate']
                     except KeyError:
                         vertical_speed = 0
-                    
-                data.append(
-                    {
-                        "airline": airline,
-                        "plane": plane,
-                        "origin": origin['iata'],
-                        "owner_iata":owner_iata,
-                        "owner_icao": owner_icao,
-                        "destination": destination['iata'],
-                        "vertical_speed": vertical_speed,
-                        "callsign": callsign,
-                        "registration": flight['r'],
-                        "distance_origin": distance_origin,
-                        "distance_destination": distance_destination,
-                        "distance": distance_from_flight_to_location(flight, self._geo_service.location),
-                        "direction": degrees_to_cardinal(plane_bearing(flight)),
-                        "ground_speed": flight['gs'],
-                        "altitude": flight['alt_geom']
-                    }
-                )
-                with self._lock:
-                    self._new_data = len(data) > 0
-                    self._processing = False
-                    self._data = data
+                
+                try:
+                    data.append(
+                        {
+                            "airline": airline,
+                            "plane": plane,
+                            "origin": origin['iata'],
+                            "owner_iata":owner_iata,
+                            "owner_icao": owner_icao,
+                            "destination": destination['iata'],
+                            "vertical_speed": vertical_speed,
+                            "callsign": callsign,
+                            "registration": flight['r'],
+                            "distance_origin": distance_origin,
+                            "distance_destination": distance_destination,
+                            "distance": distance_from_flight_to_location(flight, self._geo_service.location),
+                            "direction": degrees_to_cardinal(plane_bearing(flight)),
+                            "ground_speed": flight['gs'],
+                            "altitude": flight['alt_geom']
+                        }
+                    )
+                    with self._lock:
+                        self._new_data = len(data) > 0
+                        self._processing = False
+                        self._data = data
+                except KeyError:
+                    with self._lock:
+                        self._new_data = False
+                        self._processing = False
+                        self._data = []
             else:
                 print(f'No IFR flight found in the area.')
                 with self._lock:
