@@ -11,12 +11,6 @@ from time import sleep
 
 class AdsbTrackerService():
   def __init__(self):
-    # # TODO: Uncomment, and fill the token value with the auth token in the auth service.
-    # # This won't be necessary until the adsb.lol service requires API tokens.
-    # auth = AuthenticationService()
-    # self._fr24_api_token = auth.flightradar24_token
-    # self.conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
-    self.logger = logging.getLogger(__name__)
     with open('src/app_data/routeset_default.json', 'r') as f:
       self._default_routeset = json.load(f)
 
@@ -25,7 +19,7 @@ class AdsbTrackerService():
       data_str = data.decode('utf-8')
       return json.loads(data_str)
     except json.JSONDecodeError as e:
-      self.logger.error(f'Error decoding response payload: {e}')
+      print(f'Error decoding response payload: {e}')
       return None
   
   def _get_headers(self):
@@ -86,7 +80,6 @@ class AdsbTrackerService():
   # Attempts to get the route of an airplane by callsign
   # The lat & long values are used to calculate a plausibility of the route.
   def get_routeset(self, lat=0, long=0, callsign=''):
-    # self.logger.info(f'Retrieving route for flight {callsign}')
     print(f'Thread ID {threading.current_thread().ident} getting route for {callsign}')
   
     if not callsign:
