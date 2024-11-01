@@ -1,4 +1,4 @@
-from utilities.animator import Animator
+from workers.animator import Animator
 from setup import colours, fonts
 from RGBMatrixEmulator import graphics
 from config import DISTANCE_UNITS

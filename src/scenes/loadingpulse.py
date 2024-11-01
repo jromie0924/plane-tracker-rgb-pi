@@ -1,4 +1,4 @@
-from utilities.animator import Animator
+from workers.animator import Animator
 from setup import colours
 
 # Setup

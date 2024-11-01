@@ -1,6 +1,6 @@
 from PIL import Image
 
-from utilities.animator import Animator
+from workers.animator import Animator
 from setup import colours
 
 LOGO_SIZE = 16
