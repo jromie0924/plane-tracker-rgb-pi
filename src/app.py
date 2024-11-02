@@ -11,13 +11,15 @@ def _init_logger():
   logger.setLevel(logging.INFO)
   
   stream_handler = logging.StreamHandler(sys.stdout)
-  file_handler = logging.FileHandler(config.LOG_FILE)
+  
+  if not config.IS_RASPBERRY_PI:
+    file_handler = logging.FileHandler(config.LOG_FILE)
+    logger.addHandler(file_handler)
   
   
   formatter = logging.Formatter('[%(asctime)s]:[%(levelname)s]:[%(module)s]: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
   stream_handler.setFormatter(formatter)
   logger.addHandler(stream_handler)
-  logger.addHandler(file_handler)
 
 if __name__ == "__main__":
   # Create a display and
