@@ -1,8 +1,6 @@
 APP_NAME = "plane-tracker"
 LOG_FILE = "plane-tracker.log"
 
-IS_RASPBERRY_PI = False
-
 DISTANCE_UNITS = "imperial"
 CLOCK_FORMAT = "24hr" #use 12hr or 24hr
 MIN_ALTITUDE = 2500 #feet
