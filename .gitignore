@@ -164,3 +164,4 @@ cython_debug/
 
 geo_cache.json
 settings.json
+*.log*
