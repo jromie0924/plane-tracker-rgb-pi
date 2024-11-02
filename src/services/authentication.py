@@ -2,9 +2,11 @@ import boto3
 import json
 import os
 import config
+import logging
 
 class AuthenticationService:
   def __init__(self):
+    self.logger = logging.getLogger(config.APP_NAME)
     self.error = False
     try:
       aws_access_key = os.environ.get(config.AWS_ACCESS_KEY_ID_NAME)
@@ -23,7 +25,7 @@ class AuthenticationService:
       # rapidapi_token
       self._rapidapi_token = secret_value[config.RAPIDAPI_TOKEN_KEYNAME]
     except Exception as e:
-      print(f"Error: {e}")
+      self.logger.error(f"Error: {e}")
       self.error = True
 
   def get_rapidapi_token(self):

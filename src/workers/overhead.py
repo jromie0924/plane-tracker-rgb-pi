@@ -12,6 +12,7 @@ import math
 import time
 import geopy.distance as geodistance
 import config
+import logging
 
 from requests.exceptions import ConnectionError
 from urllib3.exceptions import NewConnectionError
@@ -91,6 +92,7 @@ def degrees_to_cardinal(d):
 
 class Overhead:
   def __init__(self):
+    self.logger = logging.getLogger(config.APP_NAME)
     self._adsb_api = AdsbTrackerService()
     self._geo_service = GeoService()
     self._airline_lookup = AirlineLookupService()
@@ -103,7 +105,7 @@ class Overhead:
 
   def grab_data(self):
     while not len(self._geo_service.location):
-      print('Waiting for location data...')
+      self.logger.info('Waiting for location data...')
       sleep(1)
 
     Thread(target=self._grab_data).start()
@@ -129,7 +131,7 @@ class Overhead:
         return
 
       flights = sorted(flights, key=lambda f: distance_from_flight_to_location(f, [self._geo_service.latitude, self._geo_service.longitude]))
-      print(f'Retrieved {len(flights)} flights')
+      self.logger.info(f'Retrieved {len(flights)} flights')
 
       # Grab a mutex lock to prevent race conditions
       with self._lock:
@@ -218,7 +220,7 @@ class Overhead:
             self._processing = False
             self._data = []
       else:
-        print(f'No IFR flight found in the area.')
+        self.logger.info(f'No IFR flight found in the area.')
         with self._lock:
           self._new_data = False
           self._processing = False
