@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 from display import Display
 from setup.setup import setup
+from logging.handlers import RotatingFileHandler
 
 import config
 import logging
@@ -9,15 +10,16 @@ import sys
 def _init_logger():
   logger = logging.getLogger(config.APP_NAME)
   logger.setLevel(logging.INFO)
+  formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] [%(module)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
   
   stream_handler = logging.StreamHandler(sys.stdout)
   
-  if not config.IS_RASPBERRY_PI:
-    file_handler = logging.FileHandler(config.LOG_FILE)
-    logger.addHandler(file_handler)
+  # Supports logging up to 5 64MB files.
+  file_handler = RotatingFileHandler(config.LOG_FILE, mode='a', maxBytes=64*1024*1024, backupCount=5)
+  file_handler.setFormatter(formatter)
+  logger.addHandler(file_handler)
   
   
-  formatter = logging.Formatter('[%(asctime)s]:[%(levelname)s]:[%(module)s]: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
   stream_handler.setFormatter(formatter)
   logger.addHandler(stream_handler)
 
