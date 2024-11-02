@@ -24,13 +24,14 @@ def _init_logger():
   logger.addHandler(stream_handler)
 
 if __name__ == "__main__":
-  # Create a display and
-  # start its animation
-  
+  # Set up logging for application
   _init_logger()
   logger = logging.getLogger(config.APP_NAME)
   logger.info("Starting display")
 
+  # Set up runtime environment vars
   setup()
+  
+  # Run the tracker
   run_text = Display()
   run_text.run()
