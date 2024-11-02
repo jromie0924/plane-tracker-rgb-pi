@@ -252,14 +252,3 @@ class Overhead:
   def data_is_empty(self):
     with self._lock:
       return len(self._data) == 0
-
-
-# Main function
-if __name__ == "__main__":
-  o = Overhead()
-  o.grab_data()
-  while not o.new_data:
-    print("processing...")
-    sleep(1)
-
-  print(o.data)
