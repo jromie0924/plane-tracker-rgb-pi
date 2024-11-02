@@ -11,6 +11,7 @@ from time import sleep
 
 class AdsbTrackerService():
   def __init__(self):
+    self.logger = logging.getLogger(config.APP_NAME)
     with open('src/app_data/routeset_default.json', 'r') as f:
       self._default_routeset = json.load(f)
 
@@ -19,7 +20,7 @@ class AdsbTrackerService():
       data_str = data.decode('utf-8')
       return json.loads(data_str)
     except json.JSONDecodeError as e:
-      print(f'Error decoding response payload: {e}')
+      self.logger.error(f'Error decoding response payload: {e}')
       return None
   
   def _get_headers(self):
@@ -37,7 +38,7 @@ class AdsbTrackerService():
 
   # Gets nearby flights given a latitude, longitude, and radius in nautical miles.
   def get_nearby_flights(self, lat, long, radius):
-    print(f'Thread ID {threading.current_thread().ident} getting nearby flights')
+    self.logger.info(f'Thread ID {threading.current_thread().ident} getting nearby flights')
 
     try:
       conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
@@ -69,7 +70,7 @@ class AdsbTrackerService():
       return data
 
     except Exception as e:
-      print(f'Error getting nearby flights: {e}')
+      self.logger.error(f'Error getting nearby flights: {e}')
       try: # attempt to close the connection if it's open
         conn.close()
       except Exception:
@@ -80,7 +81,7 @@ class AdsbTrackerService():
   # Attempts to get the route of an airplane by callsign
   # The lat & long values are used to calculate a plausibility of the route.
   def get_routeset(self, lat=0, long=0, callsign=''):
-    print(f'Thread ID {threading.current_thread().ident} getting route for {callsign}')
+    self.logger.info(f'Thread ID {threading.current_thread().ident} getting route for {callsign}')
   
     if not callsign:
       return self._default_routeset
@@ -116,7 +117,7 @@ class AdsbTrackerService():
       
       return data[0]
     except Exception as e:
-      print(f'Error getting routeset: {e}')
+      self.logger.error(f'Error getting routeset: {e}')
       try: # attempt to close the connection if it's open
         conn.close()
       except Exception:

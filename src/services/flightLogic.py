@@ -1,8 +1,10 @@
 import time
 import config
+import logging
 
 class FlightLogicService:
   def __init__(self):
+    self.logger = logging.getLogger(config.APP_NAME)
     self.flight_history_mapping = {}
     
   # Cleanses the flight history mapping of expired entries
@@ -25,7 +27,7 @@ class FlightLogicService:
   def choose_flight(self, flights, get_routeset_func: callable):
     flight, route = None, None
     
-    print(f'Cleansing duplication mapping with {len(self.flight_history_mapping)} entries.')
+    self.logger.info(f'Cleansing duplication mapping with {len(self.flight_history_mapping)} entries.')
     self.analyze_history_mapping()
 
     for flt in flights:
@@ -41,7 +43,7 @@ class FlightLogicService:
           # If the flight is older than the TTL, update the timestamp
           if timestamp - self.flight_history_mapping[flt_key] > config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000:
             flight_num = flt['flight']
-            print(f'Flight {flight_num} has expired from the dupe tracker.')
+            self.logger.info(f'Flight {flight_num} has expired from the dupe tracker.')
             flight = flt
             route = self.get_details(flt, func=get_routeset_func)
         else:

@@ -2,6 +2,7 @@ import config
 import http.client
 import json
 import time
+import logging
 
 from services.authentication import AuthenticationService
 
@@ -20,6 +21,7 @@ filepath = 'src/app_data/geo_cache.json'
 
 class GeoService():
   def __init__(self):
+    self.logger = logging.getLogger(config.APP_NAME)
     self._location = []
     try:
       self.authentication = AuthenticationService()
@@ -27,16 +29,16 @@ class GeoService():
         cached_location_data = json.load(f)
         current_timestamp = time.time() * 1000
         if round((current_timestamp - cached_location_data['timestamp']) / 1000 / 60) > config.LOCATION_CACHE_TIMEOUT:
-          print(f'Location cache expired. Updating cache...')
+          self.logger.warning(f'Location cache expired. Updating cache...')
           self._update_cache()
         else:
           self._location = [float(x) for x in cached_location_data['location']]
     except FileNotFoundError:
-      print(f'Location cache not found. Building cache...')
+      self.logger.info(f'Location cache not found. Building cache...')
       self._update_cache()
 
     except Exception:
-      print(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
+      self.logger.error(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
       self._location = config.LOCATION_COORDINATES_DEFAULT
 
   def _update_cache(self):
@@ -69,12 +71,12 @@ class GeoService():
     except Exception as e:
       try:
         with open(filepath, 'r') as f:
-          print(f'Error getting location data. Falling back to expired cache...')
+          self.logger.error(f'Error getting location data. Falling back to expired cache...')
           cached_location_data = json.load(f)
           self._location = [float(x) for x in cached_location_data['location']]
       except FileNotFoundError:
         self._location = config.LOCATION_COORDINATES_DEFAULT
-        print(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
+        self.logger.error(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
 
     with open('src/app_data/geo_cache.json', 'w') as f:
       json.dump({'location': self._location, 'timestamp': time.time() * 1000}, f)
