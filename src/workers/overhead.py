@@ -139,6 +139,13 @@ class Overhead:
         flight, route = self._flight_logic.choose_flight(flights, self._adsb_api.get_routeset)
 
       if flight and route and route['plausible']:
+        
+        '''TEMP CODE'''
+        import json
+        with open('long-route.json', 'w') as f:
+          json.dump(route, f)
+        '''TEMP CODE'''
+        
         # Get plane type
         try:
           # plane = details["aircraft"]["model"]["code"]
@@ -150,7 +157,8 @@ class Overhead:
         plane = plane if not (plane.upper() in BLANK_FIELDS) else ""
 
         # origin = details['_airports'][len(details['_airports']) - 2:][0]
-        airport_details = route['_airports'][len(route['_airports']) - 2:]
+        # airport_details = route['_airports'][len(route['_airports']) - 2:]
+        airport_details = route['_airports']
 
         if len(airport_details):
           origin = airport_details[0]

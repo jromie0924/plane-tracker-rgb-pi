@@ -1,0 +1,43 @@
+{
+  "_airport_codes_iata": "MSP-ORD-DFW",
+  "_airports": [
+    {
+      "alt_feet": 841.0,
+      "alt_meters": 256.34,
+      "countryiso2": "US",
+      "iata": "MSP",
+      "icao": "KMSP",
+      "lat": 44.882,
+      "location": "Minneapolis",
+      "lon": -93.221802,
+      "name": "Minneapolis-St Paul International/Wold-Chamberlain Airport"
+    },
+    {
+      "alt_feet": 672.0,
+      "alt_meters": 204.83,
+      "countryiso2": "US",
+      "iata": "ORD",
+      "icao": "KORD",
+      "lat": 41.9786,
+      "location": "Chicago",
+      "lon": -87.9048,
+      "name": "Chicago O'Hare International Airport"
+    },
+    {
+      "alt_feet": 607.0,
+      "alt_meters": 185.01,
+      "countryiso2": "US",
+      "iata": "DFW",
+      "icao": "KDFW",
+      "lat": 32.896801,
+      "location": "Dallas-Fort Worth",
+      "lon": -97.038002,
+      "name": "Dallas Fort Worth International Airport"
+    }
+  ],
+  "airline_code": "UAL",
+  "airport_codes": "KMSP-KORD-KDFW",
+  "callsign": "UAL1705",
+  "number": "1705",
+  "plausible": 1
+}

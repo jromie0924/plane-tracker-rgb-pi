@@ -51,8 +51,9 @@ class FlightLogicService:
           route = self.get_details(flt, func=get_routeset_func)
         try:
           if route and route['plausible']:
-            self.flight_history_mapping[flt_key] = round(time.time() * 1000)
-            break
+            if len(route['_airports']) > 2:
+              self.flight_history_mapping[flt_key] = round(time.time() * 1000)
+              break
           else:
             route = None
         except KeyError:
