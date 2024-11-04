@@ -1,5 +1,5 @@
 APP_NAME = "plane-tracker"
-LOG_FILE = "plane-tracker.log"
+LOG_FILE = "logs/plane-tracker.log"
 
 DISTANCE_UNITS = "imperial"
 CLOCK_FORMAT = "24hr" #use 12hr or 24hr
