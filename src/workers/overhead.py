@@ -7,9 +7,7 @@ from typing import Optional, Tuple
 from geopy.geocoders import Nominatim
 from services.geo import GeoService
 
-import threading
 import math
-import time
 import geopy.distance as geodistance
 import config
 import logging
