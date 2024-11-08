@@ -3,6 +3,7 @@ import http.client
 import json
 import time
 import logging
+import os
 
 from services.authentication import AuthenticationService
 
@@ -23,23 +24,32 @@ class GeoService():
   def __init__(self):
     self.logger = logging.getLogger(config.APP_NAME)
     self._location = []
-    try:
-      self.authentication = AuthenticationService()
-      with open(filepath, 'r') as f:
-        cached_location_data = json.load(f)
-        current_timestamp = time.time() * 1000
-        if round((current_timestamp - cached_location_data['timestamp']) / 1000 / 60) > config.LOCATION_CACHE_TIMEOUT:
-          self.logger.warning(f'Location cache expired. Updating cache...')
-          self._update_cache()
-        else:
-          self._location = [float(x) for x in cached_location_data['location']]
-    except FileNotFoundError:
-      self.logger.info(f'Location cache not found. Building cache...')
-      self._update_cache()
+    if not config.LOCATION_COORDINATES_OVERRIDE:
+      try:
+        self.authentication = AuthenticationService()
+        with open(filepath, 'r') as f:
+          cached_location_data = json.load(f)
+          current_timestamp = time.time() * 1000
+          if round((current_timestamp - cached_location_data['timestamp']) / 1000 / 60) > config.LOCATION_CACHE_TIMEOUT:
+            self.logger.warning(f'Location cache expired. Updating cache...')
+            self._update_cache()
+          else:
+            self._location = [float(x) for x in cached_location_data['location']]
+      except FileNotFoundError:
+        self.logger.info(f'Location cache not found. Building cache...')
+        self._update_cache()
 
-    except Exception:
-      self.logger.error(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
-      self._location = config.LOCATION_COORDINATES_DEFAULT
+      except Exception as e:
+        self.logger.error(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
+        self._location = config.LOCATION_COORDINATES_DEFAULT
+        raise e
+    else:
+      self.logger.warning(f'Location coordinates override detected. Using override coordinates: {config.LOCATION_COORDINATES_OVERRIDE}')
+      self._location = config.LOCATION_COORDINATES_OVERRIDE
+      try:
+        os.remove(filepath)
+      except FileNotFoundError:
+        pass
 
   def _update_cache(self):
     token = self.authentication.get_rapidapi_token()
