@@ -2,7 +2,6 @@ import http.client
 import config
 import json
 import logging
-import threading
 
 from time import sleep
 
@@ -38,7 +37,7 @@ class AdsbTrackerService():
 
   # Gets nearby flights given a latitude, longitude, and radius in nautical miles.
   def get_nearby_flights(self, lat, long, radius):
-    self.logger.info(f'Thread ID {threading.current_thread().ident} getting nearby flights')
+    self.logger.info(f'Getting nearby flights')
 
     try:
       conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
@@ -81,7 +80,7 @@ class AdsbTrackerService():
   # Attempts to get the route of an airplane by callsign
   # The lat & long values are used to calculate a plausibility of the route.
   def get_routeset(self, lat=0, long=0, callsign=''):
-    self.logger.info(f'Thread ID {threading.current_thread().ident} getting route for {callsign}')
+    self.logger.info(f'Getting route for {callsign}')
   
     if not callsign:
       return self._default_routeset
