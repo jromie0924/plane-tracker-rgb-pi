@@ -3,7 +3,7 @@ import config
 import json
 import logging
 
-from time import sleep
+from http import HTTPStatus
 
 # from authentication import AuthenticationService
 
@@ -47,7 +47,7 @@ class AdsbTrackerService():
                         self._get_headers())
       response = conn.getresponse()
 
-      if response.status != 200:
+      if response.status != HTTPStatus.OK:
         return None
       
       data = self.decode_response_payload(response.read())
@@ -104,7 +104,7 @@ class AdsbTrackerService():
       
       response = conn.getresponse()
       
-      if response.status != 200:
+      if response.status != HTTPStatus.OK:
         return self._default_routeset
 
       data = self.decode_response_payload(response.read())

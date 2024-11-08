@@ -5,7 +5,6 @@ from threading import Thread, Lock
 from time import sleep
 from services.geo import GeoService
 
-import math
 import config
 import logging
 
@@ -13,25 +12,11 @@ from requests.exceptions import ConnectionError
 from urllib3.exceptions import NewConnectionError
 from urllib3.exceptions import MaxRetryError
 
-RETRIES = 3
-RATE_LIMIT_DELAY = 1
-MAX_FLIGHT_LOOKUP = 5
+
 EARTH_RADIUS_M = 6371000  # Earth's radius in m
 BLANK_FIELDS = ["", "N/A", "NONE", "UNKNOWN"]
 NW = 315  # degrees
 SE = 135  # degrees
-
-timelogs = []
-
-
-def polar_to_cartesian(lat, long, alt):
-  DEG2RAD = math.pi / 180
-  return [
-    alt * math.cos(DEG2RAD * lat) * math.sin(DEG2RAD * long),
-    alt * math.sin(DEG2RAD * lat),
-    alt * math.cos(DEG2RAD * lat) * math.cos(DEG2RAD * long),
-  ]
-
 
 class Overhead:
   def __init__(self):
@@ -78,13 +63,11 @@ class Overhead:
 
       # Grab a mutex lock to prevent race conditions
       with self._lock:
-        # flight, route = choose_flight(flights)
         flight, route = self._flight_logic.choose_flight(flights, self._adsb_api.get_routeset)
 
       if flight and route and route['plausible']:
         # Get plane type
         try:
-          # plane = details["aircraft"]["model"]["code"]
           plane = flight['t']
         except (KeyError, TypeError):
           plane = ""
@@ -121,8 +104,6 @@ class Overhead:
 
         # Get owner icao
         owner_icao = route['airline_code']
-
-        # owner_iata = flight.airline_iata or "N/A"
         owner_iata = airline or 'N/A'
 
         try:

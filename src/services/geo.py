@@ -5,6 +5,7 @@ import time
 import logging
 import os
 
+from http import HTTPStatus
 from services.authentication import AuthenticationService
 
 '''
@@ -71,7 +72,7 @@ class GeoService():
       conn.request("GET", endpoint.replace(' ', '%20'), headers=headers)
       res = conn.getresponse()
 
-      if res.status == 200:
+      if res.status == HTTPStatus.OK:
         data = res.read().decode('utf-8')
         location_data = json.loads(data)
         self._location = [float(location_data[0]['lat']), float(location_data[0]['lon'])]
