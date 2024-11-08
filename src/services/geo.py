@@ -52,7 +52,7 @@ class GeoService():
         pass
 
   def _update_cache(self):
-    token = self.authentication.get_rapidapi_token()
+    token = self.authentication.rapidapi_token
 
     if not token:
       self._location = config.LOCATION_COORDINATES_DEFAULT
@@ -74,7 +74,6 @@ class GeoService():
       if res.status == 200:
         data = res.read().decode('utf-8')
         location_data = json.loads(data)
-        # return [location_data[0]['lat'], location_data[0]['lon']]
         self._location = [float(location_data[0]['lat']), float(location_data[0]['lon'])]
       else:
         self._location = config.LOCATION_COORDINATES_DEFAULT

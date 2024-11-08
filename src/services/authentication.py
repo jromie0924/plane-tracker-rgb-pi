@@ -28,7 +28,8 @@ class AuthenticationService:
       self.logger.error(f"Error: {e}")
       self.error = True
 
-  def get_rapidapi_token(self):
+  @property
+  def rapidapi_token(self):
     if not self.error:
       return self._rapidapi_token
     else:
