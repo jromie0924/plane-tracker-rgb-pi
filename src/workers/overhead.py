@@ -47,6 +47,10 @@ class Overhead:
       with self._lock:
         self._new_data = False
         self._processing = True
+        
+      # TODO: check for a SQS message and if we have one that is wanting to check for a specific flight, do that
+      # Make sure to ACK the message to clear it from the queue. If we can't find the flight, set data to []
+      # If we do find the flight, display it, set a TTL and once that is up, start displaying all flight data again.
 
       flights = self._adsb_api.get_nearby_flights(self._geo_service.latitude, self._geo_service.longitude, config.RADIUS)
 
