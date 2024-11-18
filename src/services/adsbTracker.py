@@ -2,7 +2,9 @@ import http.client
 import config
 import json
 import logging
+import time
 
+from utils.timeUtils import TimeUtils
 from http import HTTPStatus
 
 # from authentication import AuthenticationService
@@ -13,6 +15,8 @@ class AdsbTrackerService():
     self.logger = logging.getLogger(config.APP_NAME)
     with open('src/app_data/routeset_default.json', 'r') as f:
       self._default_routeset = json.load(f)
+    
+    self._routeset_timestamp = TimeUtils.current_time_milli()
 
   def decode_response_payload(self, data: bytes):
     try:
@@ -81,6 +85,18 @@ class AdsbTrackerService():
   # The lat & long values are used to calculate a plausibility of the route.
   def get_routeset(self, lat=0, long=0, callsign=''):
     self.logger.info(f'Getting route for {callsign}')
+    
+    '''
+    Rate limiter for routeset endpoint.
+    The FlightLogic class will call this method for multiple flights,
+    and this is a preventative measure to prevent the ADSB.lol API developer
+    from not liking me.
+    '''
+    now = TimeUtils.current_time_milli()
+    while now - self._routeset_timestamp < config.ROUTESET_LIMIT_SECONDS * 1000:
+      self.logger.warning(f'Rate limiting routeset endpoint. Waiting {config.ROUTESET_LIMIT_SECONDS} second...')
+      time.sleep(1)
+      now = TimeUtils.current_time_milli()
   
     if not callsign:
       return self._default_routeset

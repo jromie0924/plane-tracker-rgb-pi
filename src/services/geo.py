@@ -1,11 +1,11 @@
 import config
 import http.client
 import json
-import time
 import logging
 import os
 
 from http import HTTPStatus
+from utils.timeUtils import TimeUtils
 from services.authentication import AuthenticationService
 
 '''
@@ -30,7 +30,7 @@ class GeoService():
         self.authentication = AuthenticationService()
         with open(filepath, 'r') as f:
           cached_location_data = json.load(f)
-          current_timestamp = time.time() * 1000
+          current_timestamp = TimeUtils.current_time_milli()
           if round((current_timestamp - cached_location_data['timestamp']) / 1000 / 60) > config.LOCATION_CACHE_TIMEOUT:
             self.logger.warning(f'Location cache expired. Updating cache...')
             self._update_cache()
@@ -90,7 +90,7 @@ class GeoService():
         self.logger.error(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
 
     with open('src/app_data/geo_cache.json', 'w') as f:
-      json.dump({'location': self._location, 'timestamp': time.time() * 1000}, f)
+      json.dump({'location': self._location, 'timestamp': TimeUtils.current_time_milli()}, f)
     
   @property
   def location(self):
