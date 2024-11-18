@@ -4,7 +4,7 @@ LOG_FILE = "logs/plane-tracker.log"
 DISTANCE_UNITS = "imperial"
 CLOCK_FORMAT = "24hr" #use 12hr or 24hr
 MIN_ALTITUDE = 1000 #feet
-MAX_ALTITUDE = 100000  # feet
+MAX_ALTITUDE = 55000  # feet
 BRIGHTNESS = 100
 BRIGHTNESS_NIGHT = 50
 NIGHT_BRIGHTNESS = False #True for on False for off
@@ -26,7 +26,7 @@ RADIUS = 30 # nautical miles
 LOCATION_COORDINATES_DEFAULT = [41.8755616, -87.6244212] # Chicago, IL
 
 DUPLICATION_AVOIDANCE_TTL = 5 # minutes
-
+ROUTESET_LIMIT_SECONDS = 1 # second
 
 # TODO: Once the adsb.lol API requires a key, update the secret with the key, and update this field accordingly.
 RAPIDAPI_TOKEN_KEYNAME = 'rapidapi_key'

@@ -3,6 +3,8 @@ import config
 import logging
 import math
 
+from utils.timeUtils import TimeUtils
+
 EARTH_RADIUS_M = 6371000  # Earth's radius in m
 class FlightLogic:
   def __init__(self):
@@ -67,7 +69,7 @@ class FlightLogic:
   # Limiting the number of entries to 200
   def analyze_history_mapping(self):
     if len(self.flight_history_mapping) > 200:
-      self.flight_history_mapping = {k: v for k, v in self.flight_history_mapping.items() if round(time.time() * 1000) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
+      self.flight_history_mapping = {k: v for k, v in self.flight_history_mapping.items() if round(TimeUtils.current_time_milli()) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
     
   def validate_flight(self, flt):
     try:
@@ -93,7 +95,7 @@ class FlightLogic:
         flt_key = flt['hex'].strip().upper()
         
         if flt_key in self.flight_history_mapping:
-          timestamp = round(time.time() * 1000)
+          timestamp = round(TimeUtils.current_time_milli())
 
           # If the flight is older than the TTL, update the timestamp
           if timestamp - self.flight_history_mapping[flt_key] > config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000:
@@ -106,7 +108,7 @@ class FlightLogic:
           route = self.get_details(flt, func=get_routeset_func)
         try:
           if route and route['plausible']:
-            self.flight_history_mapping[flt_key] = round(time.time() * 1000)
+            self.flight_history_mapping[flt_key] = round(TimeUtils.current_time_milli())
             break
           else:
             route = None
