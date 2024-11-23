@@ -58,14 +58,14 @@ class Overhead:
         sleep(0.1)
         return
 
-      flights = sorted(flights, key=lambda f: FlightLogic.distance_from_flight_to_location(f, [self._geo_service.latitude, self._geo_service.longitude]))
+      # flights = sorted(flights, key=lambda f: FlightLogic.distance_from_flight_to_location(f, [self._geo_service.latitude, self._geo_service.longitude]))
       self.logger.info(f'Retrieved {len(flights)} flights')
 
       # Grab a mutex lock to prevent race conditions
       with self._lock:
         flight, route = self._flight_logic.choose_flight(flights, self._adsb_api.get_routeset)
 
-      if flight and route and route['plausible']:
+      if flight and route:
         # Get plane type
         try:
           plane = flight['t']
