@@ -58,7 +58,6 @@ class Overhead:
         sleep(0.1)
         return
 
-      # flights = sorted(flights, key=lambda f: FlightLogic.distance_from_flight_to_location(f, [self._geo_service.latitude, self._geo_service.longitude]))
       self.logger.info(f'Retrieved {len(flights)} flights')
 
       # Grab a mutex lock to prevent race conditions
@@ -76,7 +75,6 @@ class Overhead:
         # Tidy up what we pass along
         plane = plane if not (plane.upper() in BLANK_FIELDS) else ""
 
-        # origin = details['_airports'][len(details['_airports']) - 2:][0]
         airport_details = route['_airports'][len(route['_airports']) - 2:]
 
         if len(airport_details):

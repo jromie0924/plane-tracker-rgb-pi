@@ -68,7 +68,6 @@ class FlightLogic:
     
   # Cleanses the flight history mapping of expired entries
   # Helps prevent the mapping from taking up too much memory
-  # Limiting the number of entries to 200
   def _cleanse_history_mapping(self):
     start = len(self.flight_history_mapping)
     self.flight_history_mapping = {k: v for k, v in self.flight_history_mapping.items() if round(TimeUtils.current_time_milli()) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
@@ -81,10 +80,6 @@ class FlightLogic:
       return flt['flight'] and flt['lat'] and flt['lon'] and flt['alt_baro'] and flt['hex'] and flt['t']
     except KeyError:
       return False
-      
-    # Get route details for a flight
-  def get_details(self, flt, func):
-    return func(flt['lat'], flt['lon'], flt['flight'])
 
   def choose_flight(self, flights, get_routeset_func: callable):
     flight, route = None, None
@@ -92,7 +87,6 @@ class FlightLogic:
     flights = [f for f in flights if self.validate_flight(f)]
     self._cleanse_history_mapping()
     
-    # todo call routeset after refactor
     flights_with_routes = get_routeset_func(flights)
     if flights_with_routes:
       flights_with_routes = sorted(flights_with_routes, key=lambda f: self.distance_from_flight_to_location(f['flight'], self._geo_service.location))
@@ -111,43 +105,5 @@ class FlightLogic:
               continue
           self.flight_history_mapping[flight['hex']] = timestamp
           return flight, route
-      # if len(flights_with_routes):
-      #   closest = flights_with_routes[0]
-        
-      #   route = closest['route']
-      #   flight = closest['flight']
-      #   return flight, route
+
     return None, None
-    
-    # self.logger.info(f'Cleansing duplication mapping with {len(self.flight_history_mapping)} entries.')
-    # self.analyze_history_mapping()
-
-    # for flt in flights:
-    #   if not self.validate_flight(flt):
-    #     continue
-
-    #   if flt['alt_baro'] <= config.MAX_ALTITUDE and flt['alt_baro'] >= config.MIN_ALTITUDE:
-    #     flt_key = flt['hex'].strip().upper()
-        
-    #     if flt_key in self.flight_history_mapping:
-    #       timestamp = round(TimeUtils.current_time_milli())
-
-    #       # If the flight is older than the TTL, update the timestamp
-    #       if timestamp - self.flight_history_mapping[flt_key] > config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000:
-    #         flight_num = flt['flight']
-    #         self.logger.info(f'Flight {flight_num} has expired from the dupe tracker.')
-    #         flight = flt
-    #         route = self.get_details(flt, func=get_routeset_func)
-    #     else:
-    #       flight = flt
-    #       route = self.get_details(flt, func=get_routeset_func)
-    #     try:
-    #       if route and route['plausible']:
-    #         self.flight_history_mapping[flt_key] = round(TimeUtils.current_time_milli())
-    #         break
-    #       else:
-    #         route = None
-    #     except KeyError:
-    #       route = None
-    #       continue
-    # return (flight, route) if flight and route else (None, None)

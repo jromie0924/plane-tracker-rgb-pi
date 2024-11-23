@@ -7,7 +7,6 @@ import time
 from utils.timeUtils import TimeUtils
 from http import HTTPStatus
 
-# from authentication import AuthenticationService
 EMPTY_ROUTESET = []
 
 class AdsbTrackerService():
@@ -84,22 +83,8 @@ class AdsbTrackerService():
   # Attempts to get the route of an airplane by callsign
   # The lat & long values are used to calculate a plausibility of the route.
   def get_routeset(self, flights):
-    # self.logger.info(f'Getting route for {callsign}')
-    # '''
-    # Rate limiter for routeset endpoint.
-    # The FlightLogic class will call this method for multiple flights,
-    # and this is a preventative measure to prevent the ADSB.lol API developer
-    # from not liking me.
-    # '''
-    # now = TimeUtils.current_time_milli()
-    # while now - self._routeset_timestamp < config.ROUTESET_LIMIT_SECONDS * 1000:
-    #   self.logger.warning(f'Rate limiting routeset endpoint. Waiting {config.ROUTESET_LIMIT_SECONDS} second...')
-    #   time.sleep(1)
-    #   now = TimeUtils.current_time_milli()
-    
     payload = {'planes': []}
-      
-      
+    
     for flight in flights:
       callsign = flight['flight']
       lat = flight['lat']
@@ -111,21 +96,6 @@ class AdsbTrackerService():
         'lng': long
       })
   
-    # if not callsign:
-    #   return self._default_routeset
-    # try:
-    #   conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
-
-    #   payload = {
-    #     "planes": [
-    #       {
-    #         "callsign": callsign.strip(),
-    #         "lat": lat,
-    #         "lng": long
-    #       }
-    #     ]
-    #   }
-    
     try:
       conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
       conn.request('POST',
@@ -136,7 +106,6 @@ class AdsbTrackerService():
       response = conn.getresponse()
       
       if response.status != HTTPStatus.OK:
-        # return self._default_routeset
         return EMPTY_ROUTESET
 
       data = self.decode_response_payload(response.read())
@@ -144,12 +113,6 @@ class AdsbTrackerService():
       conn.close()
       
       data = [x for x in data if x['_airports'] and len(x['_airports']) > 0]
-
-      # if data is None or len(data[0]['_airports']) == 0:
-      #   # return self._default_routeset
-      #   return EMPTY_ROUTESET
-      
-      # return data[0]
       
       merged_data = []
       for flight in flights:
@@ -168,5 +131,4 @@ class AdsbTrackerService():
         conn.close()
       except Exception:
         pass
-      # return self._default_routeset
       return EMPTY_ROUTESET

@@ -22,6 +22,9 @@ Geocoding service.
 
 filepath = 'src/app_data/geo_cache.json'
 
+'''
+Singleton class
+'''
 class GeoService():
   _instance = None
   _lock = threading.Lock()
