@@ -69,9 +69,12 @@ class FlightLogic:
   # Cleanses the flight history mapping of expired entries
   # Helps prevent the mapping from taking up too much memory
   # Limiting the number of entries to 200
-  def analyze_history_mapping(self):
-    if len(self.flight_history_mapping) > 200:
-      self.flight_history_mapping = {k: v for k, v in self.flight_history_mapping.items() if round(TimeUtils.current_time_milli()) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
+  def _cleanse_history_mapping(self):
+    start = len(self.flight_history_mapping)
+    self.flight_history_mapping = {k: v for k, v in self.flight_history_mapping.items() if round(TimeUtils.current_time_milli()) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
+    end = len(self.flight_history_mapping)
+    diff = start - end
+    self.logger.debug(f'Cleansed {diff} {"entry" if diff == 1 else "entries"} from the history mapping.')
     
   def validate_flight(self, flt):
     try:
@@ -87,6 +90,7 @@ class FlightLogic:
     flight, route = None, None
     
     flights = [f for f in flights if self.validate_flight(f)]
+    self._cleanse_history_mapping()
     
     # todo call routeset after refactor
     flights_with_routes = get_routeset_func(flights)
@@ -94,9 +98,18 @@ class FlightLogic:
       flights_with_routes = sorted(flights_with_routes, key=lambda f: self.distance_from_flight_to_location(f['flight'], self._geo_service.location))
       flights_with_routes = [f for f in flights_with_routes if f['flight']['alt_baro'] <= config.MAX_ALTITUDE and f['flight']['alt_baro'] >= config.MIN_ALTITUDE]
       for item in flights_with_routes:
+        flight, route = None, None
         if item['route']['plausible'] and len(item['route']['_airports']) == 2:
           flight = item['flight']
           route = item['route']
+          timestamp = TimeUtils.current_time_milli()
+          if flight['hex'] in self.flight_history_mapping:
+            if timestamp - self.flight_history_mapping[flight['hex']] >= config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000:
+              self.flight_history_mapping[flight['hex']] = timestamp
+              return flight, route
+            else:
+              continue
+          self.flight_history_mapping[flight['hex']] = timestamp
           return flight, route
       # if len(flights_with_routes):
       #   closest = flights_with_routes[0]

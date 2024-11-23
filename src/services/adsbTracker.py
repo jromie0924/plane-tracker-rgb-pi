@@ -85,7 +85,6 @@ class AdsbTrackerService():
   # The lat & long values are used to calculate a plausibility of the route.
   def get_routeset(self, flights):
     # self.logger.info(f'Getting route for {callsign}')
-    
     # '''
     # Rate limiter for routeset endpoint.
     # The FlightLogic class will call this method for multiple flights,
