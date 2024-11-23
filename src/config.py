@@ -1,3 +1,7 @@
+import logging
+
+LOGGING_LEVEL: int = logging.DEBUG
+
 APP_NAME = "plane-tracker"
 LOG_FILE = "logs/plane-tracker.log"
 

@@ -10,7 +10,7 @@ import os
 
 def _init_logger():
   logger = logging.getLogger(config.APP_NAME)
-  logger.setLevel(logging.INFO)
+  logger.setLevel(config.LOGGING_LEVEL)
   
   # Create log directory if it doesn't exist
   dir = os.path.dirname(config.LOG_FILE)
