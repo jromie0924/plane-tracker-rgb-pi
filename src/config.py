@@ -29,7 +29,7 @@ LOCATION_CACHE_TIMEOUT = 30 # minutes
 RADIUS = 30 # nautical miles
 LOCATION_COORDINATES_DEFAULT = [41.8755616, -87.6244212] # Chicago, IL
 
-DUPLICATION_AVOIDANCE_TTL = 5 # minutes
+DUPLICATION_AVOIDANCE_TTL = 1 # minute
 ROUTESET_LIMIT_SECONDS = 1 # second
 
 # TODO: Once the adsb.lol API requires a key, update the secret with the key, and update this field accordingly.
