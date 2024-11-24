@@ -80,8 +80,7 @@ class AdsbTrackerService():
       return None
 
 
-  # Attempts to get the route of an airplane by callsign
-  # The lat & long values are used to calculate a plausibility of the route.
+  # Attempts to get the routes of a list of flights by callsign.
   def get_routeset(self, flights):
     payload = {'planes': []}
     
@@ -89,7 +88,6 @@ class AdsbTrackerService():
       callsign = flight['flight']
       lat = flight['lat']
       long = flight['lon']
-      # self.logger.info(f'Getting route for {callsign}')
       payload['planes'].append({
         'callsign': callsign.strip(),
         'lat': lat,
