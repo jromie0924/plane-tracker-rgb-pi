@@ -45,9 +45,9 @@ class AdsbTrackerService():
     try:
       conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
       conn.request('GET',
-                        self._get_nearby_flight_url(lat, long, radius),
-                        '',
-                        self._get_headers())
+                    self._get_nearby_flight_url(lat, long, radius),
+                    '',
+                    self._get_headers())
       response = conn.getresponse()
 
       if response.status != HTTPStatus.OK:
