@@ -73,6 +73,7 @@ class FlightLogic:
     end = len(self.flight_history_mapping)
     diff = start - end
     self.logger.debug(f'Cleansed {diff} {"entry" if diff == 1 else "entries"} from the history mapping.')
+    self.logger.debug(f'History mapping now contains {len(self.flight_history_mapping)} entries.')
     
   def validate_flight(self, flt):
     try:
