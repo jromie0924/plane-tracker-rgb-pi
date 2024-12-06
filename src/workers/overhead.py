@@ -58,7 +58,7 @@ class Overhead:
         sleep(0.1)
         return
 
-      self.logger.info(f'Retrieved {len(flights)} flights')
+      self.logger.debug(f'Retrieved {len(flights)} flights')
 
       # Grab a mutex lock to prevent race conditions
       with self._lock:
