@@ -66,7 +66,7 @@ class Overhead:
 
       if flight and route:
         # Get plane type
-        self.logger.info(f'Preparing to display flight: {flight["flight"]}')
+        self.logger.info(f'Preparing to display flight: {flight["flight"].strip()} | route: {route["_airports"][-2]["iata"]} -> {route["_airports"][-1]["iata"]}')
         try:
           plane = flight['t']
         except (KeyError, TypeError):
