@@ -70,6 +70,7 @@ class GeoService():
     token = self.authentication.rapidapi_token
 
     if not token:
+      self.logger.error(f'No RapidAPI token found. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
       self._location = config.LOCATION_COORDINATES_DEFAULT
       return
 
@@ -85,18 +86,20 @@ class GeoService():
     try:
       conn = http.client.HTTPSConnection(config.RAPIDAPI_HOST)
       conn.request("GET", endpoint.replace(' ', '%20'), headers=headers)
-      res = conn.getresponse()
+      res: http.client.HTTPResponse = conn.getresponse()
 
       if res.status == HTTPStatus.OK:
         data = res.read().decode('utf-8')
         location_data = json.loads(data)
         self._location = [float(location_data[0]['lat']), float(location_data[0]['lon'])]
       else:
+        self.logger.error(f'Error getting location data. Response code: {res.status}. '\
+                          f'Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
         self._location = config.LOCATION_COORDINATES_DEFAULT
     except Exception as e:
       try:
         with open(filepath, 'r') as f:
-          self.logger.error(f'Error getting location data. Falling back to expired cache...')
+          self.logger.error(f'Error getting location data. Falling back to expired cache... {e}')
           cached_location_data = json.load(f)
           self._location = [float(x) for x in cached_location_data['location']]
       except FileNotFoundError:
