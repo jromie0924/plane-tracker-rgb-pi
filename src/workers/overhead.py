@@ -112,16 +112,32 @@ class Overhead:
             vertical_speed = flight['geom_rate']
           except KeyError:
             vertical_speed = 0
+            
+        origin_str: str
+        destination_str: str
+        if origin['iata']:
+          origin_str = origin['iata']
+        elif origin['icao']:
+          origin_str = origin['icao'][1:]
+        else:
+          origin = ''
+          
+        if destination['iata']:
+          destination_str = destination['iata']
+        elif destination['icao']:
+          destination_str = destination['icao'][1:]
+        else:
+          destination_str = ''
 
         try:
           data.append(
             {
               "airline": airline,
               "plane": plane,
-              "origin": origin['iata'],
+              "origin": origin_str,
               "owner_iata": owner_iata,
               "owner_icao": owner_icao,
-              "destination": destination['iata'],
+              "destination": destination_str,
               "vertical_speed": vertical_speed,
               "callsign": callsign,
               "registration": flight['r'],
