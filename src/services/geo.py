@@ -1,9 +1,12 @@
 import config
 import http.client
 import json
-import time
 import logging
+import os
+import threading
 
+from http import HTTPStatus
+from utils.timeUtils import TimeUtils
 from services.authentication import AuthenticationService
 
 '''
@@ -19,32 +22,55 @@ Geocoding service.
 
 filepath = 'src/app_data/geo_cache.json'
 
+'''
+Singleton class
+'''
 class GeoService():
+  _instance = None
+  _lock = threading.Lock()
+  
+  def __new__(cls):
+    with cls._lock:
+      if not cls._instance:
+        cls._instance = super(GeoService, cls).__new__(cls)
+        cls._instance.__init__()
+      return cls._instance
+  
   def __init__(self):
     self.logger = logging.getLogger(config.APP_NAME)
     self._location = []
-    try:
-      self.authentication = AuthenticationService()
-      with open(filepath, 'r') as f:
-        cached_location_data = json.load(f)
-        current_timestamp = time.time() * 1000
-        if round((current_timestamp - cached_location_data['timestamp']) / 1000 / 60) > config.LOCATION_CACHE_TIMEOUT:
-          self.logger.warning(f'Location cache expired. Updating cache...')
-          self._update_cache()
-        else:
-          self._location = [float(x) for x in cached_location_data['location']]
-    except FileNotFoundError:
-      self.logger.info(f'Location cache not found. Building cache...')
-      self._update_cache()
+    if not config.LOCATION_COORDINATES_OVERRIDE:
+      try:
+        self.authentication = AuthenticationService()
+        with open(filepath, 'r') as f:
+          cached_location_data = json.load(f)
+          current_timestamp = TimeUtils.current_time_milli()
+          if round((current_timestamp - cached_location_data['timestamp']) / 1000 / 60) > config.LOCATION_CACHE_TIMEOUT:
+            self.logger.warning(f'Location cache expired. Updating cache...')
+            self._update_cache()
+          else:
+            self._location = [float(x) for x in cached_location_data['location']]
+      except FileNotFoundError:
+        self.logger.info(f'Location cache not found. Building cache...')
+        self._update_cache()
 
-    except Exception:
-      self.logger.error(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
-      self._location = config.LOCATION_COORDINATES_DEFAULT
+      except Exception as e:
+        self.logger.error(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
+        self._location = config.LOCATION_COORDINATES_DEFAULT
+        raise e
+    else:
+      self.logger.warning(f'Location coordinates override detected. Using override coordinates: {config.LOCATION_COORDINATES_OVERRIDE}')
+      self._location = config.LOCATION_COORDINATES_OVERRIDE
+      try:
+        os.remove(filepath)
+      except FileNotFoundError:
+        pass
 
   def _update_cache(self):
-    token = self.authentication.get_rapidapi_token()
+    token = self.authentication.rapidapi_token
 
     if not token:
+      self.logger.error(f'No RapidAPI token found. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
       self._location = config.LOCATION_COORDINATES_DEFAULT
       return
 
@@ -53,25 +79,27 @@ class GeoService():
       'x-rapidapi-host': config.RAPIDAPI_HOST
     }
 
-    endpoint = f'/v1/forward?format=json&street={config.STREET}&city={config.CITY}&state={config.STATE}&postalcode={config.ZIP_CODE}&country={config.COUNTRY}'\
-                f'&accept-language=en&addressdetails=1&limit=1&bounded=0&polygon_text=0&polygon_kml=0&polygon_svg=0&polygon_geojson=0&polygon_threshold=0.0'
+    endpoint = f'/v1/forward?format=json&postalcode={config.ZIP_CODE}&country={config.COUNTRY}'\
+                f'&accept-language=en&addressdetails=1&limit=1&bounded=0&polygon_text=0&polygon_kml=0'\
+                f'&polygon_svg=0&polygon_geojson=0&polygon_threshold=0.0'
 
     try:
       conn = http.client.HTTPSConnection(config.RAPIDAPI_HOST)
       conn.request("GET", endpoint.replace(' ', '%20'), headers=headers)
-      res = conn.getresponse()
+      res: http.client.HTTPResponse = conn.getresponse()
 
-      if res.status == 200:
+      if res.status == HTTPStatus.OK:
         data = res.read().decode('utf-8')
         location_data = json.loads(data)
-        # return [location_data[0]['lat'], location_data[0]['lon']]
         self._location = [float(location_data[0]['lat']), float(location_data[0]['lon'])]
       else:
+        self.logger.error(f'Error getting location data. Response code: {res.status}. '\
+                          f'Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
         self._location = config.LOCATION_COORDINATES_DEFAULT
     except Exception as e:
       try:
         with open(filepath, 'r') as f:
-          self.logger.error(f'Error getting location data. Falling back to expired cache...')
+          self.logger.error(f'Error getting location data. Falling back to expired cache... {e}')
           cached_location_data = json.load(f)
           self._location = [float(x) for x in cached_location_data['location']]
       except FileNotFoundError:
@@ -79,7 +107,7 @@ class GeoService():
         self.logger.error(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
 
     with open('src/app_data/geo_cache.json', 'w') as f:
-      json.dump({'location': self._location, 'timestamp': time.time() * 1000}, f)
+      json.dump({'location': self._location, 'timestamp': TimeUtils.current_time_milli()}, f)
     
   @property
   def location(self):
