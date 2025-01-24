@@ -62,15 +62,15 @@ class Overhead:
         sleep(0.1)
         return
 
-      flights = sorted(flights, key=lambda f: FlightLogic.distance_from_flight_to_location(f, [self._geo_service.latitude, self._geo_service.longitude]))
-      self.logger.info(f'Retrieved {len(flights)} flights')
+      self.logger.debug(f'Retrieved {len(flights)} flights')
 
       # Grab a mutex lock to prevent race conditions
       with self._lock:
         flight, route = self._flight_logic.choose_flight(flights, self._adsb_api.get_routeset)
 
-      if flight and route and route['plausible']:
+      if flight and route:
         # Get plane type
+        self.logger.info(f'Preparing to display flight: {flight["flight"].strip()} | route: {route["_airports"][-2]["iata"]} -> {route["_airports"][-1]["iata"]}')
         try:
           plane = flight['t']
         except (KeyError, TypeError):
@@ -79,7 +79,6 @@ class Overhead:
         # Tidy up what we pass along
         plane = plane if not (plane.upper() in BLANK_FIELDS) else ""
 
-        # origin = details['_airports'][len(details['_airports']) - 2:][0]
         airport_details = route['_airports'][len(route['_airports']) - 2:]
 
         if len(airport_details):
@@ -117,16 +116,32 @@ class Overhead:
             vertical_speed = flight['geom_rate']
           except KeyError:
             vertical_speed = 0
+            
+        origin_str: str
+        destination_str: str
+        if origin['iata']:
+          origin_str = origin['iata']
+        elif origin['icao']:
+          origin_str = origin['icao'][1:]
+        else:
+          origin = ''
+          
+        if destination['iata']:
+          destination_str = destination['iata']
+        elif destination['icao']:
+          destination_str = destination['icao'][1:]
+        else:
+          destination_str = ''
 
         try:
           data.append(
             {
               "airline": airline,
               "plane": plane,
-              "origin": origin['iata'],
+              "origin": origin_str,
               "owner_iata": owner_iata,
               "owner_icao": owner_icao,
-              "destination": destination['iata'],
+              "destination": destination_str,
               "vertical_speed": vertical_speed,
               "callsign": callsign,
               "registration": flight['r'],
