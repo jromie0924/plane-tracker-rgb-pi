@@ -1,12 +1,14 @@
 #!/usr/bin/python3
 from display import Display
-from setup.setup import setup
+from models.runtimeModel import RuntimeModel
+from services.runtime import RuntimeService
 from logging.handlers import RotatingFileHandler
 
 import config
 import logging
 import sys
 import os
+import csv
 
 def _init_logger():
   logger = logging.getLogger(config.APP_NAME)
@@ -33,15 +35,40 @@ def _init_logger():
   # Add handlers to the logger
   logger.addHandler(file_handler)
   logger.addHandler(stream_handler)
+  
 
+def setup(aws_secret_loc: str):
+  AWS_ACCESS_CREDS_FILENAME = 'flight_tracker_app_accessKeys.csv'
+
+  ACCESS_KEY_ID_NAME = 'Access key ID'
+  SECRET_ACCESS_KEY_NAME = 'Secret access key'
+
+  runtime_model: RuntimeModel
+
+  with open(f'{aws_secret_loc}/{AWS_ACCESS_CREDS_FILENAME}', mode='r', encoding='utf-8-sig') as file:
+    csvFile = csv.DictReader(file)
+    for line in csvFile:
+      access_key_id = line[ACCESS_KEY_ID_NAME]
+      secret_access_key = line[SECRET_ACCESS_KEY_NAME]
+      runtime_model = RuntimeModel(aws_access_key_id=access_key_id,
+                                   aws_secret_access_key=secret_access_key)
+  return runtime_model
+
+  
 if __name__ == "__main__":
   # Set up logging for application
   _init_logger()
   logger = logging.getLogger(config.APP_NAME)
   logger.info("Starting display")
-
-  # Set up runtime environment vars
-  setup()
+  
+  try:
+    aws_secret_loc = sys.argv[1]
+    runtime_service = RuntimeService()
+    vars = setup(aws_secret_loc)
+    runtime_service.set_runtime_vars(vars)
+  except KeyError as e:
+    logger.error(f"Error: {e}")
+    sys.exit(1)
   
   # Run the program
   run_text = Display()
