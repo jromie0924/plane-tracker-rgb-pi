@@ -5,6 +5,8 @@ import config
 import logging
 import threading
 
+from services.runtime import RuntimeService
+
 class AuthenticationService:
   _instance = None
   _lock = threading.Lock()
@@ -19,9 +21,10 @@ class AuthenticationService:
   def __init__(self):
     self.logger = logging.getLogger(config.APP_NAME)
     self.error = False
+    self.runtime_service = RuntimeService()
     try:
-      aws_access_key = os.environ.get(config.AWS_ACCESS_KEY_ID_NAME)
-      aws_secret_key = os.environ.get(config.AWS_SECRET_ACCESS_KEY_NAME)
+      aws_access_key = self.runtime_service.aws_access_key_id
+      aws_secret_key = self.runtime_service.aws_secret_access_key
       region = config.AWS_REGION
       rapidapi_secret_name = config.RAPIDAPI_KEY_NAME
 
