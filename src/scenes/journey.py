@@ -1,6 +1,6 @@
 from workers.animator import Animator
 from setup import colours, fonts
-from RGBMatrixEmulator import graphics
+from rgbmatrix import graphics
 from config import DISTANCE_UNITS
 
 # Attempt to load config data

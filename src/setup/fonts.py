@@ -1,5 +1,5 @@
 import os
-from RGBMatrixEmulator import graphics
+from rgbmatrix import graphics
 
 # Fonts
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
