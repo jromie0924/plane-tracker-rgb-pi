@@ -13,6 +13,7 @@ from scenes.clock import ClockScene
 # from scenes.daysforecast import DaysForecastScene
 from scenes.date import DateScene
 
+# from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics
 from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 
 

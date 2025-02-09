@@ -1,6 +1,7 @@
 from workers.animator import Animator
 from setup import colours, fonts, screen
 
+# from RGBMatrixEmulator import graphics
 from rgbmatrix import graphics
 
 # Setup

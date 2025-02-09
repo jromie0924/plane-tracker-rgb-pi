@@ -2,6 +2,7 @@ from datetime import datetime
 # from utilities.temperature import grab_forecast
 from workers.animator import Animator
 from setup import colours, fonts, frames
+# from RGBMatrixEmulator import graphics
 from rgbmatrix import graphics
 import logging
 

@@ -1,3 +1,4 @@
+# from RGBMatrixEmulator import graphics
 from rgbmatrix import graphics
 
 # Colour helpers
