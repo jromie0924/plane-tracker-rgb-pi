@@ -65,8 +65,8 @@ class JourneyScene(object):
     origin = self._data[self._data_index]["origin"]
     destination = self._data[self._data_index]["destination"]
 
-    origin_color = colours.BLUE_LIGHT
-    destination_color = colours.BLUE_LIGHT
+    origin_color = self.determine_color(self._data[self._data_index]["distance_origin"])
+    destination_color = self.determine_color(self._data[self._data_index]["distance_destination"])
     
     # Draw background with the chosen color
     self.draw_square(
@@ -183,3 +183,17 @@ class JourneyScene(object):
       x += 1
       y1 += 1
       y2 -= 1
+  
+  def determine_color(self, distance: int) -> colours:
+    if distance >= 2000:
+      return colours.XMAS_RED
+    elif distance >= 1000:
+      return colours.ORANGE
+    elif distance >= 500:
+      return colours.TROPICAL_ORANGE
+    elif distance >= 200:
+      return colours.YELLOW
+    elif distance >= 100:
+      return colours.GREEN
+    else:
+      return colours.TEAL
