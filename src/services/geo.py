@@ -57,7 +57,6 @@ class GeoService():
       except Exception as e:
         self.logger.error(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
         self._location = config.LOCATION_COORDINATES_DEFAULT
-        raise e
     else:
       self.logger.warning(f'Location coordinates override detected. Using override coordinates: {config.LOCATION_COORDINATES_OVERRIDE}')
       self._location = config.LOCATION_COORDINATES_OVERRIDE
