@@ -45,6 +45,7 @@ This repo was initially forked from [c0wsaysmoo' repository](https://github.com/
 ## Configuration
 `src/config.py`
 * Update your ZIP and Country code to tell the app where you are. NOTE see the bottom of the file for a note regarding this.
+* For development purposes, you can emulate the RGB display with a browser emulator `RGBMatrixEmulator`. You'll want to search for all strings in the repo "from rgbmatrix" and replace it with "from RGBMatrixEmulator" to run in a browser.
 
 ## Run the App*
 `scripts/start-tracker.sh`
