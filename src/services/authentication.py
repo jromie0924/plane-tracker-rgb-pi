@@ -46,14 +46,17 @@ class AuthenticationService:
         break
       except Exception as e:
         self.logger.error(f"Error: {e}")
-        # self.error = True
         self.logger.warning(f"Retrying to get secret value. Retry {retries}/{_retries_allowed}")
         retries += 1
         time.sleep(5)
-        
         if retries == _retries_allowed:
           self.error = True
           self.logger.error(f"Failed to get secret value after {retries} retries")
+    
+    if not self.error:
+      self.logger.info("Authentication service successfully initialized.")
+    else:
+      self.logger.error("Authentication service initialized with errors.")
 
   @property
   def rapidapi_token(self):
