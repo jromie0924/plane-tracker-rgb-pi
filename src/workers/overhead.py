@@ -1,3 +1,4 @@
+import json
 from services.adsbTracker import AdsbTrackerService
 from services.airlineLookup import AirlineLookupService
 from services.flightLogic import FlightLogic
@@ -150,10 +151,14 @@ class Overhead:
             }
           )
           
-          self.logger.info(f"Airline: {airline}")
-          self.logger.info(f"Plane: {plane}")
-          self.logger.info(f"Altitude: {flight['alt_geom']} ft")
-          self.logger.info(f"Ground Speed: {flight['gs']} kts")
+          log = {
+            "Airline": airline,
+            "Plane": plane,
+            "Altitude": f"{flight['alt_geom']} ft",
+            "Ground Speed": f"{flight['gs']} kts"
+          }
+          log_str = json.dumps(log)
+          self.logger.info(log_str)
           
           with self._lock:
             self._new_data = len(data) > 0
