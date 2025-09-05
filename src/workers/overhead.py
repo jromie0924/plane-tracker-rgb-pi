@@ -149,6 +149,12 @@ class Overhead:
               "altitude": flight['alt_geom']
             }
           )
+          
+          self.logger.info(f"Airline: {airline}")
+          self.logger.info(f"Plane: {plane}")
+          self.logger.info(f"Altitude: {flight['alt_geom']} ft")
+          self.logger.info(f"Ground Speed: {flight['gs']} kts")
+          
           with self._lock:
             self._new_data = len(data) > 0
             self._processing = False
