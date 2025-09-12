@@ -12,6 +12,7 @@ import logging
 from requests.exceptions import ConnectionError
 from urllib3.exceptions import NewConnectionError
 from urllib3.exceptions import MaxRetryError
+from datetime import datetime
 
 
 EARTH_RADIUS_M = 6371000  # Earth's radius in m
@@ -67,7 +68,7 @@ class Overhead:
 
       if flight and route:
         # Get plane type
-        self.logger.info(f'Preparing to display flight: {flight["flight"].strip()} | route: {route["_airports"][-2]["iata"]} -> {route["_airports"][-1]["iata"]}')
+        flight_capture_timestamp = datetime.now()
         try:
           plane = flight['t']
         except (KeyError, TypeError):
@@ -151,13 +152,21 @@ class Overhead:
             }
           )
           
+          format = "%Y-%m-%dT%H%M%S"
+          date_time_formatted = flight_capture_timestamp.strftime(format)
+          
           log = {
+            "Time": date_time_formatted,
             "Airline": airline,
+            "Flight": callsign,
+            "Route": f'{route["_airports"][-2]["iata"]} -> {route["_airports"][-1]["iata"]}',
             "Plane": plane,
             "Altitude": f"{flight['alt_geom']} ft",
             "Ground Speed": f"{flight['gs']} kts"
           }
-          log_str = json.dumps(log)
+          
+          # Serialize the log and remove bracks and quotes
+          log_str = json.dumps(log).replace("{", "").replace("}", "").replace("\"", "")
           self.logger.info(log_str)
           
           with self._lock:
