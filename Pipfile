@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 boto3 = "*"
 requests = "*"
+timeout-decorator = "*"
 
 [dev-packages]
 rgbmatrixemulator = "0.11.6"
