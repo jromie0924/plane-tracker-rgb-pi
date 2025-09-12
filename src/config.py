@@ -1,6 +1,6 @@
 import logging
 
-LOGGING_LEVEL: int = logging.INFO
+LOGGING_LEVEL: int = logging.DEBUG
 
 APP_NAME = "plane-tracker"
 LOG_FILE = "logs/plane-tracker.log"
@@ -31,6 +31,7 @@ LOCATION_COORDINATES_DEFAULT = [41.8755616, -87.6244212] # Chicago, IL
 
 DUPLICATION_AVOIDANCE_TTL = 3 # minutes
 ROUTESET_LIMIT_SECONDS = 1 # second
+MAX_RETRIES = 3
 
 # TODO: Once the adsb.lol API requires a key, update the secret with the key, and update this field accordingly.
 RAPIDAPI_TOKEN_KEYNAME = 'rapidapi_key'

@@ -48,8 +48,12 @@ class Overhead:
       with self._lock:
         self._new_data = False
         self._processing = True
-
-      flights = self._adsb_api.get_nearby_flights(self._geo_service.latitude, self._geo_service.longitude, config.RADIUS)
+      
+      try:
+        flights = self._adsb_api.get_nearby_flights(self._geo_service.latitude, self._geo_service.longitude, config.RADIUS)
+      except Exception as e:
+        self.logger.error(f"Timeout exception when getting flights: {e}")
+        flights = None
 
       if not flights or len(flights) == 0:
         with self._lock:
