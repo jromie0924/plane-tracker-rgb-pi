@@ -13,8 +13,8 @@ from scenes.clock import ClockScene
 # from scenes.daysforecast import DaysForecastScene
 from scenes.date import DateScene
 
-# from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics
-from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
+from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics
+# from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 
 
 def flight_updated(flights_a, flights_b):
@@ -105,7 +105,7 @@ class Display(
 
     # Start Looking for planes
     self.overhead = Overhead()
-    self.overhead.grab_data()
+    # self.overhead.grab_data()
 
     # Initalise animator and scenes
     super().__init__()
