@@ -4,6 +4,7 @@ import json
 import logging
 import time
 
+from datetime import datetime as dt
 from utils.timeUtils import TimeUtils
 from http import HTTPStatus
 
@@ -120,6 +121,20 @@ class AdsbTrackerService():
               'flight': flight,
               'route': route
             })
+      try:
+        with open("logs/analysis_data.json", "r") as f:
+          logs = json.load(f)
+      except FileNotFoundError:
+        logs = {}
+      
+      now = dt.now()
+      format = "%Y%m%dT%H%M%S"
+      timestamp = now.strftime(format)
+      
+      logs[timestamp] = response.status
+      with open("logs/analysis_data.json", 'w') as f:
+        json.dump(logs, f)
+        
       return merged_data
       
       
