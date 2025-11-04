@@ -155,6 +155,8 @@ class Overhead:
           format = "%Y-%m-%dT%H%M%S"
           date_time_formatted = flight_capture_timestamp.strftime(format)
           
+          self.logger.debug(f"Data: {data[-1]}")
+          
           log = {
             "Time": date_time_formatted,
             "Airline": airline,
