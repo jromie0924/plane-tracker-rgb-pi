@@ -4,7 +4,6 @@ This repo was initially forked from [c0wsaysmoo' repository](https://github.com/
 
 ## Some Images
 #### The device:
-(Note the picture was taken a little close up, it looks better in person)
 ![image](docs/images/display.jpg)
 
 #### The Emulator:
