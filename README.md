@@ -45,8 +45,6 @@ This repo was initially forked from [c0wsaysmoo' repository](https://github.com/
 
 `pipenv shell`
 
-`pipenv install`
-
 `pipenv install --dev`
 
 ## Configuration
