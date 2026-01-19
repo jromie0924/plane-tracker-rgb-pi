@@ -39,11 +39,11 @@ class AdsbTrackerService():
   
 
   # Gets nearby flights given a latitude, longitude, and radius in nautical miles.
-  def get_nearby_flights(self, lat, long, radius):
+  def get_nearby_flights(self, lat, long, radius, timeout=15):
     self.logger.info(f'Getting nearby flights')
 
     try:
-      conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
+      conn = http.client.HTTPSConnection(config.ADSB_LOL_URL, timeout=timeout)
       conn.request('GET',
                     self._get_nearby_flight_url(lat, long, radius),
                     '',
@@ -81,7 +81,7 @@ class AdsbTrackerService():
 
 
   # Attempts to get the routes of a list of flights by callsign.
-  def get_routeset(self, flights):
+  def get_routeset(self, flights, timeout=15):
     payload = {'planes': []}
     
     for flight in flights:
@@ -95,7 +95,7 @@ class AdsbTrackerService():
       })
   
     try:
-      conn = http.client.HTTPSConnection(config.ADSB_LOL_URL)
+      conn = http.client.HTTPSConnection(config.ADSB_LOL_URL, timeout=timeout)
       conn.request('POST',
                         self._get_routeset_url(),
                         json.dumps(payload),
@@ -104,6 +104,10 @@ class AdsbTrackerService():
       response = conn.getresponse()
       
       if response.status != HTTPStatus.OK:
+        try:
+          conn.close()
+        except Exception:
+          pass
         return EMPTY_ROUTESET
 
       data = self.decode_response_payload(response.read())
