@@ -38,7 +38,16 @@ class Overhead:
       self.logger.info('Waiting for location data...')
       sleep(1)
 
-    Thread(target=self._grab_data).start()
+    with self._lock:
+      if self._processing:
+        return
+
+      self._new_data = False
+      self._processing = True
+
+    t = Thread(target=self._grab_data)
+    t.daemon = True
+    t.start()
 
   def _grab_data(self):
     # Mark data as old
@@ -46,11 +55,11 @@ class Overhead:
 
     # Grab flight details
     try:
-      with self._lock:
-        self._new_data = False
-        self._processing = True
-
-      flights = self._adsb_api.get_nearby_flights(self._geo_service.latitude, self._geo_service.longitude, config.RADIUS)
+      try:
+        flights = self._adsb_api.get_nearby_flights(self._geo_service.latitude, self._geo_service.longitude, config.RADIUS)
+      except TimeoutError:
+        self.logger.warning("Timeout experienced when getting nearby flights.", exc_info=True)
+        flights = None
 
       if not flights or len(flights) == 0:
         with self._lock:
@@ -62,9 +71,7 @@ class Overhead:
 
       self.logger.debug(f'Retrieved {len(flights)} flights')
 
-      # Grab a mutex lock to prevent race conditions
-      with self._lock:
-        flight, route = self._flight_logic.choose_flight(flights, self._adsb_api.get_routeset)
+      flight, route = self._flight_logic.choose_flight(flights, self._adsb_api.get_routeset)
 
       if flight and route:
         # Get plane type

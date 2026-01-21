@@ -9,6 +9,8 @@ import logging
 import sys
 import os
 import csv
+import faulthandler
+import signal
 
 def _init_logger():
   logger = logging.getLogger(config.APP_NAME)
@@ -60,6 +62,12 @@ if __name__ == "__main__":
   _init_logger()
   logger = logging.getLogger(config.APP_NAME)
   logger.info("Starting display")
+
+  faulthandler.enable(all_threads=True)
+  try:
+    faulthandler.register(signal.SIGUSR1, all_threads=True)
+  except Exception:
+    pass
   
   try:
     aws_secret_loc = sys.argv[1]
