@@ -9,6 +9,8 @@ from services.adsbTracker import AdsbTrackerService
 @pytest.fixture
 def mock_config():
   with patch('services.adsbTracker.config') as mock_config:
+    # Set APP_NAME to a string to avoid TypeError in logging.getLogger
+    mock_config.APP_NAME = 'test_app'
     yield mock_config
 
 @pytest.fixture
@@ -93,14 +95,19 @@ def test_get_routeset_success(mock_config, mock_https_connection):
   mock_conn = mock_https_connection.return_value
   mock_response = MagicMock()
   mock_response.status = 200
-  mock_response.read.return_value = json.dumps([{'_airports': ['JFK']}]).encode('utf-8')
+  mock_response.read.return_value = json.dumps([{
+    'callsign': 'test_callsign',
+    '_airports': ['JFK']
+  }]).encode('utf-8')
   mock_conn.getresponse.return_value = mock_response
 
   service = AdsbTrackerService()
-  result = service.get_routeset(40.7128, -74.0060, 'test_callsign')
+  flights = [{'flight': 'test_callsign', 'lat': 40.7128, 'lon': -74.0060}]
+  result = service.get_routeset(flights)
 
   assert result is not None
-  assert result['_airports'][0] == 'JFK'
+  assert len(result) == 1
+  assert result[0]['route']['_airports'][0] == 'JFK'
 
 
 def test_get_routeset_no_callsign(mock_config, mock_https_connection):
@@ -108,13 +115,19 @@ def test_get_routeset_no_callsign(mock_config, mock_https_connection):
   mock_conn = mock_https_connection.return_value
   mock_response = MagicMock()
   mock_response.status = 200
-  mock_response.read.return_value = json.dumps([{'_airports': ['JFK']}]).encode('utf-8')
+  mock_response.read.return_value = json.dumps([{
+    'callsign': '',
+    '_airports': ['JFK']
+  }]).encode('utf-8')
   mock_conn.getresponse.return_value = mock_response
 
   service = AdsbTrackerService()
-  result = service.get_routeset(40.7128, -74.0060, '')
+  flights = [{'flight': '', 'lat': 40.7128, 'lon': -74.0060}]
+  result = service.get_routeset(flights)
 
-  assert result == service._default_routeset
+  # Empty callsign matches empty callsign
+  assert len(result) == 1
+  assert result[0]['route']['callsign'] == ''
 
 def test_get_routeset_bad_status(mock_config, mock_https_connection):
   mock_config.ADSB_LOL_URL = 'test_url'
@@ -124,9 +137,11 @@ def test_get_routeset_bad_status(mock_config, mock_https_connection):
   mock_conn.getresponse.return_value = mock_response
 
   service = AdsbTrackerService()
-  result = service.get_routeset(40.7128, -74.0060, 'test_callsign')
+  flights = [{'flight': 'test_callsign', 'lat': 40.7128, 'lon': -74.0060}]
+  result = service.get_routeset(flights)
 
-  assert result == service._default_routeset
+  # Bad status returns empty routeset
+  assert result == []
 
 
 def test_get_routeset_bad_json(mock_config, mock_https_connection):
@@ -138,6 +153,8 @@ def test_get_routeset_bad_json(mock_config, mock_https_connection):
   mock_conn.getresponse.return_value = mock_response
 
   service = AdsbTrackerService()
-  result = service.get_routeset(40.7128, -74.0060, 'test_callsign')
+  flights = [{'flight': 'test_callsign', 'lat': 40.7128, 'lon': -74.0060}]
+  result = service.get_routeset(flights)
 
-  assert result == service._default_routeset
+  # Bad JSON causes exception, returns empty routeset
+  assert result == []

@@ -1,5 +1,4 @@
-# from RGBMatrixEmulator import graphics
-from rgbmatrix import graphics
+from matrix_service import graphics
 
 # Colour helpers
 BLACK = graphics.Color(0, 0, 0)
