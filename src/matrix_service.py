@@ -13,7 +13,7 @@ def is_raspberry_pi():
     try:
         with open('/proc/device-tree/model', 'r') as f:
             return 'Raspberry Pi' in f.read()
-    except:
+    except (FileNotFoundError, PermissionError, OSError):
         return False
 
 # Allow manual override via environment variable

@@ -25,7 +25,7 @@ def test_is_raspberry_pi_detection_true():
         
         try:
             spec.loader.exec_module(module)
-            assert module.is_raspberry_pi() == True
+            assert module.is_raspberry_pi()
         finally:
             # Cleanup
             if 'rgbmatrix' in sys.modules:
@@ -51,7 +51,7 @@ def test_is_raspberry_pi_detection_false():
         
         try:
             spec.loader.exec_module(module)
-            assert module.is_raspberry_pi() == False
+            assert not module.is_raspberry_pi()
         finally:
             # Cleanup
             if 'rgbmatrix' in sys.modules:
@@ -81,7 +81,7 @@ def test_force_emulator_mode():
             try:
                 spec.loader.exec_module(module)
                 assert module.MATRIX_MODE == "emulator"
-                assert module.is_hardware() == False
+                assert not module.is_hardware()
             finally:
                 # Cleanup
                 if 'rgbmatrix' in sys.modules:
@@ -111,7 +111,7 @@ def test_force_hardware_mode():
             try:
                 spec.loader.exec_module(module)
                 assert module.MATRIX_MODE == "hardware"
-                assert module.is_hardware() == True
+                assert module.is_hardware()
             finally:
                 # Cleanup
                 if 'rgbmatrix' in sys.modules:
