@@ -4,17 +4,20 @@ This document describes how to run tests for the plane-tracker-rgb-pi project.
 
 ## Quick Start
 
-To run tests immediately:
+The project uses `pipenv` for dependency management. To run tests:
 
 ```bash
-# 1. Install test dependencies
-pip3 install -r requirements-test.txt
+# 1. Set up pipenv environment
+pipenv install --dev
+pipenv shell
 
 # 2. Run the tests
-python3 -m pytest test/test_matrix_service.py test/test_imports.py -v
+python -m pytest -v
 ```
 
-Expected output: `15 passed`
+Expected output: `24 passed`
+
+**For a simplified testing guide, see [QUICKTEST.md](QUICKTEST.md).**
 
 ## Test Structure
 
@@ -28,53 +31,53 @@ test/
 └── test_imports.py               # Integration tests for import verification
 ```
 
-**Note:** The `test_adsbTracker.py` tests have pre-existing issues unrelated to the matrix_service changes. To run only the matrix_service related tests, use the command in the Quick Start section above.
+**Note:** All tests now pass. The project uses `pipenv` for dependency management.
 
 ## Prerequisites
 
-### Option 1: Using requirements file (Recommended for testing)
+### Recommended: Using pipenv (Project Standard)
 
-Install test dependencies from requirements file:
-
-```bash
-pip3 install -r requirements-test.txt
-```
-
-This installs pytest and pytest-cov.
-
-### Option 2: Using pip
-
-Install pytest directly:
-
-```bash
-pip3 install pytest
-```
-
-### Option 3: Using pipenv
-
-If you're using pipenv for dependency management:
+The project uses pipenv for dependency management:
 
 ```bash
 pipenv install --dev
 pipenv shell
 ```
 
-This will install pytest and other dev dependencies from the Pipfile.
+This installs all dependencies including pytest from the Pipfile.
+
+### Alternative: Using requirements file
+
+If not using pipenv, install test dependencies from requirements file:
+
+```bash
+pip install -r requirements-test.txt
+```
+
+### Alternative: Direct pip install
+
+Install pytest directly:
+
+```bash
+pip install pytest
+```
 
 ## Running Tests
 
-**Important:** All commands should be run from the project root directory.
+**Important:** Make sure you're in the pipenv shell before running tests:
 
 ```bash
-cd plane-tracker-rgb-pi
+pipenv shell
 ```
+
+All commands should be run from the project root directory.
 
 ### Run All Tests
 
 To run all tests in the project:
 
 ```bash
-python3 -m pytest
+python -m pytest
 ```
 
 ### Run Tests with Verbose Output
@@ -82,7 +85,7 @@ python3 -m pytest
 For detailed output showing each test:
 
 ```bash
-python3 -m pytest -v
+python -m pytest -v
 ```
 
 ### Run Tests for a Specific Module
@@ -90,25 +93,25 @@ python3 -m pytest -v
 To run tests for the matrix_service module:
 
 ```bash
-python3 -m pytest test/test_matrix_service.py -v
+python -m pytest test/test_matrix_service.py -v
 ```
 
 To run integration tests:
 
 ```bash
-python3 -m pytest test/test_imports.py -v
+python -m pytest test/test_imports.py -v
 ```
 
 To run both matrix_service and import tests:
 
 ```bash
-python3 -m pytest test/test_matrix_service.py test/test_imports.py -v
+python -m pytest test/test_matrix_service.py test/test_imports.py -v
 ```
 
 To run service tests:
 
 ```bash
-python3 -m pytest test/service/ -v
+python -m pytest test/service/ -v
 ```
 
 ### Run a Specific Test
@@ -116,7 +119,7 @@ python3 -m pytest test/service/ -v
 To run a single test function:
 
 ```bash
-python3 -m pytest test/test_matrix_service.py::test_is_raspberry_pi_detection_true -v
+python -m pytest test/test_matrix_service.py::test_is_raspberry_pi_detection_true -v
 ```
 
 ### Run Tests with Coverage
@@ -124,8 +127,7 @@ python3 -m pytest test/test_matrix_service.py::test_is_raspberry_pi_detection_tr
 To see code coverage (requires pytest-cov):
 
 ```bash
-pip3 install pytest-cov
-python3 -m pytest --cov=src --cov-report=html
+python -m pytest --cov=src --cov-report=html
 ```
 
 This generates an HTML coverage report in `htmlcov/index.html`.
@@ -165,10 +167,10 @@ The matrix_service module respects the `MATRIX_MODE` environment variable:
 
 ```bash
 # Force emulator mode during tests
-MATRIX_MODE=emulator python3 -m pytest test/test_imports.py -v
+MATRIX_MODE=emulator python -m pytest test/test_imports.py -v
 
 # Force hardware mode during tests
-MATRIX_MODE=hardware python3 -m pytest test/test_imports.py -v
+MATRIX_MODE=hardware python -m pytest test/test_imports.py -v
 ```
 
 ## Continuous Integration
@@ -184,9 +186,14 @@ Tests should pass before merging any pull request. The test suite validates:
 
 ### ImportError: No module named 'pytest'
 
-Install pytest:
+Make sure you're in the pipenv shell:
 ```bash
-pip3 install pytest
+pipenv shell
+```
+
+If pytest is still not found, install dev dependencies:
+```bash
+pipenv install --dev
 ```
 
 ### Tests fail with "No module named 'RGBMatrixEmulator'"
@@ -198,7 +205,7 @@ This is expected in test environments. The tests mock these modules, so this err
 Ensure you're running tests from the project root directory:
 ```bash
 cd plane-tracker-rgb-pi
-python3 -m pytest
+python -m pytest
 ```
 
 ## Adding New Tests
@@ -231,9 +238,10 @@ def test_my_feature():
 
 ## Summary
 
-- **Run all tests**: `python3 -m pytest`
-- **Run with details**: `python3 -m pytest -v`
-- **Run specific module**: `python3 -m pytest test/test_matrix_service.py -v`
-- **Force mode**: `MATRIX_MODE=emulator python3 -m pytest`
+- **Quick guide**: See [QUICKTEST.md](QUICKTEST.md) for simplified instructions
+- **Run all tests**: `python -m pytest`
+- **Run with details**: `python -m pytest -v`
+- **Run specific module**: `python -m pytest test/test_matrix_service.py -v`
+- **Force mode**: `MATRIX_MODE=emulator python -m pytest`
 
 For questions or issues with tests, please open an issue on GitHub.
