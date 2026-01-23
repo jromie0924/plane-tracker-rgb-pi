@@ -4,20 +4,23 @@ This document describes how to run tests for the plane-tracker-rgb-pi project.
 
 ## Quick Start
 
-The project uses `pipenv` for dependency management. To run tests:
+The project uses `pipenv` for dependency management and includes a `Makefile` for easy test execution.
 
 ```bash
 # 1. Set up pipenv environment
 pipenv install --dev
 pipenv shell
 
-# 2. Run the tests
-python -m pytest -v
+# 2. Run tests using make
+make test              # Run all tests (24 tests)
+make test-unit         # Run unit tests (5 tests)
+make test-integration  # Run integration tests (10 tests)
+make test-all          # Run all tests with verbose output
 ```
 
-Expected output: `24 passed`
+See `make help` for all available test targets.
 
-**For a simplified testing guide, see [QUICKTEST.md](QUICKTEST.md).**
+Expected output: `24 passed`
 
 ## Test Structure
 
@@ -69,6 +72,24 @@ pip install pytest
 ```bash
 pipenv shell
 ```
+
+### Using Make (Recommended)
+
+The project includes a Makefile with convenient test targets:
+
+```bash
+make help              # Show all available targets
+make test              # Run all tests (24 tests)
+make test-unit         # Run unit tests (5 tests for matrix_service)
+make test-integration  # Run integration tests (10 tests for imports)
+make test-all          # Run all tests with verbose output
+make test-service      # Run service tests (9 tests for adsbTracker)
+make test-coverage     # Run tests with coverage report
+```
+
+### Using pytest directly
+
+You can also run pytest directly from the command line:
 
 All commands should be run from the project root directory.
 
@@ -128,6 +149,8 @@ To see code coverage (requires pytest-cov):
 
 ```bash
 python -m pytest --cov=src --cov-report=html
+# Or use make
+make test-coverage
 ```
 
 This generates an HTML coverage report in `htmlcov/index.html`.
@@ -238,10 +261,11 @@ def test_my_feature():
 
 ## Summary
 
-- **Quick guide**: See [QUICKTEST.md](QUICKTEST.md) for simplified instructions
-- **Run all tests**: `python -m pytest`
-- **Run with details**: `python -m pytest -v`
-- **Run specific module**: `python -m pytest test/test_matrix_service.py -v`
+- **Quick guide**: Run `make help` to see all test targets
+- **Run all tests**: `make test` or `python -m pytest`
+- **Run unit tests**: `make test-unit`
+- **Run integration tests**: `make test-integration`
+- **Run with details**: `make test-all` or `python -m pytest -v`
 - **Force mode**: `MATRIX_MODE=emulator python -m pytest`
 
 For questions or issues with tests, please open an issue on GitHub.
