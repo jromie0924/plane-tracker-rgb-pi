@@ -136,7 +136,7 @@ def mock_config():
 1. Create a new file in `src/services/`
 2. Follow the pattern of existing services (e.g., `adsbTracker.py`)
 3. Use configuration from `config.py`
-4. Add corresponding tests in `test/service/`
+4. Add corresponding tests in `test/service/` (note: singular 'service')
 
 ### Adding a New Display Scene
 1. Create a new scene class in `src/scenes/`
