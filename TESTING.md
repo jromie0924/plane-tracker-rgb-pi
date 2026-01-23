@@ -2,6 +2,20 @@
 
 This document describes how to run tests for the plane-tracker-rgb-pi project.
 
+## Quick Start
+
+To run tests immediately:
+
+```bash
+# 1. Install test dependencies
+pip3 install -r requirements-test.txt
+
+# 2. Run the tests
+python3 -m pytest test/test_matrix_service.py test/test_imports.py -v
+```
+
+Expected output: `15 passed`
+
 ## Test Structure
 
 The project uses `pytest` as its testing framework. Tests are organized in the `test/` directory:
@@ -9,33 +23,57 @@ The project uses `pytest` as its testing framework. Tests are organized in the `
 ```
 test/
 ├── service/
-│   └── test_adsbTracker.py      # Tests for ADSB tracking service
+│   └── test_adsbTracker.py      # Tests for ADSB tracking service (has pre-existing issues)
 ├── test_matrix_service.py        # Unit tests for matrix_service module
 └── test_imports.py               # Integration tests for import verification
 ```
 
+**Note:** The `test_adsbTracker.py` tests have pre-existing issues unrelated to the matrix_service changes. To run only the matrix_service related tests, use the command in the Quick Start section above.
+
 ## Prerequisites
 
-Install pytest if you haven't already:
+### Option 1: Using requirements file (Recommended for testing)
+
+Install test dependencies from requirements file:
+
+```bash
+pip3 install -r requirements-test.txt
+```
+
+This installs pytest and pytest-cov.
+
+### Option 2: Using pip
+
+Install pytest directly:
 
 ```bash
 pip3 install pytest
 ```
 
-Or using pipenv (if available):
+### Option 3: Using pipenv
+
+If you're using pipenv for dependency management:
 
 ```bash
 pipenv install --dev
+pipenv shell
 ```
 
+This will install pytest and other dev dependencies from the Pipfile.
+
 ## Running Tests
+
+**Important:** All commands should be run from the project root directory.
+
+```bash
+cd plane-tracker-rgb-pi
+```
 
 ### Run All Tests
 
 To run all tests in the project:
 
 ```bash
-cd /home/runner/work/plane-tracker-rgb-pi/plane-tracker-rgb-pi
 python3 -m pytest
 ```
 
@@ -59,6 +97,12 @@ To run integration tests:
 
 ```bash
 python3 -m pytest test/test_imports.py -v
+```
+
+To run both matrix_service and import tests:
+
+```bash
+python3 -m pytest test/test_matrix_service.py test/test_imports.py -v
 ```
 
 To run service tests:
@@ -153,7 +197,7 @@ This is expected in test environments. The tests mock these modules, so this err
 
 Ensure you're running tests from the project root directory:
 ```bash
-cd /home/runner/work/plane-tracker-rgb-pi/plane-tracker-rgb-pi
+cd plane-tracker-rgb-pi
 python3 -m pytest
 ```
 

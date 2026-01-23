@@ -9,6 +9,7 @@ requests = "*"
 
 [dev-packages]
 rgbmatrixemulator = "0.11.6"
+pytest = "*"
 
 [requires]
 python_version = "3.9"
