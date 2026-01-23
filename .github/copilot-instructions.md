@@ -30,12 +30,12 @@ This is a Python-based ADSB plane tracker that displays nearby aircraft informat
   - `scenes/`: Display scenes for different states
   - `services/`: Business logic services (ADSB tracking, geo, authentication, etc.)
   - `workers/`: Background worker processes
+  - `fonts/`: Font files for display rendering
+  - `icons/`: Icon assets
 - `test/`: Unit tests (pytest-based)
 - `scripts/`: Shell scripts for starting the application
 - `docs/`: Documentation and images
 - `logos/`: Logo assets
-- `fonts/`: Font files for display rendering
-- `icons/`: Icon assets
 
 ### Important Files
 - `Pipfile` & `Pipfile.lock`: Python dependency definitions
