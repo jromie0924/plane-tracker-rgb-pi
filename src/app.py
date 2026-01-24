@@ -2,7 +2,7 @@
 from display import Display
 from models.runtimeModel import RuntimeModel
 from services.runtime import RuntimeService
-from logging.handlers import RotatingFileHandler
+from logging.handlers import TimedRotatingFileHandler
 
 import config
 import logging
@@ -27,11 +27,11 @@ def _init_logger():
   stream_handler = logging.StreamHandler(sys.stdout)
   stream_handler.setFormatter(formatter)
   
-  # Rotating file handler
-  # Will keep 50 files, each with a max size of 1MB
-  # When the log file reaches 1MB, it will create a new log file
-  # The oldest log file will be deleted
-  file_handler = RotatingFileHandler(config.LOG_FILE, mode='a', maxBytes=1024*1024, backupCount=50)
+  # Timed rotating file handler
+  # Rotates log files daily at midnight
+  # Will keep 30 days of log files
+  # Older log files will be automatically deleted
+  file_handler = TimedRotatingFileHandler(config.LOG_FILE, when='midnight', interval=1, backupCount=30)
   file_handler.setFormatter(formatter)
   
   # Add handlers to the logger
