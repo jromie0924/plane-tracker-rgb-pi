@@ -5,9 +5,13 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 from services.airlineLookup import AirlineLookupService
 
+# Constants
+AIRLINES_JSON_PATH = 'src/app_data/airlines.json'
+REQUIRED_FIELDS = ['id', 'name', 'alias', 'iata', 'icao', 'callsign', 'country', 'active']
+
 def test_airlines_json_valid():
   """Test that airlines.json is valid JSON and can be loaded"""
-  with open('src/app_data/airlines.json', 'r') as f:
+  with open(AIRLINES_JSON_PATH, 'r') as f:
     data = json.load(f)
   
   assert isinstance(data, list)
@@ -15,14 +19,12 @@ def test_airlines_json_valid():
 
 def test_airlines_json_structure():
   """Test that each airline entry has required fields"""
-  with open('src/app_data/airlines.json', 'r') as f:
+  with open(AIRLINES_JSON_PATH, 'r') as f:
     data = json.load(f)
   
   # Check first and last entries have required fields
-  required_fields = ['id', 'name', 'alias', 'iata', 'icao', 'callsign', 'country', 'active']
-  
   for airline in [data[0], data[-1]]:
-    for field in required_fields:
+    for field in REQUIRED_FIELDS:
       assert field in airline, f"Missing field '{field}' in airline entry"
 
 def test_lookup_air_premia():
@@ -72,29 +74,22 @@ def test_lookup_empty_string():
 
 def test_air_premia_icao_unique_among_active():
   """Test that Air Premia's ICAO code (APZ) is unique among active airlines"""
-  with open('src/app_data/airlines.json', 'r') as f:
+  with open(AIRLINES_JSON_PATH, 'r') as f:
     data = json.load(f)
   
   # Count how many active airlines have ICAO code 'APZ'
-  apz_count = 0
-  for airline in data:
-    if airline['active'] == 'Y' and airline['icao'] == 'APZ':
-      apz_count += 1
+  apz_count = sum(1 for airline in data if airline['active'] == 'Y' and airline['icao'] == 'APZ')
   
   # Air Premia should be the only active airline with ICAO code APZ
   assert apz_count == 1, f"Expected 1 active airline with ICAO 'APZ', found {apz_count}"
 
 def test_air_premia_entry_complete():
   """Test that Air Premia entry has all expected fields filled correctly"""
-  with open('src/app_data/airlines.json', 'r') as f:
+  with open(AIRLINES_JSON_PATH, 'r') as f:
     data = json.load(f)
   
-  # Find Air Premia
-  air_premia = None
-  for airline in data:
-    if airline['icao'] == 'APZ':
-      air_premia = airline
-      break
+  # Find Air Premia using a generator expression for efficiency
+  air_premia = next((airline for airline in data if airline['icao'] == 'APZ'), None)
   
   assert air_premia is not None, "Air Premia not found in database"
   assert air_premia['name'] == 'Air Premia'
