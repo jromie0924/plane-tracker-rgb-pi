@@ -6,7 +6,7 @@ This is a Python-based ADSB plane tracker that displays nearby aircraft informat
 ## Development Environment
 
 ### Python Environment
-- **Python Version**: 3.9 (specified in Pipfile)
+- **Python Version**: 3.11 (specified in Pipfile)
 - **Package Manager**: pipenv
 - **Virtual Environment**: Use `pipenv shell` to activate the virtual environment
 - **Dependencies Installation**: `pipenv install --dev`
