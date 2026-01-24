@@ -1,8 +1,14 @@
 ### On SELinux-enabled systems: commands for scripts that systemd cannot execute due to SELinux labeling
 
-`sudo chcon -t bin_t $HOME/plane-tracker-rgb-pi/scripts/start-tracker-comp.sh`
+`sudo chcon -t bin_t $HOME/plane-tracker-rgb-pi/scripts/start-tracker.sh`
 
 ... or if that doesn't work use this (replace \`$HOME/plane-tracker-rgb-pi\` with your actual install path, e.g. \`<repo_root>\`):
-`sudo semanage fcontext -a -t bin_t "$HOME/plane-tracker-rgb-pi/scripts/start-tracker-comp.sh"`
-`sudo restorecon -v $HOME/plane-tracker-rgb-pi/scripts/start-tracker-comp.sh`
+`sudo semanage fcontext -a -t bin_t "$HOME/plane-tracker-rgb-pi/scripts/start-tracker.sh"`
+`sudo restorecon -v $HOME/plane-tracker-rgb-pi/scripts/start-tracker.sh`
+
+### Note
+The `start-tracker.sh` script automatically detects whether it's running on a Raspberry Pi or a regular computer:
+- On Raspberry Pi: Runs directly with system Python
+- On other systems: Uses pipenv virtual environment
+
 
