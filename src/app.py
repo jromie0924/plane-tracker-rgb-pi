@@ -28,7 +28,7 @@ def _init_logger():
   stream_handler.setFormatter(formatter)
   
   # Rotating file handler
-  # Will keep 2 files, each with a max size of 1MB
+  # Will keep 50 files, each with a max size of 1MB
   # When the log file reaches 1MB, it will create a new log file
   # The oldest log file will be deleted
   file_handler = RotatingFileHandler(config.LOG_FILE, mode='a', maxBytes=1024*1024, backupCount=50)
