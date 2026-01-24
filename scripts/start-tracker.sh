@@ -32,6 +32,12 @@ if is_raspberry_pi; then
     python src/app.py "$AWS_SECRET"
 else
     echo "Detected non-Raspberry Pi system - using pipenv"
-    pipenv sync
-    pipenv run python src/app.py "$AWS_SECRET"
+    # Find pipenv path for systemd compatibility
+    PIPENV_PATH=$(command -v pipenv)
+    if [ -z "$PIPENV_PATH" ]; then
+        echo "Error: pipenv not found in PATH" >&2
+        exit 1
+    fi
+    "$PIPENV_PATH" sync
+    "$PIPENV_PATH" run python src/app.py "$AWS_SECRET"
 fi
