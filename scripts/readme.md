@@ -1,4 +1,4 @@
-### Run these commands for any script that needs to be invoked by systemd
+### On SELinux-enabled systems: commands for scripts that systemd cannot execute due to SELinux labeling
 
 `sudo chcon -t bin_t $HOME/plane-tracker-rgb-pi/scripts/start-tracker-comp.sh`
 
