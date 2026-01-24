@@ -39,7 +39,6 @@ This is a Python-based ADSB plane tracker that displays nearby aircraft informat
 
 ### Important Files
 - `Pipfile` & `Pipfile.lock`: Python dependency definitions
-- `environment.yml`: Conda environment configuration (alternative to pipenv)
 - `emulator_config.json`: Configuration for the RGB matrix emulator
 - `scripts/start-tracker.sh`: Script to start the tracker application
 
