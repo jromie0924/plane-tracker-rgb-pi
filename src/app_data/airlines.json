@@ -60648,5 +60648,15 @@
     "callsign": "ASIA CARGO",
     "country": "Malaysia",
     "active": "Y"
+  },
+  {
+    "id": "19863",
+    "name": "Air Premia",
+    "alias": "",
+    "iata": "YP",
+    "icao": "APZ",
+    "callsign": "AIR PREMIA",
+    "country": "South Korea",
+    "active": "Y"
   }
 ]
