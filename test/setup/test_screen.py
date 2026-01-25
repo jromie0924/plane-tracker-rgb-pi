@@ -20,7 +20,7 @@ class TestPlatformDetection:
                 with patch('platform.machine', return_value='x86_64'):
                     # Need to reload module to test the function
                     from setup.screen import is_raspberry_pi
-                    assert is_raspberry_pi() == True
+                    assert is_raspberry_pi()
     
     def test_raspberry_pi_not_detected_from_wrong_model(self):
         """Test that non-Pi hardware is not detected as Pi"""
@@ -28,28 +28,28 @@ class TestPlatformDetection:
             with patch('builtins.open', mock_open(read_data='Generic x86_64 System')):
                 with patch('platform.machine', return_value='x86_64'):
                     from setup.screen import is_raspberry_pi
-                    assert is_raspberry_pi() == False
+                    assert not is_raspberry_pi()
     
     def test_raspberry_pi_detected_from_arm_architecture(self):
         """Test that ARM architecture is detected as Pi when model file doesn't exist"""
         with patch('os.path.exists', return_value=False):
             with patch('platform.machine', return_value='armv7l'):
                 from setup.screen import is_raspberry_pi
-                assert is_raspberry_pi() == True
+                assert is_raspberry_pi()
     
     def test_raspberry_pi_detected_from_aarch64_architecture(self):
         """Test that aarch64 architecture is detected as Pi"""
         with patch('os.path.exists', return_value=False):
             with patch('platform.machine', return_value='aarch64'):
                 from setup.screen import is_raspberry_pi
-                assert is_raspberry_pi() == True
+                assert is_raspberry_pi()
     
     def test_non_pi_detected_from_x86_architecture(self):
         """Test that x86 architecture is not detected as Pi"""
         with patch('os.path.exists', return_value=False):
             with patch('platform.machine', return_value='x86_64'):
                 from setup.screen import is_raspberry_pi
-                assert is_raspberry_pi() == False
+                assert not is_raspberry_pi()
     
     def test_file_read_error_handled_gracefully(self):
         """Test that IOError when reading model file is handled gracefully"""
@@ -58,7 +58,7 @@ class TestPlatformDetection:
                 with patch('platform.machine', return_value='x86_64'):
                     from setup.screen import is_raspberry_pi
                     # Should fall back to architecture check
-                    assert is_raspberry_pi() == False
+                    assert not is_raspberry_pi()
     
     def test_os_error_handled_gracefully(self):
         """Test that OSError when reading model file is handled gracefully"""
@@ -67,7 +67,7 @@ class TestPlatformDetection:
                 with patch('platform.machine', return_value='armv7l'):
                     from setup.screen import is_raspberry_pi
                     # Should fall back to architecture check
-                    assert is_raspberry_pi() == True
+                    assert is_raspberry_pi()
 
 
 class TestScreenDimensionsRaspberryPi:
@@ -92,7 +92,7 @@ class TestScreenDimensionsRaspberryPi:
             assert screen_module.WIDTH == 64
             assert screen_module.HEIGHT == 32
             assert screen_module.SCALE_FACTOR == 1
-            assert screen_module.IS_RASPBERRY_PI == True
+            assert screen_module.IS_RASPBERRY_PI
 
 
 class TestScreenDimensionsNonPi:
@@ -113,7 +113,7 @@ class TestScreenDimensionsNonPi:
             assert screen_module.WIDTH == 256
             assert screen_module.HEIGHT == 128
             assert screen_module.SCALE_FACTOR == 4
-            assert screen_module.IS_RASPBERRY_PI == False
+            assert not screen_module.IS_RASPBERRY_PI
 
 
 class TestScaleFactor:
