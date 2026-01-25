@@ -1,6 +1,6 @@
 import sys
 from datetime import datetime
-from setup import frames
+from setup import frames, screen
 from workers.animator import Animator
 from workers.overhead import Overhead
 
@@ -77,8 +77,8 @@ class Display(
     # Setup Display
     options = RGBMatrixOptions()
     options.hardware_mapping = "adafruit-hat-pwm" if HAT_PWM_ENABLED else "adafruit-hat"
-    options.rows = 32
-    options.cols = 64
+    options.rows = screen.HEIGHT
+    options.cols = screen.WIDTH
     options.chain_length = 1
     options.parallel = 1
     options.row_address_type = 0
