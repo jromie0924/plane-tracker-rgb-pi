@@ -11,7 +11,6 @@ if screen.IS_RASPBERRY_PI:
     FONT_DIR = f"{DIR_PATH}/../fonts"
 else:
     FONT_DIR = f"{DIR_PATH}/../fonts/scaled"
-    FONT_SUFFIX = "_4x"
 
 extrasmall = graphics.Font()
 small = graphics.Font()

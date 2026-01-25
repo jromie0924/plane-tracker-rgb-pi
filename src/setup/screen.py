@@ -10,7 +10,7 @@ def is_raspberry_pi():
                 model = f.read()
                 if 'Raspberry Pi' in model:
                     return True
-    except:
+    except (IOError, OSError, FileNotFoundError):
         pass
     
     # Fallback: check CPU architecture (ARM typically indicates Pi)

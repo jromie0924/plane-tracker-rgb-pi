@@ -1,7 +1,7 @@
 from datetime import datetime
 # from utilities.temperature import grab_forecast
 from workers.animator import Animator
-from setup import colours, fonts, frames
+from setup import colours, fonts, frames, screen
 from matrix_service import graphics
 import logging
 
