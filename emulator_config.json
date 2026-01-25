@@ -1,6 +1,6 @@
 {
     "pixel_outline": 0,
-    "pixel_size": 5,
+    "pixel_size": 12,
     "pixel_style": "circle",
     "display_adapter": "browser",
     "suppress_font_warnings": false,
