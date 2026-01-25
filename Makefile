@@ -1,8 +1,13 @@
-.PHONY: test test-unit test-integration test-all help
+.PHONY: test test-unit test-integration test-all help run
 
 # Default target
 help:
-	@echo "Available test targets:"
+	@echo "Available targets:"
+	@echo ""
+	@echo "Application:"
+	@echo "  make start            - Start the plane tracker application"
+	@echo ""
+	@echo "Testing:"
 	@echo "  make test             - Run all tests (24 tests)"
 	@echo "  make test-unit        - Run unit tests (5 tests for matrix_service)"
 	@echo "  make test-integration - Run integration tests (10 tests for imports)"
@@ -11,7 +16,7 @@ help:
 	@echo ""
 	@echo "Usage:"
 	@echo "  1. Ensure you're in pipenv shell: pipenv shell"
-	@echo "  2. Run desired test target: make test"
+	@echo "  2. Run desired target: make start or make test"
 
 # Run all tests
 test:
@@ -37,3 +42,7 @@ test-service:
 test-coverage:
 	pipenv run python -m pytest --cov=src --cov-report=html
 	@echo "Coverage report generated in htmlcov/index.html"
+
+# Start tracking server
+start:
+	scripts/start-tracker.sh
