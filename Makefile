@@ -15,25 +15,25 @@ help:
 
 # Run all tests
 test:
-	python -m pytest
+	pipenv run python -m pytest
 
 # Run unit tests (matrix_service module)
 test-unit:
-	python -m pytest test/test_matrix_service.py -v
+	pipenv run python -m pytest test/test_matrix_service.py -v
 
 # Run integration tests (import verification)
 test-integration:
-	python -m pytest test/test_imports.py -v
+	pipenv run python -m pytest test/test_imports.py -v
 
 # Run all tests with verbose output
 test-all:
-	python -m pytest -v
+	pipenv run python -m pytest -v
 
 # Run service tests
 test-service:
-	python -m pytest test/service/ -v
+	pipenv run python -m pytest test/service/ -v
 
 # Run tests with coverage
 test-coverage:
-	python -m pytest --cov=src --cov-report=html
+	pipenv run python -m pytest --cov=src --cov-report=html
 	@echo "Coverage report generated in htmlcov/index.html"
