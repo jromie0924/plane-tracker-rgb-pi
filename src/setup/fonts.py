@@ -11,8 +11,15 @@ if screen.IS_RASPBERRY_PI:
     FONT_DIR = f"{DIR_PATH}/../fonts"
     FONT_SUFFIX = ""
 else:
-    FONT_DIR = f"{DIR_PATH}/../fonts/scaled_{screen.SCALE_FACTOR}x"
-    FONT_SUFFIX = f"_{screen.SCALE_FACTOR}x"
+    # Validate that scale factor has a corresponding font directory
+    font_dir_candidate = f"{DIR_PATH}/../fonts/scaled_{screen.SCALE_FACTOR}x"
+    if not os.path.exists(font_dir_candidate):
+        print(f"Warning: Font directory {font_dir_candidate} does not exist. Falling back to scaled_3x.")
+        FONT_DIR = f"{DIR_PATH}/../fonts/scaled_3x"
+        FONT_SUFFIX = "_3x"
+    else:
+        FONT_DIR = font_dir_candidate
+        FONT_SUFFIX = f"_{screen.SCALE_FACTOR}x"
 
 extrasmall = graphics.Font()
 small = graphics.Font()

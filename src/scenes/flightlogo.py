@@ -1,4 +1,5 @@
 from PIL import Image
+import os
 
 from workers.animator import Animator
 from setup import colours, screen
@@ -10,6 +11,10 @@ DEFAULT_IMAGE = "default"
 # Use higher resolution logos for larger displays
 if screen.SCALE_FACTOR >= 3:
     LOGO_DIR = "logos_48x48"
+    # Validate directory exists, fallback to 16x16 logos if not
+    if not os.path.exists(LOGO_DIR):
+        print(f"Warning: {LOGO_DIR} directory not found. Using standard 16x16 logos.")
+        LOGO_DIR = "logos"
 else:
     LOGO_DIR = "logos"
 
