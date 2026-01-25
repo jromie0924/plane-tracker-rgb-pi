@@ -6,6 +6,13 @@ from setup import colours, screen
 LOGO_SIZE = 16 * screen.SCALE_FACTOR
 DEFAULT_IMAGE = "default"
 
+# Determine logo directory based on scale factor
+# Use higher resolution logos for larger displays
+if screen.SCALE_FACTOR >= 3:
+    LOGO_DIR = "logos_48x48"
+else:
+    LOGO_DIR = "logos"
+
 class FlightLogoScene:
   @Animator.KeyFrame.add(0, scene_name="flightlogo")
   def logo_details(self):
@@ -29,9 +36,9 @@ class FlightLogoScene:
 
     # Open the file
     try:
-      image = Image.open(f"logos/{icao}.png")
+      image = Image.open(f"{LOGO_DIR}/{icao}.png")
     except FileNotFoundError:
-      image = Image.open(f"logos/{DEFAULT_IMAGE}.png")
+      image = Image.open(f"{LOGO_DIR}/{DEFAULT_IMAGE}.png")
 
     # Make image fit our screen.
     image.thumbnail((LOGO_SIZE, LOGO_SIZE), Image.Resampling.LANCZOS)

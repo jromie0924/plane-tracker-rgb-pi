@@ -5,12 +5,14 @@ from setup import screen
 # Fonts
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
-# Determine font directory based on platform
+# Determine font directory based on platform and scale factor
 # Use scaled fonts for non-Pi systems (emulator)
 if screen.IS_RASPBERRY_PI:
     FONT_DIR = f"{DIR_PATH}/../fonts"
+    FONT_SUFFIX = ""
 else:
-    FONT_DIR = f"{DIR_PATH}/../fonts/scaled"
+    FONT_DIR = f"{DIR_PATH}/../fonts/scaled_{screen.SCALE_FACTOR}x"
+    FONT_SUFFIX = f"_{screen.SCALE_FACTOR}x"
 
 extrasmall = graphics.Font()
 small = graphics.Font()
@@ -32,11 +34,11 @@ if screen.IS_RASPBERRY_PI:
     large.LoadFont(f"{FONT_DIR}/8x13.bdf")
     large_bold.LoadFont(f"{FONT_DIR}/8x13B.bdf")
 else:
-    extrasmall.LoadFont(f"{FONT_DIR}/4x6_4x.bdf")
-    small.LoadFont(f"{FONT_DIR}/5x8_4x.bdf")
-    regular.LoadFont(f"{FONT_DIR}/6x13_4x.bdf")
-    regular_bold.LoadFont(f"{FONT_DIR}/6x13B_4x.bdf")
-    regularplus.LoadFont(f"{FONT_DIR}/7x13_4x.bdf")
-    regularplus_bold.LoadFont(f"{FONT_DIR}/7x13B_4x.bdf")
-    large.LoadFont(f"{FONT_DIR}/8x13_4x.bdf")
-    large_bold.LoadFont(f"{FONT_DIR}/8x13B_4x.bdf")
+    extrasmall.LoadFont(f"{FONT_DIR}/4x6{FONT_SUFFIX}.bdf")
+    small.LoadFont(f"{FONT_DIR}/5x8{FONT_SUFFIX}.bdf")
+    regular.LoadFont(f"{FONT_DIR}/6x13{FONT_SUFFIX}.bdf")
+    regular_bold.LoadFont(f"{FONT_DIR}/6x13B{FONT_SUFFIX}.bdf")
+    regularplus.LoadFont(f"{FONT_DIR}/7x13{FONT_SUFFIX}.bdf")
+    regularplus_bold.LoadFont(f"{FONT_DIR}/7x13B{FONT_SUFFIX}.bdf")
+    large.LoadFont(f"{FONT_DIR}/8x13{FONT_SUFFIX}.bdf")
+    large_bold.LoadFont(f"{FONT_DIR}/8x13B{FONT_SUFFIX}.bdf")
