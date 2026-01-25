@@ -1,8 +1,8 @@
 from workers.animator import Animator
-from setup import colours
+from setup import colours, screen
 
 # Setup
-BLINKER_POSITION = (63, 0)
+BLINKER_POSITION = (63 * screen.SCALE_FACTOR, 0)
 BLINKER_STEPS = 10
 BLINKER_COLOUR = colours.GREY
 

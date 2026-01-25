@@ -1,7 +1,7 @@
 from datetime import datetime
 # from utilities.temperature import grab_forecast
 from workers.animator import Animator
-from setup import colours, fonts, frames
+from setup import colours, fonts, frames, screen
 from matrix_service import graphics
 import logging
 
@@ -11,7 +11,7 @@ import logging
 
 # Setup
 CLOCK_FONT = fonts.large_bold
-CLOCK_POSITION = (0, 11)
+CLOCK_POSITION = (0, 11 * screen.SCALE_FACTOR)
 DAY_COLOUR = colours.TROPICAL_YELLOW
 NIGHT_COLOUR = colours.TROPICAL_DARK_BLUE
 
