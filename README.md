@@ -52,6 +52,27 @@ This repo was initially forked from [c0wsaysmoo' repository](https://github.com/
 * Update your ZIP and Country code to tell the app where you are. NOTE see the bottom of the file for a note regarding this.
 * For development purposes, you can emulate the RGB display with a browser emulator `RGBMatrixEmulator`. You'll want to search for all strings in the repo "from rgbmatrix" and replace it with "from RGBMatrixEmulator" to run in a browser.
 
+### Emulator Display Configuration
+When running in emulator mode, you can customize the display size by modifying the `emulator_config.json` files. There are two configuration files:
+* `emulator_config.json` (root level) - Default configuration
+* `src/emulator_config.json` - Alternative configuration used by some scripts
+
+The RGB matrix display is **64 pixels wide × 32 pixels tall**. The `pixel_size` parameter multiplies each LED pixel to determine the final browser window size.
+
+#### Key Configuration Options:
+* **`pixel_size`**: Size of each LED pixel in the browser (e.g., 20 means each LED is 20×20 pixels)
+  - Small screens: 15-20 (960×480 to 1280×640)
+  - Medium screens: 20-25 (1280×640 to 1600×800)
+  - Large screens: 25-30 (1600×800 to 1920×960)
+  - Formula: `width = 64 × pixel_size`, `height = 32 × pixel_size`
+* **`pixel_style`**: Visual style of LED pixels
+  - `"circle"` - Rounded LED appearance (recommended)
+  - `"square"` - Sharp-edged appearance
+* **`pixel_outline`**: Width of outline around each pixel (0 for no outline)
+* **`image_border`**: Whether to show a border around the entire display (true/false)
+
+After modifying the configuration, restart the application to see the changes.
+
 ## Run the App*
 `scripts/start-tracker.sh`
 
