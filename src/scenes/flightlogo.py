@@ -1,9 +1,9 @@
 from PIL import Image
 
 from workers.animator import Animator
-from setup import colours
+from setup import colours, screen
 
-LOGO_SIZE = 16
+LOGO_SIZE = 16 * screen.SCALE_FACTOR
 DEFAULT_IMAGE = "default"
 
 class FlightLogoScene:

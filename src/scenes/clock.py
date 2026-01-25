@@ -11,7 +11,7 @@ import logging
 
 # Setup
 CLOCK_FONT = fonts.large_bold
-CLOCK_POSITION = (0, 11)
+CLOCK_POSITION = (0, 11 * screen.SCALE_FACTOR)
 DAY_COLOUR = colours.TROPICAL_YELLOW
 NIGHT_COLOUR = colours.TROPICAL_DARK_BLUE
 

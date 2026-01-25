@@ -1,7 +1,7 @@
 from datetime import datetime
 # from utilities.temperature import grab_forecast
 from workers.animator import Animator
-from setup import colours, fonts, frames
+from setup import colours, fonts, frames, screen
 from matrix_service import graphics
 import logging
 from config import NIGHT_START, NIGHT_END
@@ -11,7 +11,7 @@ from config import NIGHT_START, NIGHT_END
 
 # Setup
 DATE_FONT = fonts.extrasmall
-DATE_POSITION = (40, 11)
+DATE_POSITION = (40 * screen.SCALE_FACTOR, 11 * screen.SCALE_FACTOR)
 
 # Convert NIGHT_START and NIGHT_END to datetime objects
 NIGHT_START_TIME = datetime.strptime(NIGHT_START, "%H:%M")
@@ -68,7 +68,7 @@ class DateScene(object):
 
   def draw_gradient_text(self, text, x, y, start_color, end_color):
     text_length = len(text)
-    char_width = 4  # Width of each character
+    char_width = 4 * screen.SCALE_FACTOR  # Width of each character
     for i, char in enumerate(text):
       position = i / (text_length - 1)
       r = int(start_color.red + (end_color.red - start_color.red) * position)

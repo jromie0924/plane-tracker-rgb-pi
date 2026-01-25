@@ -1,5 +1,5 @@
 from workers.animator import Animator
-from setup import colours, fonts
+from setup import colours, fonts, screen
 from matrix_service import graphics
 from config import DISTANCE_UNITS
 
@@ -19,23 +19,23 @@ except (ModuleNotFoundError, NameError, ImportError):
   JOURNEY_BLANK_FILLER = " ? "
 
 # Setup
-JOURNEY_POSITION = (17, 0)
-JOURNEY_HEIGHT = 10
-JOURNEY_WIDTH = 48
-JOURNEY_SPACING = 5
+JOURNEY_POSITION = (17 * screen.SCALE_FACTOR, 0)
+JOURNEY_HEIGHT = 10 * screen.SCALE_FACTOR
+JOURNEY_WIDTH = 48 * screen.SCALE_FACTOR
+JOURNEY_SPACING = 5 * screen.SCALE_FACTOR
 JOURNEY_FONT = fonts.regularplus
 JOURNEY_FONT_SELECTED = fonts.regularplus_bold
 ARROW_COLOUR = colours.GREY
 DISTANCE_COLOUR = colours.TROPICAL_LIGHT_BLUE
 DISTANCE_MEASURE = colours.TROPICAL_DARK_BLUE
-DISTANCE_POSITION = (17, 16)
-DISTANCE_WIDTH = 48
+DISTANCE_POSITION = (17 * screen.SCALE_FACTOR, 16 * screen.SCALE_FACTOR)
+DISTANCE_WIDTH = 48 * screen.SCALE_FACTOR
 DISTANCE_FONT = fonts.extrasmall
 
 # Element Positions
-ARROW_POINT_POSITION = (41, 5)
-ARROW_WIDTH = 3
-ARROW_HEIGHT = 6
+ARROW_POINT_POSITION = (41 * screen.SCALE_FACTOR, 5 * screen.SCALE_FACTOR)
+ARROW_WIDTH = 3 * screen.SCALE_FACTOR
+ARROW_HEIGHT = 6 * screen.SCALE_FACTOR
 
 
 class JourneyScene(object):
@@ -98,13 +98,13 @@ class JourneyScene(object):
       destination if destination else JOURNEY_BLANK_FILLER,
     )
     # Calculate the center of the available area
-    center_x = (16 + 64) // 2
+    center_x = (16 * screen.SCALE_FACTOR + screen.WIDTH) // 2
 
     # Calculate the width of each half
-    half_width = (64 - 16) // 2
+    half_width = (screen.WIDTH - 16 * screen.SCALE_FACTOR) // 2
 
     # Calculate the width of the text using the font's character width (including space)
-    font_character_width = 4
+    font_character_width = 4 * screen.SCALE_FACTOR
     distance_origin_text_width = len(distance_origin_text) * font_character_width
     distance_destination_text_width = len(distance_destination_text) * font_character_width
 
