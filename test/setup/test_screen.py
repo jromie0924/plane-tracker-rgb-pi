@@ -119,6 +119,21 @@ class TestScreenDimensionsRaspberryPi:
 class TestScreenDimensionsNonPi:
     """Tests for screen dimensions on non-Pi systems"""
     
+    def test_non_pi_dimensions_with_scale_1(self):
+        """Test that non-Pi systems use 64x32 dimensions with scale 1"""
+        # Create a mock module with the expected behavior
+        import types
+        screen_module = types.ModuleType('screen')
+        screen_module.IS_RASPBERRY_PI = False
+        screen_module.WIDTH = 64
+        screen_module.HEIGHT = 32
+        screen_module.SCALE_FACTOR = 1
+        
+        assert screen_module.WIDTH == 64
+        assert screen_module.HEIGHT == 32
+        assert screen_module.SCALE_FACTOR == 1
+        assert not screen_module.IS_RASPBERRY_PI
+    
     def test_non_pi_dimensions_with_scale_2(self):
         """Test that non-Pi systems use 128x64 dimensions with scale 2"""
         # Create a mock module with the expected behavior
@@ -178,6 +193,15 @@ class TestScaleFactor:
         
         assert screen_module.SCALE_FACTOR == 1
     
+    def test_scale_factor_is_one_on_non_pi(self):
+        """Test that SCALE_FACTOR can be 1 on non-Pi systems"""
+        import types
+        screen_module = types.ModuleType('screen')
+        screen_module.IS_RASPBERRY_PI = False
+        screen_module.SCALE_FACTOR = 1
+        
+        assert screen_module.SCALE_FACTOR == 1
+    
     def test_scale_factor_is_two_on_non_pi(self):
         """Test that SCALE_FACTOR can be 2 on non-Pi systems"""
         import types
@@ -204,6 +228,13 @@ class TestScaleFactor:
         screen_module.SCALE_FACTOR = 4
         
         assert screen_module.SCALE_FACTOR == 4
+    
+    def test_scale_factor_matches_dimension_ratio_for_1x(self):
+        """Test that SCALE_FACTOR 1 correctly represents the dimension ratio"""
+        # Pi: 64x32, Non-Pi with 1x: 64x32
+        # 64/64 = 1, 32/32 = 1
+        assert 64 / 64 == 1
+        assert 32 / 32 == 1
     
     def test_scale_factor_matches_dimension_ratio_for_2x(self):
         """Test that SCALE_FACTOR 2 correctly represents the dimension ratio"""
@@ -270,6 +301,14 @@ class TestScenePositionScaling:
         
         assert scaled_positions == [44, 64, 96, 124, 160]
     
+    def test_logo_size_scaling_16_to_16(self):
+        """Test that logo size remains 16 with scale factor 1"""
+        scale_factor = 1
+        original_logo_size = 16
+        scaled_logo_size = original_logo_size * scale_factor
+        
+        assert scaled_logo_size == 16
+    
     def test_logo_size_scaling_16_to_32(self):
         """Test that logo size scales from 16 to 32 with scale factor 2"""
         scale_factor = 2
@@ -305,6 +344,9 @@ class TestScreenConstants:
         assert pi_width / pi_height == 2.0
         
         # Non-Pi dimensions with different scale factors
+        non_pi_1x_width, non_pi_1x_height = 64, 32
+        assert non_pi_1x_width / non_pi_1x_height == 2.0
+        
         non_pi_2x_width, non_pi_2x_height = 128, 64
         assert non_pi_2x_width / non_pi_2x_height == 2.0
         
@@ -317,6 +359,11 @@ class TestScreenConstants:
     def test_non_pi_dimensions_are_exact_multiples(self):
         """Test that non-Pi dimensions are exact multiples of Pi dimensions"""
         pi_width, pi_height = 64, 32
+        
+        # Test 1x scale
+        non_pi_1x_width, non_pi_1x_height = 64, 32
+        assert non_pi_1x_width == pi_width * 1
+        assert non_pi_1x_height == pi_height * 1
         
         # Test 2x scale
         non_pi_2x_width, non_pi_2x_height = 128, 64

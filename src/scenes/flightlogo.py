@@ -35,6 +35,9 @@ class FlightLogoScene:
     except FileNotFoundError:
       image = Image.open(f"{LOGO_DIR}/{DEFAULT_IMAGE}.png")
 
-    # Make image fit our screen.
-    image.thumbnail((LOGO_SIZE, LOGO_SIZE), Image.Resampling.LANCZOS)
+    # Scale the logo according to the display scale factor
+    # LOGO_SIZE = 16 * SCALE_FACTOR, so we scale from original size to target size
+    if image.size != (LOGO_SIZE, LOGO_SIZE):
+      image = image.resize((LOGO_SIZE, LOGO_SIZE), Image.Resampling.LANCZOS)
+    
     self.matrix.SetImage(image.convert('RGB'))
