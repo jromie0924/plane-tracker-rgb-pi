@@ -14,9 +14,16 @@ def is_raspberry_pi():
         pass
     
     # Fallback: check CPU architecture (ARM typically indicates Pi)
-    # Note: Exclude aarch64 as it could be Apple Silicon Macs
+    # Apple Silicon Macs report 'arm64' on 'Darwin', so we need to check OS too
+    # Only Linux ARM systems are Raspberry Pi
     machine = platform.machine()
-    return machine.startswith('arm')
+    system = platform.system()
+    
+    # Check if it's a Linux ARM system (Raspberry Pi)
+    # Raspberry Pi reports: armv6l, armv7l (32-bit) or aarch64 (64-bit) on Linux
+    # Apple Silicon reports: arm64 on Darwin (macOS)
+    is_linux_arm = system == 'Linux' and (machine.startswith('arm') or machine.startswith('aarch'))
+    return is_linux_arm
 
 # Determine if we're on a Raspberry Pi
 IS_RASPBERRY_PI = is_raspberry_pi()

@@ -31,43 +31,64 @@ class TestPlatformDetection:
                     assert not is_raspberry_pi()
     
     def test_raspberry_pi_detected_from_arm_architecture(self):
-        """Test that ARM architecture is detected as Pi when model file doesn't exist"""
+        """Test that ARM architecture on Linux is detected as Pi"""
         with patch('os.path.exists', return_value=False):
             with patch('platform.machine', return_value='armv7l'):
-                from setup.screen import is_raspberry_pi
-                assert is_raspberry_pi()
+                with patch('platform.system', return_value='Linux'):
+                    from setup.screen import is_raspberry_pi
+                    assert is_raspberry_pi()
     
-    def test_raspberry_pi_detected_from_aarch64_architecture(self):
-        """Test that aarch64 architecture is NOT detected as Pi (Apple Silicon)"""
+    def test_raspberry_pi_detected_from_aarch64_on_linux(self):
+        """Test that aarch64 architecture on Linux IS detected as Pi (64-bit Pi)"""
         with patch('os.path.exists', return_value=False):
             with patch('platform.machine', return_value='aarch64'):
-                from setup.screen import is_raspberry_pi
-                assert not is_raspberry_pi()
+                with patch('platform.system', return_value='Linux'):
+                    from setup.screen import is_raspberry_pi
+                    assert is_raspberry_pi()
+    
+    def test_apple_silicon_not_detected_as_pi(self):
+        """Test that Apple Silicon (arm64 on Darwin) is NOT detected as Pi"""
+        with patch('os.path.exists', return_value=False):
+            with patch('platform.machine', return_value='arm64'):
+                with patch('platform.system', return_value='Darwin'):
+                    from setup.screen import is_raspberry_pi
+                    assert not is_raspberry_pi()
+    
+    def test_aarch64_on_darwin_not_detected_as_pi(self):
+        """Test that aarch64 on Darwin (macOS) is NOT detected as Pi"""
+        with patch('os.path.exists', return_value=False):
+            with patch('platform.machine', return_value='aarch64'):
+                with patch('platform.system', return_value='Darwin'):
+                    from setup.screen import is_raspberry_pi
+                    assert not is_raspberry_pi()
     
     def test_non_pi_detected_from_x86_architecture(self):
         """Test that x86 architecture is not detected as Pi"""
         with patch('os.path.exists', return_value=False):
             with patch('platform.machine', return_value='x86_64'):
-                from setup.screen import is_raspberry_pi
-                assert not is_raspberry_pi()
+                with patch('platform.system', return_value='Linux'):
+                    from setup.screen import is_raspberry_pi
+                    assert not is_raspberry_pi()
     
     def test_file_read_error_handled_gracefully(self):
         """Test that IOError when reading model file is handled gracefully"""
         with patch('os.path.exists', return_value=True):
             with patch('builtins.open', side_effect=IOError('Permission denied')):
                 with patch('platform.machine', return_value='x86_64'):
-                    from setup.screen import is_raspberry_pi
-                    # Should fall back to architecture check
-                    assert not is_raspberry_pi()
+                    with patch('platform.system', return_value='Linux'):
+                        from setup.screen import is_raspberry_pi
+                        # Should fall back to architecture check
+                        assert not is_raspberry_pi()
     
     def test_os_error_handled_gracefully(self):
         """Test that OSError when reading model file is handled gracefully"""
         with patch('os.path.exists', return_value=True):
             with patch('builtins.open', side_effect=OSError('System error')):
                 with patch('platform.machine', return_value='armv7l'):
-                    from setup.screen import is_raspberry_pi
-                    # Should fall back to architecture check
-                    assert is_raspberry_pi()
+                    with patch('platform.system', return_value='Linux'):
+                        from setup.screen import is_raspberry_pi
+                        # Should fall back to architecture check
+                        assert is_raspberry_pi()
 
 
 class TestScreenDimensionsRaspberryPi:
