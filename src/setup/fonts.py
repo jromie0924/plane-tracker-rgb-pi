@@ -7,7 +7,7 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Determine font directory based on platform and scale factor
 # Use scaled fonts for non-Pi systems (emulator)
-if screen.IS_RASPBERRY_PI:
+if screen.SCALE_FACTOR == 1:
     FONT_DIR = f"{DIR_PATH}/../fonts"
     FONT_SUFFIX = ""
 else:

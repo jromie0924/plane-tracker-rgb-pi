@@ -43,12 +43,12 @@ else:
         # Validate scale factor is one of the supported values
         if DISPLAY_SCALE_FACTOR not in (2, 3, 4):
             print(f"Warning: DISPLAY_SCALE_FACTOR must be 2, 3, or 4. Got {DISPLAY_SCALE_FACTOR}. Using default of 3.")
-            SCALE_FACTOR = 3
+            SCALE_FACTOR = 1
         else:
             SCALE_FACTOR = DISPLAY_SCALE_FACTOR
     except (ImportError, AttributeError):
         # Default to 3 if config not available
-        SCALE_FACTOR = 3
+        SCALE_FACTOR = 1
     
     WIDTH = 64 * SCALE_FACTOR
     HEIGHT = 32 * SCALE_FACTOR
