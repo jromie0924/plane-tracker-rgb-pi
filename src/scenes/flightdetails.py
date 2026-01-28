@@ -33,12 +33,12 @@ class FlightDetailsScene(object):
     if len(self._data) == 0:
       return
 
-    # Clear the whole area
+    # Clear the whole area (extended to ensure all text fragments are cleared)
     self.draw_square(
       0,
       FLIGHT_NO_DISTANCE_FROM_TOP - FLIGHT_NO_TEXT_HEIGHT,
       screen.WIDTH,
-      FLIGHT_NO_DISTANCE_FROM_TOP,
+      FLIGHT_NO_DISTANCE_FROM_TOP + 2,
       colours.BLACK,
     )
 
@@ -46,7 +46,7 @@ class FlightDetailsScene(object):
       0,
       PLANE_DISTANCE_FROM_TOP - FLIGHT_NO_TEXT_HEIGHT,
       screen.WIDTH,
-      PLANE_DISTANCE_FROM_TOP,
+      PLANE_DISTANCE_FROM_TOP + 2,
       colours.BLACK,
     )
 
@@ -132,7 +132,7 @@ class FlightDetailsScene(object):
     self.flight_details_length = flight_no_text_length
 
     # Handle scrolling
-    self.flight_position -= 1
+    self.flight_position -= 1 * screen.SCALE_FACTOR
     if self.flight_position + text_length < 0:
       self.flight_position = screen.WIDTH
       # if len(self._data) > 1:

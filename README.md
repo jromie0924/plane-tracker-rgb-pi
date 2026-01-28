@@ -52,19 +52,39 @@ This repo was initially forked from [c0wsaysmoo' repository](https://github.com/
 * Update your ZIP and Country code to tell the app where you are. NOTE see the bottom of the file for a note regarding this.
 * For development purposes, you can emulate the RGB display with a browser emulator `RGBMatrixEmulator`. You'll want to search for all strings in the repo "from rgbmatrix" and replace it with "from RGBMatrixEmulator" to run in a browser.
 
+### Display Scale Factor
+The `DISPLAY_SCALE_FACTOR` setting in `config.py` controls the size of the display when running on non-Raspberry Pi systems (like development environments).
+
+* **Options**: `1`, `2`, `3`, or `4`
+* **Default**: `1` (matches Pi native resolution)
+* **Effect**: Multiplies the base 64×32 matrix dimensions
+  - `DISPLAY_SCALE_FACTOR = 1` → 64×32 display (same as Pi)
+  - `DISPLAY_SCALE_FACTOR = 2` → 128×64 display
+  - `DISPLAY_SCALE_FACTOR = 3` → 192×96 display
+  - `DISPLAY_SCALE_FACTOR = 4` → 256×128 display
+
+This setting automatically:
+- Adjusts display dimensions
+- Loads appropriately scaled fonts (1x, 2x, 3x, or 4x)
+- Scales airline logos in real-time to match the display scale
+
+**Note**: This setting only affects non-Raspberry Pi systems. On actual Raspberry Pi hardware, the display always uses the native 64×32 resolution.
+
 ### Emulator Display Configuration
-When running in emulator mode, you can customize the display size by modifying the `emulator_config.json` files. There are two configuration files:
+When running in emulator mode, the display automatically scales based on the `DISPLAY_SCALE_FACTOR` setting in `config.py`. You can further customize the visual appearance by modifying the `emulator_config.json` files. There are two configuration files:
 * `emulator_config.json` (root level) - Default configuration
 * `src/emulator_config.json` - Alternative configuration used by some scripts
 
-The RGB matrix display is **64 pixels wide × 32 pixels tall**. The `pixel_size` parameter multiplies each LED pixel to determine the final browser window size.
+The RGB matrix display is **64 pixels wide × 32 pixels tall** on Raspberry Pi hardware. On development systems, this is automatically scaled by the `DISPLAY_SCALE_FACTOR` (default: 1x = 64×32). The `pixel_size` parameter in the emulator config controls the visual size of each LED pixel in the browser window.
 
 #### Key Configuration Options:
-* **`pixel_size`**: Size of each LED pixel in the browser (e.g., 20 means each LED is 20×20 pixels)
-  - Small screens: 15-20 (960×480 to 1280×640)
-  - Medium screens: 20-25 (1280×640 to 1600×800)
-  - Large screens: 25-30 (1600×800 to 1920×960)
-  - Formula: `width = 64 × pixel_size`, `height = 32 × pixel_size`
+* **`pixel_size`**: Size of each LED pixel in the browser (e.g., 12 means each LED is 12×12 pixels)
+  - Adjusts the visual size of the emulator window
+  - With default 1x scale (64×32): pixel_size of 12-20 works well for most screens
+  - With 2x scale (128×64): pixel_size of 8-12 works well
+  - With 3x scale (192×96): pixel_size of 5-8 works well
+  - With 4x scale (256×128): pixel_size of 4-6 works well
+  - Formula: `browser_width = (64 × DISPLAY_SCALE_FACTOR) × pixel_size`
 * **`pixel_style`**: Visual style of LED pixels
   - `"circle"` - Rounded LED appearance (recommended)
   - `"square"` - Sharp-edged appearance
