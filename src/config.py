@@ -9,9 +9,9 @@ DISTANCE_UNITS = "imperial"
 CLOCK_FORMAT = "24hr" #use 12hr or 24hr
 
 # Display scale factor for non-Pi systems (emulator)
-# Options: 1, 2, 3, or 4 (default: 1)
+# Options: 1, 2, or 3 (default: 1)
 # This controls the size of the display on non-Raspberry Pi systems
-DISPLAY_SCALE_FACTOR = 1
+DISPLAY_SCALE_FACTOR = 2
 MIN_ALTITUDE = 1000 #feet
 MAX_ALTITUDE = 55000  # feet
 BRIGHTNESS = 100

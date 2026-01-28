@@ -97,46 +97,78 @@ class JourneyScene(object):
       destination_color,
       destination if destination else JOURNEY_BLANK_FILLER,
     )
-    # Calculate the center of the available area
-    center_x = (16 * screen.SCALE_FACTOR + screen.WIDTH) // 2
-
-    # Calculate the width of each half
-    half_width = (screen.WIDTH - 16 * screen.SCALE_FACTOR) // 2
-
-    # Calculate the width of the text using the font's character width (including space)
-    font_character_width = 4 * screen.SCALE_FACTOR
-    distance_origin_text_width = len(distance_origin_text) * font_character_width
-    distance_destination_text_width = len(distance_destination_text) * font_character_width
-
-    # Calculate the adjusted positions for drawing the text
-    distance_origin_x = center_x - half_width + (half_width - distance_origin_text_width) // 2
-    distance_destination_x = center_x + (half_width - distance_destination_text_width) // 2
+    # Calculate the available width for distance display
+    # Left side is for origin, right side is for destination
+    left_start_x = JOURNEY_POSITION[0]
+    left_end_x = JOURNEY_POSITION[0] + JOURNEY_WIDTH // 2
+    right_start_x = JOURNEY_POSITION[0] + JOURNEY_WIDTH // 2
+    right_end_x = min(JOURNEY_POSITION[0] + JOURNEY_WIDTH, screen.WIDTH * screen.SCALE_FACTOR)
     
-    # Iterate through each character in distance_origin_text
+    # Calculate actual text widths by measuring
     distance_origin_text_length = 0
+    origin_x_positions = []
     for ch in distance_origin_text:
       ch_length = graphics.DrawText(
         self.canvas,
         DISTANCE_FONT,
-        distance_origin_x + distance_origin_text_length,
-        DISTANCE_POSITION[1],  # Keep the same vertical position
-        DISTANCE_COLOUR if ch.isnumeric() else DISTANCE_MEASURE,
+        0,  # Dummy position for measurement
+        0,  # Dummy position
+        DISTANCE_COLOUR,
         ch,
       )
+      origin_x_positions.append(ch_length)
       distance_origin_text_length += ch_length
-
-    # Iterate through each character in distance_destination_text
+    
     distance_destination_text_length = 0
+    destination_x_positions = []
     for ch in distance_destination_text:
       ch_length = graphics.DrawText(
         self.canvas,
         DISTANCE_FONT,
-        distance_destination_x + distance_destination_text_length,
-        DISTANCE_POSITION[1],  # Keep the same vertical position
+        0,  # Dummy position for measurement
+        0,  # Dummy position
+        DISTANCE_COLOUR,
+        ch,
+      )
+      destination_x_positions.append(ch_length)
+      distance_destination_text_length += ch_length
+    
+    # Center the text within available space
+    left_available_width = left_end_x - left_start_x
+    right_available_width = right_end_x - right_start_x
+    
+    distance_origin_x = left_start_x + max(0, (left_available_width - distance_origin_text_length) // 2)
+    distance_destination_x = right_start_x + max(0, (right_available_width - distance_destination_text_length) // 2)
+    
+    # Clamp to ensure text doesn't exceed boundaries
+    distance_origin_x = min(distance_origin_x, left_end_x - distance_origin_text_length)
+    distance_destination_x = min(distance_destination_x, right_end_x - distance_destination_text_length)
+    
+    # Draw distance_origin_text
+    distance_origin_current_x = distance_origin_x
+    for i, ch in enumerate(distance_origin_text):
+      graphics.DrawText(
+        self.canvas,
+        DISTANCE_FONT,
+        distance_origin_current_x,
+        DISTANCE_POSITION[1],
         DISTANCE_COLOUR if ch.isnumeric() else DISTANCE_MEASURE,
         ch,
       )
-      distance_destination_text_length += ch_length
+      distance_origin_current_x += origin_x_positions[i]
+
+    # Draw distance_destination_text
+    distance_destination_current_x = distance_destination_x
+    for i, ch in enumerate(distance_destination_text):
+      graphics.DrawText(
+        self.canvas,
+        DISTANCE_FONT,
+        distance_destination_current_x,
+        DISTANCE_POSITION[1],
+        DISTANCE_COLOUR if ch.isnumeric() else DISTANCE_MEASURE,
+        ch,
+      )
+      distance_destination_current_x += destination_x_positions[i]
 
   @Animator.KeyFrame.add(0, scene_name="journey")
   def journey_arrow(self):
