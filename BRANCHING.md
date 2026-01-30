@@ -194,8 +194,8 @@ If you encounter merge conflicts when merging to RC:
 
 1. Update your feature branch with latest RC:
    ```bash
-   git checkout feature/my-feature
-   git pull origin RC
+git checkout feature/my-feature
+git pull origin RC
    ```
 2. Resolve conflicts locally
 3. Commit the resolution
