@@ -114,14 +114,13 @@ Branch protection rules must be configured manually in GitHub Settings > Branche
 
 ## Default Branch
 
-Consider setting `RC` as the default branch if most pull requests should target it:
+The `RC` branch is configured as the default branch for this repository. This means:
 
-1. Navigate to **Settings** > **Branches**
-2. Under "Default branch", click the switch icon
-3. Select `RC` from the dropdown
-4. Click "Update"
+- New pull requests automatically target `RC` instead of `main`
+- The repository opens to the `RC` branch by default
+- Most development work flows through `RC` before being promoted to `main`
 
-This ensures that new pull requests automatically target `RC` instead of `main`.
+This configuration ensures that all feature development is properly tested and integrated before reaching production.
 
 ## Release Process
 
@@ -160,16 +159,17 @@ After promoting to main:
 
 ### `develop` Branch
 
-**Status**: ⚠️ DEPRECATED
+**Status**: ❌ DELETED
 
-The `develop` branch is no longer used in this project. Its functionality has been replaced by the `RC` (Release Candidate) branch, which serves as the pre-release testing and integration branch.
+The `develop` branch has been removed from this project. Its functionality has been replaced by the `RC` (Release Candidate) branch, which serves as the pre-release testing and integration branch.
 
-If you have local references to the `develop` branch, you can safely delete them:
+If you have local references to the old `develop` branch, you should delete them:
 
 ```bash
 git branch -d develop                 # Delete local branch
-git push origin --delete develop      # Delete remote branch (if you have permissions)
 ```
+
+Note: The remote `develop` branch has already been deleted from the repository.
 
 ## Quick Reference
 
