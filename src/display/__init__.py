@@ -134,11 +134,19 @@ class Display(
       # Check if there's data
       there_is_data = len(self._data) > 0 or not self.overhead.data_is_empty
       
-      timestamp = datetime.now()
-      brightness = config.BRIGHTNESS if timestamp.hour <= 17 and timestamp.hour > 7 else config.BRIGHTNESS_NIGHT
-      if self.matrix.brightness != brightness:
-        logger.info(f"Changing brightness from {self.matrix.brightness} to {brightness}")
-        self.matrix.brightness = brightness
+      # Respect NIGHT_BRIGHTNESS flag when adjusting brightness here
+      if getattr(config, "NIGHT_BRIGHTNESS", True):
+        timestamp = datetime.now()
+        brightness = (
+          config.BRIGHTNESS
+          if 7 < timestamp.hour <= 17
+          else config.BRIGHTNESS_NIGHT
+        )
+        if self.matrix.brightness != brightness:
+          logger.info(
+            f"Changing brightness from {self.matrix.brightness} to {brightness}"
+          )
+          self.matrix.brightness = brightness
       
       # this marks self.overhead.data as no longer new
       new_data = self.overhead.data
