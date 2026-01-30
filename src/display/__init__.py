@@ -141,13 +141,6 @@ class Display(
           config.BRIGHTNESS
           if 7 < timestamp.hour <= 17
           else config.BRIGHTNESS_NIGHT
-        )
-        if self.matrix.brightness != brightness:
-          logger.info(
-            f"Changing brightness from {self.matrix.brightness} to {brightness}"
-          )
-          self.matrix.brightness = brightness
-      
       # this marks self.overhead.data as no longer new
       new_data = self.overhead.data
 
