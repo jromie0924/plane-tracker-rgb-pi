@@ -15,7 +15,7 @@ def test_is_raspberry_pi_detection_true():
         import importlib.util
         spec = importlib.util.spec_from_file_location(
             "matrix_service_test", 
-            os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/matrix_service.py'))
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/services/matrix_service.py'))
         )
         module = importlib.util.module_from_spec(spec)
         
@@ -41,7 +41,7 @@ def test_is_raspberry_pi_detection_false():
         import importlib.util
         spec = importlib.util.spec_from_file_location(
             "matrix_service_test2", 
-            os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/matrix_service.py'))
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/services/matrix_service.py'))
         )
         module = importlib.util.module_from_spec(spec)
         
@@ -68,7 +68,7 @@ def test_force_emulator_mode():
             import importlib.util
             spec = importlib.util.spec_from_file_location(
                 "matrix_service_test3", 
-                os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/matrix_service.py'))
+                os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/services/matrix_service.py'))
             )
             module = importlib.util.module_from_spec(spec)
             
@@ -98,7 +98,7 @@ def test_force_hardware_mode():
             import importlib.util
             spec = importlib.util.spec_from_file_location(
                 "matrix_service_test4", 
-                os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/matrix_service.py'))
+                os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/services/matrix_service.py'))
             )
             module = importlib.util.module_from_spec(spec)
             
@@ -135,7 +135,7 @@ def test_matrix_service_exports():
             import importlib.util
             spec = importlib.util.spec_from_file_location(
                 "matrix_service_test5", 
-                os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/matrix_service.py'))
+                os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/services/matrix_service.py'))
             )
             module = importlib.util.module_from_spec(spec)
             

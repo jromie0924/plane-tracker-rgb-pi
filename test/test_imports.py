@@ -1,5 +1,5 @@
 """
-Integration tests to verify matrix_service imports work correctly
+Integration tests to verify services.matrix_service imports work correctly
 across all modules that use it.
 """
 import pytest
@@ -45,7 +45,7 @@ def mock_matrix_modules():
     
     # Remove imported modules to allow fresh imports
     modules_to_remove = [
-        'matrix_service', 'setup.colours', 'setup.fonts',
+        'services.matrix_service', 'services', 'setup.colours', 'setup.fonts',
         'scenes.journey', 'scenes.clock', 'scenes.flightdetails', 'scenes.date'
     ]
     for mod in modules_to_remove:
@@ -54,10 +54,10 @@ def mock_matrix_modules():
 
 
 def test_matrix_service_import(mock_matrix_modules):
-    """Test that matrix_service can be imported successfully"""
+    """Test that services.matrix_service can be imported successfully"""
     with patch.dict(os.environ, {'MATRIX_MODE': 'emulator'}):
         with patch('builtins.open', side_effect=FileNotFoundError()):
-            import matrix_service
+            from services import matrix_service
             
             # Verify the module loaded
             assert matrix_service.MATRIX_MODE == "emulator"
@@ -67,7 +67,7 @@ def test_matrix_service_import(mock_matrix_modules):
 
 
 def test_colours_module_import(mock_matrix_modules):
-    """Test that setup.colours imports graphics from matrix_service correctly"""
+    """Test that setup.colours imports graphics from services.matrix_service correctly"""
     with patch.dict(os.environ, {'MATRIX_MODE': 'emulator'}):
         with patch('builtins.open', side_effect=FileNotFoundError()):
             from setup import colours
@@ -79,7 +79,7 @@ def test_colours_module_import(mock_matrix_modules):
 
 
 def test_fonts_module_import(mock_matrix_modules):
-    """Test that setup.fonts imports graphics from matrix_service correctly"""
+    """Test that setup.fonts imports graphics from services.matrix_service correctly"""
     with patch.dict(os.environ, {'MATRIX_MODE': 'emulator'}):
         with patch('builtins.open', side_effect=FileNotFoundError()):
             # Mock the font file loading
@@ -94,7 +94,7 @@ def test_fonts_module_import(mock_matrix_modules):
 
 
 def test_journey_scene_import(mock_matrix_modules):
-    """Test that scenes.journey imports graphics from matrix_service correctly"""
+    """Test that scenes.journey imports graphics from services.matrix_service correctly"""
     with patch.dict(os.environ, {'MATRIX_MODE': 'emulator'}):
         with patch('builtins.open', side_effect=FileNotFoundError()):
             # Mock required dependencies
@@ -107,7 +107,7 @@ def test_journey_scene_import(mock_matrix_modules):
 
 
 def test_clock_scene_import(mock_matrix_modules):
-    """Test that scenes.clock imports graphics from matrix_service correctly"""
+    """Test that scenes.clock imports graphics from services.matrix_service correctly"""
     with patch.dict(os.environ, {'MATRIX_MODE': 'emulator'}):
         with patch('builtins.open', side_effect=FileNotFoundError()):
             # Mock config
@@ -120,7 +120,7 @@ def test_clock_scene_import(mock_matrix_modules):
 
 
 def test_flightdetails_scene_import(mock_matrix_modules):
-    """Test that scenes.flightdetails imports graphics from matrix_service correctly"""
+    """Test that scenes.flightdetails imports graphics from services.matrix_service correctly"""
     with patch.dict(os.environ, {'MATRIX_MODE': 'emulator'}):
         with patch('builtins.open', side_effect=FileNotFoundError()):
             from scenes import flightdetails
@@ -131,7 +131,7 @@ def test_flightdetails_scene_import(mock_matrix_modules):
 
 
 def test_date_scene_import(mock_matrix_modules):
-    """Test that scenes.date imports graphics from matrix_service correctly"""
+    """Test that scenes.date imports graphics from services.matrix_service correctly"""
     with patch.dict(os.environ, {'MATRIX_MODE': 'emulator'}):
         with patch('builtins.open', side_effect=FileNotFoundError()):
             # Mock config
@@ -145,21 +145,21 @@ def test_date_scene_import(mock_matrix_modules):
 
 
 def test_all_modules_use_same_graphics_source(mock_matrix_modules):
-    """Test that all modules import graphics from matrix_service (not directly from rgbmatrix/emulator)"""
+    """Test that all modules import graphics from services.matrix_service (not directly from rgbmatrix/emulator)"""
     with patch.dict(os.environ, {'MATRIX_MODE': 'emulator'}):
         with patch('builtins.open', side_effect=FileNotFoundError()):
-            # Import matrix_service first
-            import matrix_service
+            # Import services.matrix_service first
+            from services import matrix_service
             
             # Import colours and fonts
             with patch.object(sys.modules['RGBMatrixEmulator'].graphics.Font(), 'LoadFont'):
                 from setup import colours, fonts
                 
-                # Verify they have graphics attributes (imported from matrix_service)
+                # Verify they have graphics attributes (imported from services.matrix_service)
                 assert hasattr(colours, 'graphics')
                 assert hasattr(fonts, 'graphics')
                 
-                # Verify graphics.Color works (from matrix_service)
+                # Verify graphics.Color works (from services.matrix_service)
                 color = colours.graphics.Color(255, 0, 0)
                 assert color is not None
 
@@ -168,7 +168,7 @@ def test_emulator_mode_with_environment_variable(mock_matrix_modules):
     """Test that MATRIX_MODE=emulator forces emulator imports across all modules"""
     with patch.dict(os.environ, {'MATRIX_MODE': 'emulator'}):
         with patch('builtins.open', mock_open=MagicMock(read_data='Raspberry Pi')):
-            import matrix_service
+            from services import matrix_service
             
             # Even though we might be on a Pi, emulator mode should be forced
             assert matrix_service.MATRIX_MODE == "emulator"
@@ -179,7 +179,7 @@ def test_hardware_mode_with_environment_variable(mock_matrix_modules):
     """Test that MATRIX_MODE=hardware forces hardware imports across all modules"""
     with patch.dict(os.environ, {'MATRIX_MODE': 'hardware'}):
         with patch('builtins.open', side_effect=FileNotFoundError()):
-            import matrix_service
+            from services import matrix_service
             
             # Even though we're not on a Pi, hardware mode should be forced
             assert matrix_service.MATRIX_MODE == "hardware"

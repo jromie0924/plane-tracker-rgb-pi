@@ -2,7 +2,7 @@ from datetime import datetime
 # from utilities.temperature import grab_forecast
 from workers.animator import Animator
 from setup import colours, fonts, frames, screen
-from matrix_service import graphics
+from services.matrix_service import graphics
 import logging
 from config import NIGHT_START, NIGHT_END
 
