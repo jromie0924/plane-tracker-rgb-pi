@@ -165,7 +165,7 @@ class Display(
     # Adjust brightness
     adjust_brightness(self.matrix)
 
-  @Animator.KeyFrame.add(frames.PER_SECOND * 30, scene_name="display")
+  @Animator.KeyFrame.add(frames.PER_SECOND * 25, offset=frames.PER_SECOND * 4, scene_name="display")
   def grab_new_data(self, count):
     # Only grab data if we're not already searching
     # for planes, or if there's new data available
