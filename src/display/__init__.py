@@ -15,6 +15,7 @@ from scenes.date import DateScene
 
 from matrix_service import RGBMatrix, RGBMatrixOptions, graphics
 
+
 def flight_updated(flights_a, flights_b):
   get_callsigns = lambda flights: [(f["callsign"], f["direction"]) for f in flights]
   updatable_a = set(get_callsigns(flights_a))
@@ -128,7 +129,7 @@ class Display(
     if self.overhead.new_data:
       # Check if there's data
       there_is_data = len(self._data) > 0 or not self.overhead.data_is_empty
-      
+
       # this marks self.overhead.data as no longer new
       new_data = self.overhead.data
 
