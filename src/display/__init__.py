@@ -1,7 +1,5 @@
 import sys
 from datetime import datetime
-import config
-import logging
 from setup import frames, screen
 from workers.animator import Animator
 from workers.overhead import Overhead
@@ -16,9 +14,6 @@ from scenes.clock import ClockScene
 from scenes.date import DateScene
 
 from matrix_service import RGBMatrix, RGBMatrixOptions, graphics
-
-logger = logging.getLogger()
-
 
 def flight_updated(flights_a, flights_b):
   get_callsigns = lambda flights: [(f["callsign"], f["direction"]) for f in flights]
@@ -133,12 +128,6 @@ class Display(
     if self.overhead.new_data:
       # Check if there's data
       there_is_data = len(self._data) > 0 or not self.overhead.data_is_empty
-      
-      timestamp = datetime.now()
-      brightness = config.BRIGHTNESS if timestamp.hour <= 17 and timestamp.hour > 7 else config.BRIGHTNESS_NIGHT
-      if self.matrix.brightness != brightness:
-        logger.info(f"Changing brightness from {self.matrix.brightness} to {brightness}")
-        self.matrix.brightness = brightness
       
       # this marks self.overhead.data as no longer new
       new_data = self.overhead.data
