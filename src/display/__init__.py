@@ -116,7 +116,6 @@ class Display(
   def draw_square(self, x0, y0, x1, y1, colour):
     for x in range(x0, x1):
       _ = graphics.DrawLine(self.canvas, x, y0, x, y1, colour)
-      
 
   @Animator.KeyFrame.add(0, scene_name="display")
   def clear_screen(self):
