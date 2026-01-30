@@ -116,7 +116,6 @@ class Display(
   def draw_square(self, x0, y0, x1, y1, colour):
     for x in range(x0, x1):
       _ = graphics.DrawLine(self.canvas, x, y0, x, y1, colour)
-      
 
   @Animator.KeyFrame.add(0, scene_name="display")
   def clear_screen(self):
@@ -165,7 +164,7 @@ class Display(
     # Adjust brightness
     adjust_brightness(self.matrix)
 
-  @Animator.KeyFrame.add(frames.PER_SECOND * 30, scene_name="display")
+  @Animator.KeyFrame.add(frames.PER_SECOND * 25, offset=frames.PER_SECOND * 4, scene_name="display")
   def grab_new_data(self, count):
     # Only grab data if we're not already searching
     # for planes, or if there's new data available
