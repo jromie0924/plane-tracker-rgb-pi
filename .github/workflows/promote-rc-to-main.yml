@@ -13,6 +13,8 @@ permissions:
 
 jobs:
   promote:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
