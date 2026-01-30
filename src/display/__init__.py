@@ -13,7 +13,7 @@ from scenes.clock import ClockScene
 # from scenes.daysforecast import DaysForecastScene
 from scenes.date import DateScene
 
-from matrix_service import RGBMatrix, RGBMatrixOptions, graphics
+from services.matrix_service import RGBMatrix, RGBMatrixOptions, graphics
 
 
 def flight_updated(flights_a, flights_b):

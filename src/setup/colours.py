@@ -1,4 +1,4 @@
-from matrix_service import graphics
+from services.matrix_service import graphics
 
 # Colour helpers
 BLACK = graphics.Color(0, 0, 0)
