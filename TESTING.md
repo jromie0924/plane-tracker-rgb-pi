@@ -198,12 +198,29 @@ MATRIX_MODE=hardware python -m pytest test/test_imports.py -v
 
 ## Continuous Integration
 
-Tests should pass before merging any pull request. The test suite validates:
+Tests should pass before merging any pull request to the `RC` branch. The `RC` branch serves as the integration testing branch where all features are tested together before being promoted to `main`.
+
+### Branch Strategy
+
+- **RC Branch**: All pull requests should target the `RC` branch
+  - Tests must pass before merging to RC
+  - RC serves as the integration testing environment
+  - Multiple features can be tested together on RC
+  
+- **Main Branch**: Receives only tested, stable code from RC
+  - Code is promoted from RC to main via GitHub Action
+  - Main always contains production-ready code with tagged releases
+
+### Test Validation
+
+The test suite validates:
 
 1. **Platform abstraction**: matrix_service correctly detects and imports appropriate libraries
 2. **Import integrity**: All modules successfully import from matrix_service
 3. **Environment overrides**: Manual mode forcing works correctly
 4. **Service functionality**: ADSB tracking and other services work as expected
+
+See [BRANCHING.md](BRANCHING.md) for more details on the branch strategy and release workflow.
 
 ## Troubleshooting
 
