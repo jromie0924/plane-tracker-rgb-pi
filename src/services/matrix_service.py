@@ -1,4 +1,4 @@
-# src/matrix_service.py
+# src/services/matrix_service.py
 """
 Matrix service module that abstracts rgbmatrix vs RGBMatrixEmulator.
 Automatically detects the platform and imports the appropriate module.

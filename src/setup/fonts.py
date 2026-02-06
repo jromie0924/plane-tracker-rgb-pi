@@ -1,5 +1,5 @@
 import os
-from matrix_service import graphics
+from services.matrix_service import graphics
 from setup import screen
 
 # Fonts

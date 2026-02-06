@@ -13,7 +13,7 @@ from scenes.clock import ClockScene
 # from scenes.daysforecast import DaysForecastScene
 from scenes.date import DateScene
 
-from matrix_service import RGBMatrix, RGBMatrixOptions, graphics
+from services.matrix_service import RGBMatrix, RGBMatrixOptions, graphics
 
 
 def flight_updated(flights_a, flights_b):
@@ -164,7 +164,7 @@ class Display(
     # Adjust brightness
     adjust_brightness(self.matrix)
 
-  @Animator.KeyFrame.add(frames.PER_SECOND * 25, offset=frames.PER_SECOND * 4, scene_name="display")
+  @Animator.KeyFrame.add(frames.PER_SECOND * 42, offset=frames.PER_SECOND * 7, scene_name="display")
   def grab_new_data(self, count):
     # Only grab data if we're not already searching
     # for planes, or if there's new data available

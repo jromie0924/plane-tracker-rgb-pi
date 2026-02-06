@@ -1,7 +1,7 @@
 from workers.animator import Animator
 from setup import colours, fonts, screen
 
-from matrix_service import graphics
+from services.matrix_service import graphics
 
 # Setup
 FLIGHT_NO_DISTANCE_FROM_TOP = 24 * screen.SCALE_FACTOR

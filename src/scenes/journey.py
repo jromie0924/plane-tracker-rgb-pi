@@ -1,6 +1,6 @@
 from workers.animator import Animator
 from setup import colours, fonts, screen
-from matrix_service import graphics
+from services.matrix_service import graphics
 from config import DISTANCE_UNITS
 
 # Attempt to load config data
