@@ -29,6 +29,6 @@ jobs:
       - name: Merge RC to main
         run: |
           git checkout main
-          git merge --no-ff RC -m "Release ${{ inputs.version }}"
+          git merge --no-ff rc -m "Release ${{ inputs.version }}"
           git tag ${{ inputs.version }}
           git push origin main --tags
