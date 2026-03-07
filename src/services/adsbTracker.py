@@ -27,7 +27,8 @@ class AdsbTrackerService():
   
   def _get_headers(self):
     return {
-      'Accept': 'application/json'
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
     }
   
   def _get_nearby_flight_url(self, lat, long, radius):
@@ -84,7 +85,7 @@ class AdsbTrackerService():
   def get_routeset(self, flights, timeout=15):
     payload = {'planes': []}
     
-    for flight in flights:
+    for flight in flights[:20]:
       callsign = flight['flight']
       lat = flight['lat']
       long = flight['lon']
