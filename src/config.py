@@ -12,8 +12,8 @@ CLOCK_FORMAT = "24hr" #use 12hr or 24hr
 # Options: 1, 2, or 3 (default: 1)
 # This controls the size of the display on non-Raspberry Pi systems
 DISPLAY_SCALE_FACTOR = 2
-MIN_ALTITUDE = 1000 #feet
-MAX_ALTITUDE = 55000  # feet
+MIN_ALTITUDE = 500 #feet
+MAX_ALTITUDE = 70000  # feet
 BRIGHTNESS = 75
 BRIGHTNESS_NIGHT = 50
 NIGHT_BRIGHTNESS = True #True for on False for off
