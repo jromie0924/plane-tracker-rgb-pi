@@ -158,3 +158,40 @@ def test_get_routeset_bad_json(mock_config, mock_https_connection):
 
   # Bad JSON causes exception, returns empty routeset
   assert result == []
+
+
+def test_get_nearby_flights_bad_status_logs_error(mock_config, mock_https_connection):
+  mock_config.ADSB_LOL_URL = 'test_url'
+  mock_conn = mock_https_connection.return_value
+  mock_response = MagicMock()
+  mock_response.status = 503
+  mock_conn.getresponse.return_value = mock_response
+
+  service = AdsbTrackerService()
+  with patch.object(service.logger, 'error') as mock_error:
+    service.get_nearby_flights(40.7128, -74.0060, 10)
+    mock_error.assert_called_once()
+    assert '503' in mock_error.call_args[0][0]
+
+
+def test_get_routeset_bad_status_logs_error(mock_config, mock_https_connection):
+  mock_config.ADSB_LOL_URL = 'test_url'
+  mock_conn = mock_https_connection.return_value
+  mock_response = MagicMock()
+  mock_response.status = 429
+  mock_conn.getresponse.return_value = mock_response
+
+  service = AdsbTrackerService()
+  with patch.object(service.logger, 'error') as mock_error:
+    service.get_routeset([{'flight': 'AAL1', 'lat': 40.7128, 'lon': -74.0060}])
+    mock_error.assert_called_once()
+    assert '429' in mock_error.call_args[0][0]
+
+
+def test_get_headers_contains_required_fields(mock_config):
+  mock_config.ADSB_LOL_URL = 'test_url'
+  service = AdsbTrackerService()
+  headers = service._get_headers()
+
+  assert headers['Accept'] == 'application/json'
+  assert headers['Content-Type'] == 'application/json'
