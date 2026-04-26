@@ -14,6 +14,8 @@ from urllib3.exceptions import NewConnectionError
 from urllib3.exceptions import MaxRetryError
 from datetime import datetime
 
+from services.trackerLog import TrackerLog
+
 
 EARTH_RADIUS_M = 6371000  # Earth's radius in m
 BLANK_FIELDS = ["", "N/A", "NONE", "UNKNOWN"]
@@ -27,6 +29,7 @@ class Overhead:
     self._geo_service = GeoService()
     self._airline_lookup = AirlineLookupService()
     self._flight_logic = FlightLogic()
+    self._tracker_log = TrackerLog()
     self._lock = Lock()
     self._data = []
     self._new_data = False
@@ -69,6 +72,7 @@ class Overhead:
         sleep(0.1)
         return
 
+      self._tracker_log.update_log(flights)
       self.logger.debug(f'Retrieved {len(flights)} flights')
 
       flight, route = self._flight_logic.choose_flight(flights, self._adsb_api.get_routeset)

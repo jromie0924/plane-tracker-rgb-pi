@@ -165,3 +165,4 @@ cython_debug/
 geo_cache.json
 settings.json
 logs/
+tracker_log/
