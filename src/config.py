@@ -5,6 +5,10 @@ LOGGING_LEVEL: int = logging.INFO
 APP_NAME = "plane-tracker"
 LOG_FILE = "logs/plane-tracker.log"
 
+TRACKER_LOG_FILE = "tracker_log/log.json"
+TRACKER_LOG_TTL_HOURS = 168 # 1 week
+TRACKER_LOG_SAVE_INTERVAL_MINUTES = 2
+
 DISTANCE_UNITS = "imperial"
 CLOCK_FORMAT = "24hr" #use 12hr or 24hr
 
@@ -12,7 +16,7 @@ CLOCK_FORMAT = "24hr" #use 12hr or 24hr
 # Options: 1, 2, or 3 (default: 1)
 # This controls the size of the display on non-Raspberry Pi systems
 DISPLAY_SCALE_FACTOR = 2
-MIN_ALTITUDE = 500 #feet
+MIN_ALTITUDE = 1000 #feet
 MAX_ALTITUDE = 70000  # feet
 BRIGHTNESS = 75
 BRIGHTNESS_NIGHT = 50
@@ -31,7 +35,7 @@ COUNTRY = "USA"
 LOCATION_COORDINATES_OVERRIDE = [] #[lat, lon]
 
 LOCATION_CACHE_TIMEOUT = 30 # minutes
-RADIUS = 30 # nautical miles
+RADIUS = 70 # nautical miles
 LOCATION_COORDINATES_DEFAULT = [41.8755616, -87.6244212] # Chicago, IL
 
 DUPLICATION_AVOIDANCE_TTL = 3 # minutes

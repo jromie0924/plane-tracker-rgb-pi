@@ -37,7 +37,6 @@ def _init_logger():
   # Add handlers to the logger
   logger.addHandler(file_handler)
   logger.addHandler(stream_handler)
-  
 
 def setup(aws_secret_loc: str):
   AWS_ACCESS_CREDS_FILENAME = 'flight_tracker_app_accessKeys.csv'
