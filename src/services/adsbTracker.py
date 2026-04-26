@@ -54,6 +54,7 @@ class AdsbTrackerService():
       response = conn.getresponse()
 
       if response.status != HTTPStatus.OK:
+        self.logger.error(f'Error getting flights. Response: {response.read()}')
         return None
       
       data = self.decode_response_payload(response.read())
@@ -107,6 +108,7 @@ class AdsbTrackerService():
       response = conn.getresponse()
       
       if response.status != HTTPStatus.OK:
+        self.logger.error(f'Error getting flight routeset. Response: {response.read()}')
         try:
           conn.close()
         except Exception:
