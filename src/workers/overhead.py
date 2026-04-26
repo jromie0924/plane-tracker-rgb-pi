@@ -73,7 +73,7 @@ class Overhead:
 
       flight, route = self._flight_logic.choose_flight(flights, self._adsb_api.get_routeset)
 
-      if flight and route:
+      if flight:
         # Get plane type
         flight_capture_timestamp = datetime.now()
         try:
@@ -84,21 +84,24 @@ class Overhead:
         # Tidy up what we pass along
         plane = plane if not (plane.upper() in BLANK_FIELDS) else ""
 
-        airport_details = route['_airports'][len(route['_airports']) - 2:]
+        try:
+          airport_details = route['_airports'][len(route['_airports']) - 2:]
+        except KeyError:
+          airport_details = ''
 
         if len(airport_details):
           origin = airport_details[0]
           destination = airport_details[1]
         else:
           # TODO: is this necessary?
-          origin = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
-          destination = {'iata': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
+          origin = {'iata': '', 'icao': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
+          destination = {'iata': '', 'icao': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
 
         callsign: str = flight['flight']
         if callsign.upper() in BLANK_FIELDS:
           callsign = ''
 
-        if (route['airline_code']):
+        if (route.get('airline_code')):
           airline = self._airline_lookup.lookup(route['airline_code'])
         else:
           airline = ''
@@ -111,7 +114,7 @@ class Overhead:
         distance_destination = FlightLogic.distance_from_flight_to_location(flight, [destination['lat'], destination['lon']])
 
         # Get owner icao
-        owner_icao = route['airline_code']
+        owner_icao = route.get('airline_code') or ''
         owner_iata = airline or 'N/A'
 
         try:
@@ -129,7 +132,7 @@ class Overhead:
         elif origin['icao']:
           origin_str = origin['icao'][1:]
         else:
-          origin = ''
+          origin_str = ''
           
         if destination['iata']:
           destination_str = destination['iata']
@@ -162,11 +165,16 @@ class Overhead:
           format = "%Y-%m-%dT%H%M%S"
           date_time_formatted = flight_capture_timestamp.strftime(format)
           
+          try:
+            route_str = f'{route["_airports"][-2]["iata"]} -> {route["_airports"][-1]["iata"]}'
+          except:
+            route_str = 'Route not available'
+          
           log = {
             "Time": date_time_formatted,
             "Airline": airline,
             "Flight": callsign,
-            "Route": f'{route["_airports"][-2]["iata"]} -> {route["_airports"][-1]["iata"]}',
+            "Route": route_str,
             "Plane": plane,
             "Altitude": f"{flight['alt_geom']} ft",
             "Ground Speed": f"{flight['gs']} kts"
@@ -186,7 +194,7 @@ class Overhead:
             self._processing = False
             self._data = []
       else:
-        self.logger.info(f'No IFR flight found in the area.')
+        self.logger.info(f'No eligible flights found in the area.')
         with self._lock:
           self._new_data = False
           self._processing = False

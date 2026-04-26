@@ -106,4 +106,6 @@ class FlightLogic:
           self.flight_history_mapping[flight['hex']] = timestamp
           return flight, route
 
-    return None, None
+    if flights:
+      return flights[0], {}
+    return None, {}
