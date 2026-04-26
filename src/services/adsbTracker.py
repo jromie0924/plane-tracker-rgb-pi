@@ -29,8 +29,8 @@ class AdsbTrackerService():
     return {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      # 'Origin': 'https://adsb.lol',
-      # 'Referer': 'https://adsb.lol/'
+      'Origin': 'https://adsb.lol',
+      'Referer': 'https://adsb.lol/'
     }
   
   def _get_nearby_flight_url(self, lat, long, radius):
