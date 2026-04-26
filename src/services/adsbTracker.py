@@ -29,8 +29,8 @@ class AdsbTrackerService():
     return {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      'Origin': 'https://adsb.lol',
-      'Referer': 'https://adsb.lol/'
+      # 'Origin': 'https://adsb.lol',
+      # 'Referer': 'https://adsb.lol/'
     }
   
   def _get_nearby_flight_url(self, lat, long, radius):
@@ -54,7 +54,7 @@ class AdsbTrackerService():
       response = conn.getresponse()
 
       if response.status != HTTPStatus.OK:
-        self.logger.error(f'Error getting flights. Response: {response.read()}')
+        self.logger.error(f'Error getting flights. Response code: {response.status}')
         return None
       
       data = self.decode_response_payload(response.read())
@@ -108,7 +108,7 @@ class AdsbTrackerService():
       response = conn.getresponse()
       
       if response.status != HTTPStatus.OK:
-        self.logger.error(f'Error getting flight routeset. Response: {response.read()}')
+        self.logger.error(f'Error getting flight routeset. Response code: {response.status}')
         try:
           conn.close()
         except Exception:
