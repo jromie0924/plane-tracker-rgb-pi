@@ -4,6 +4,7 @@ import logging
 import json
 import os
 
+from datetime import datetime
 from utils.timeUtils import TimeUtils
 
 class TrackerLog:
@@ -33,6 +34,7 @@ class TrackerLog:
     current_timestamp = TimeUtils.current_time_milli()
     for entry in entries:
       entry['timestamp'] = current_timestamp
+      entry['timestamp_readable'] = datetime.fromtimestamp(current_timestamp / 1000).isoformat()
       try:
         entry_callsign: str = entry.get('flight') or entry.get('r')
         entry_callsign = entry_callsign.strip()
