@@ -88,8 +88,6 @@ class Overhead:
       flight, route = self._flight_logic.choose_flight(flights, self._adsb_api.get_routeset)
 
       if flight:
-        # DELETE THIS
-        route = {}
         # Get plane type
         flight_capture_timestamp = datetime.now()
         try:
