@@ -1,4 +1,3 @@
-import json
 from services.adsbTracker import AdsbTrackerService
 from services.airlineLookup import AirlineLookupService
 from services.flightLogic import FlightLogic
@@ -7,7 +6,9 @@ from time import sleep
 from services.geo import GeoService
 
 import config
+import json
 import logging
+import re
 
 from requests.exceptions import ConnectionError
 from urllib3.exceptions import NewConnectionError
@@ -21,6 +22,8 @@ EARTH_RADIUS_M = 6371000  # Earth's radius in m
 BLANK_FIELDS = ["", "N/A", "NONE", "UNKNOWN"]
 NW = 315  # degrees
 SE = 135  # degrees
+
+AIRLINE_CODE_REG = r'^(?P<icao>[a-zA-Z]{3}+)+[0-9]*\s*$'
 
 class Overhead:
   def __init__(self):
@@ -51,6 +54,13 @@ class Overhead:
     t = Thread(target=self._grab_data)
     t.daemon = True
     t.start()
+  
+  @staticmethod
+  def tokenize_airline_code_from_callsign(callsign: str) -> str:
+    result = re.match(AIRLINE_CODE_REG, callsign)
+    icao = result.group('icao') if result else ''
+    return icao
+      
 
   def _grab_data(self):
     # Mark data as old
@@ -78,6 +88,8 @@ class Overhead:
       flight, route = self._flight_logic.choose_flight(flights, self._adsb_api.get_routeset)
 
       if flight:
+        # DELETE THIS
+        route = {}
         # Get plane type
         flight_capture_timestamp = datetime.now()
         try:
@@ -118,7 +130,7 @@ class Overhead:
         distance_destination = FlightLogic.distance_from_flight_to_location(flight, [destination['lat'], destination['lon']])
 
         # Get owner icao
-        owner_icao = route.get('airline_code') or ''
+        owner_icao = route.get('airline_code') or Overhead.tokenize_airline_code_from_callsign(callsign=callsign)
         owner_iata = airline or 'N/A'
 
         try:
