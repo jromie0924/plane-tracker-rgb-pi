@@ -58,6 +58,7 @@ class TrackerLog:
     if now - self._last_save_time < config.TRACKER_LOG_SAVE_INTERVAL_MINUTES * 60 * 1000 and not overwrite:
       return True
 
+    self.logger.info("Saving in-memory tracker log to file")
     filepath = config.TRACKER_LOG_FILE
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
 

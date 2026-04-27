@@ -16,6 +16,9 @@ class FlightLogic:
   # Haversine formula
   @staticmethod
   def distance_from_flight_to_location(flight, home=[0, 0]):
+    if [0,0] == home:
+      return 0
+    
     lat1, lon1 = flight['lat'], flight['lon']
     lat2, lon2 = home[0], home[1]
 
