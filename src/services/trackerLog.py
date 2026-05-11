@@ -27,7 +27,11 @@ class TrackerLog:
     self.cleanse_log()
     
   def cleanse_log(self):
-    self.data = {k:v for k, v in self.data.items() if round(TimeUtils.current_time_milli()) - v.get('timestamp') < config.TRACKER_LOG_TTL_HOURS * 60 * 60 * 1000}
+    for callsign in self.data:
+      self.data[callsign] = [
+        f for f in self.data[callsign]
+        if TimeUtils.current_time_milli() - f.get('timestamp') < config.TRACKER_LOG_TTL_HOURS * 60 * 60 * 1000
+      ]
     self.save_file()
     
   def update_log(self, entries: list[dict]):
@@ -42,7 +46,7 @@ class TrackerLog:
         self.logger.warning(f'Entry {entry} does not have an identifier. Flight will not be logged.')
         continue
       
-      self.data[entry_callsign] = entry
+      self.data[entry_callsign] = [entry] if not (self.data.get(entry_callsign) and len(self.data[entry_callsign])) else self.data[entry_callsign] + [entry]
       
     self.cleanse_log()
     
