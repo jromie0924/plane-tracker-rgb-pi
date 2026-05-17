@@ -7,7 +7,6 @@ LOG_FILE = "logs/plane-tracker.log"
 
 TRACKER_LOG_FILE = "tracker_log/log.json"
 TRACKER_LOG_TTL_HOURS = 168 # 1 week
-TRACKER_LOG_SAVE_INTERVAL_MINUTES = 2
 
 DISTANCE_UNITS = "imperial"
 CLOCK_FORMAT = "24hr" #use 12hr or 24hr
