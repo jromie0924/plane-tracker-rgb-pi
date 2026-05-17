@@ -1,74 +1,76 @@
 import threading
 import config
 import logging
-import json
-import os
+import boto3
 
+from decimal import Decimal
 from datetime import datetime
 from utils.timeUtils import TimeUtils
+from services.runtime import RuntimeService
+from setup.screen import IS_RASPBERRY_PI
+
+_DYNAMODB_TABLE_NAME = 'tracker_log' if IS_RASPBERRY_PI else 'tracker_log_emu'
+
 
 class TrackerLog:
   _instance = None
   _lock = threading.Lock()
-  
+
   def __new__(cls):
     with cls._lock:
       if not cls._instance:
         cls._instance = super(TrackerLog, cls).__new__(cls)
       return cls._instance
-  
+
   def __init__(self):
     if hasattr(self, '_initialized'):
       return
     self._initialized = True
     self.logger = logging.getLogger(config.APP_NAME)
-    self._last_save_time = round(TimeUtils.current_time_milli())
-    self.data = self._load_file()
-    self.cleanse_log()
-    
-  def cleanse_log(self):
-    self.data = {k:v for k, v in self.data.items() if round(TimeUtils.current_time_milli()) - v.get('timestamp') < config.TRACKER_LOG_TTL_HOURS * 60 * 60 * 1000}
-    self.save_file()
-    
+    runtime = RuntimeService()
+    self._table = boto3.resource(
+      'dynamodb',
+      aws_access_key_id=runtime.aws_access_key_id,
+      aws_secret_access_key=runtime.aws_secret_access_key,
+      region_name=config.AWS_REGION
+    ).Table(_DYNAMODB_TABLE_NAME)
+
   def update_log(self, entries: list[dict]):
     current_timestamp = TimeUtils.current_time_milli()
+    expires_at = int(current_timestamp / 1000) + config.TRACKER_LOG_TTL_HOURS * 3600
+
+    items = []
     for entry in entries:
-      entry['timestamp'] = current_timestamp
-      entry['timestamp_readable'] = datetime.fromtimestamp(current_timestamp / 1000).isoformat()
       try:
-        entry_callsign: str = entry.get('flight') or entry.get('r')
-        entry_callsign = entry_callsign.strip()
+        callsign = entry.get('flight') or entry.get('r')
+        callsign = callsign.strip()
       except AttributeError:
         self.logger.warning(f'Entry {entry} does not have an identifier. Flight will not be logged.')
         continue
-      
-      self.data[entry_callsign] = entry
-      
-    self.cleanse_log()
-    
-  def _load_file(self) -> dict:
-    filepath = config.TRACKER_LOG_FILE
-    try:
-      with open(filepath, 'r') as file:
-        data = json.load(file)
-        return data
-    except FileNotFoundError:
-      return {}
-    
-  def save_file(self, overwrite=False) -> bool:
-    now = round(TimeUtils.current_time_milli())
-    if now - self._last_save_time < config.TRACKER_LOG_SAVE_INTERVAL_MINUTES * 60 * 1000 and not overwrite:
-      return True
 
-    self.logger.info("Saving in-memory tracker log to file")
-    filepath = config.TRACKER_LOG_FILE
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+      item = _floats_to_decimal(entry)
+      item['callsign'] = callsign
+      item['timestamp'] = int(current_timestamp)
+      item['timestamp_readable'] = datetime.fromtimestamp(current_timestamp / 1000).isoformat()
+      item['expires_at'] = expires_at
+      items.append(item)
 
+    self._batch_write(items)
+
+  def _batch_write(self, items: list[dict]):
     try:
-      with open(filepath, 'w') as file:
-        json.dump(self.data, file, indent=None)
-      self._last_save_time = now
-      return True
+      with self._table.batch_writer() as batch:
+        for item in items:
+          batch.put_item(Item=item)
     except Exception:
-      self.logger.error(f'Exception encountered while saving tracker log file.', exc_info=True)
-      return False
+      self.logger.error('Failed to write entries to DynamoDB.', exc_info=True)
+
+
+def _floats_to_decimal(obj):
+  if isinstance(obj, float):
+    return Decimal(str(obj))
+  if isinstance(obj, dict):
+    return {k: _floats_to_decimal(v) for k, v in obj.items()}
+  if isinstance(obj, list):
+    return [_floats_to_decimal(v) for v in obj]
+  return obj

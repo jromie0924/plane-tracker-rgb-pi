@@ -1,178 +1,70 @@
-# Claude Instructions for ADSB Plane Tracker
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-This is a Python-based ADSB plane tracker that displays nearby aircraft information on an RGB LED matrix display. The project can run on a Raspberry Pi with a physical RGB matrix or in development mode using a browser-based emulator.
+Python-based ADSB plane tracker that displays nearby aircraft on a 64×32 RGB LED matrix. Runs on Raspberry Pi with physical hardware or in development mode using a browser-based emulator at `localhost:8888`.
 
-## Development Environment
+## Commands
 
-### Python Environment
-- **Python Version**: 3.11 (specified in Pipfile)
-- **Package Manager**: pipenv
-- **Virtual Environment**: Use `pipenv shell` to activate the virtual environment
-- **Dependencies Installation**: `pipenv install --dev`
+```bash
+# Install dependencies (dev includes emulator + pytest)
+pipenv install --dev
 
-### Key Dependencies
-- **Production**: boto3, requests
-- **Development**: rgbmatrixemulator (0.11.6)
+# Run the application
+scripts/start-tracker.sh  # auto-detects Pi vs dev, handles pipenv
 
-### Setup Tools
-- **pipenv**: For Python package management
-- **pyenv**: For Python version management (optional but recommended)
+# Run all tests
+pipenv run pytest
 
-## Project Structure
+# Run a single test file
+pipenv run pytest test/service/test_flightLogic.py
 
-### Core Directories
-- `src/`: Main application code
-  - `app.py`: Main application entry point
-  - `config.py`: Configuration settings (ZIP code, coordinates, API keys, etc.)
-  - `display/`: Display rendering logic for RGB matrix
-  - `models/`: Data models
-  - `scenes/`: Display scenes for different states
-  - `services/`: Business logic services (ADSB tracking, geo, authentication, etc.)
-  - `workers/`: Background worker processes
-  - `fonts/`: Font files for display rendering
-  - `icons/`: Icon assets
-- `test/`: Unit tests (pytest-based)
-- `scripts/`: Shell scripts for starting the application
-- `docs/`: Documentation and images
-- `logos/`: Logo assets
+# Run a specific test
+pipenv run pytest test/service/test_flightLogic.py::test_choose_flight_returns_none_empty_dict_when_no_flights
 
-### Important Files
-- `Pipfile` & `Pipfile.lock`: Python dependency definitions
-- `emulator_config.json`: Configuration for the RGB matrix emulator
-- `scripts/start-tracker.sh`: Script to start the tracker application
-
-## Configuration
-
-### User Configuration (`src/config.py`)
-Key configuration values that users may need to customize:
-- `ZIP_CODE` and `COUNTRY`: User's location
-- `LOCATION_COORDINATES_OVERRIDE`: Optional coordinate override
-- `RADIUS`: Search radius for nearby aircraft (nautical miles)
-- `MIN_ALTITUDE` / `MAX_ALTITUDE`: Altitude filters
-- `BRIGHTNESS` / `BRIGHTNESS_NIGHT`: Display brightness settings
-- `DISTANCE_UNITS`: "imperial" or "metric"
-- `CLOCK_FORMAT`: "12hr" or "24hr"
-
-### AWS Configuration
-The project uses AWS Secrets Manager for storing API keys:
-- RapidAPI key for geocoding services
-- AWS credentials stored in `~/.aws_secret`
-
-## Running the Application
-
-### Development Mode (Emulator)
-To run with the browser-based RGB matrix emulator:
-1. Replace imports from `rgbmatrix` to `RGBMatrixEmulator` in relevant files
-2. Run: `scripts/start-tracker.sh`
-3. Open browser to `localhost:8888`
-
-### Production Mode (Physical RGB Matrix)
-Run: `scripts/start-tracker.sh` (with rgbmatrix imports)
-
-## Testing
-
-### Test Framework
-- **Framework**: pytest
-- **Test Location**: `test/` directory
-- **Running Tests**: Use pytest command
-- **Test Pattern**: Tests use mocks for external dependencies (HTTP calls, config)
-
-### Test Structure Example
-Tests use fixtures and unittest.mock for mocking:
-```python
-@pytest.fixture
-def mock_config():
-    with patch('services.adsbTracker.config') as mock_config:
-        yield mock_config
+# Force emulator mode without Pi detection
+MATRIX_MODE=emulator pipenv run python src/app.py ~/.aws_secret
 ```
 
-## Code Style Guidelines
+## Architecture
 
-### Python Conventions
-- **Import Organization**: Standard library, third-party, local imports
-- **Logging**: Use the configured logger from `config.APP_NAME`
-- **Path Handling**: Use `os.path` for file operations
-- **Error Handling**: Proper exception handling especially for HTTP requests
+### Render Loop (`workers/animator.py`)
+`Animator` is the core render engine. Methods decorated with `@Animator.KeyFrame.add(divisor, offset, scene_name)` are called every `divisor` frames (offset for phase-shifting). `divisor=0` means "run once on scene reset." `Display` inherits from all scene classes and `Animator` via Python multiple inheritance — scene methods are registered automatically through introspection.
 
-### Display Code
-- Display logic is separated into scenes (e.g., loading, tracking, error states)
-- Font and icon resources are loaded from respective directories
-- Display coordinates use PIL/Pillow for rendering
+### Display (`src/display/__init__.py`)
+`Display` composes all scenes and the animator via multiple inheritance:
+```python
+class Display(FlightDetailsScene, FlightLogoScene, JourneyScene, ClockScene, Animator)
+```
+Key keyframes: `clear_screen` (divisor=0, on reset), `check_for_loaded_data` (every 5s), `grab_new_data` (every 42s), `sync` (every frame, calls `SwapOnVSync`).
 
-### Services
-- Services are stateless classes with focused responsibilities
-- HTTP requests should include timeouts to prevent deadlocks
-- External API calls should be wrapped in try-except blocks
+### Data Flow
+1. `Overhead._grab_data()` runs in a background daemon thread (Lock-protected)
+2. Calls `AdsbTrackerService` → adsb.lol API for nearby flights
+3. `FlightLogic.choose_flight()` selects the best flight: prioritizes flights with plausible routes, avoids duplicates via `flight_history_mapping` (TTL: `DUPLICATION_AVOIDANCE_TTL` minutes)
+4. `Display.check_for_loaded_data()` polls `overhead.new_data` and triggers scene reset when data changes
+5. `TrackerLog.update_log()` writes all visible flights to DynamoDB asynchronously
 
-## Key Technical Details
+### Platform Detection (`src/services/matrix_service.py`)
+Auto-detects Pi by reading `/proc/device-tree/model` and imports `rgbmatrix` (hardware) or `RGBMatrixEmulator` (development). All other files import from `services.matrix_service` — **never import directly from `rgbmatrix` or `RGBMatrixEmulator`**. Override with `MATRIX_MODE=emulator` or `MATRIX_MODE=hardware`.
 
-### RGB Matrix Display
-- The project uses either:
-  - Physical RGB LED matrix (via `rgbmatrix` library) for production
-  - Browser-based emulator (via `RGBMatrixEmulator` library) for development
-- Display rendering uses PIL/Pillow for image composition
+### Singletons
+`RuntimeService` and `TrackerLog` are thread-safe singletons (via `__new__` + Lock). `RuntimeService` holds AWS credentials loaded from a CSV at startup. `TrackerLog` connects to DynamoDB using those credentials — table name is `tracker_log` on Pi, `tracker_log_emu` in dev.
 
-### ADSB Data Source
-- Uses adsb.lol API for nearby aircraft data
-- Queries based on location coordinates and radius
-- Filters by altitude range
+### AWS Setup
+App entrypoint: `python src/app.py <aws_secret_dir>`. The directory must contain `flight_tracker_app_accessKeys.csv` with columns `Access key ID` and `Secret access key`. These credentials are used for both AWS Secrets Manager (RapidAPI key) and DynamoDB writes.
 
-### Geocoding
-- Uses RapidAPI's forward-reverse geocoding service
-- Fallback to default coordinates (Chicago, IL) if API unavailable
-- Can be overridden with specific coordinates in config
+## Configuration (`src/config.py`)
+Key values to customize: `ZIP_CODE`/`COUNTRY`, `RADIUS` (nautical miles), `MIN_ALTITUDE`/`MAX_ALTITUDE`, `BRIGHTNESS`/`BRIGHTNESS_NIGHT`, `NIGHT_START`/`NIGHT_END`, `DISTANCE_UNITS`, `CLOCK_FORMAT`, `DISPLAY_SCALE_FACTOR` (1/2/3 for emulator), `DUPLICATION_AVOIDANCE_TTL`.
 
-### Logging
-- Centralized logging configuration in `app.py`
-- Rotating file handler (1MB per file, 2 backup files)
-- Logs stored in `logs/plane-tracker.log`
-- Console and file output
+## Testing
+Tests live in `test/` with subdirectories `service/`, `scenes/`, `setup/`. All test files manually add `../../src` to `sys.path`. Mock the module-level config by patching `services.<module>.config`, not `config` directly (e.g., `patch('services.flightLogic.config')`).
 
-## Common Tasks
-
-### Adding a New Service
-1. Create a new file in `src/services/`
-2. Follow the pattern of existing services (e.g., `adsbTracker.py`)
-3. Use configuration from `config.py`
-4. Add corresponding tests in `test/service/` (note: singular 'service')
-
-### Adding a New Display Scene
-1. Create a new scene class in `src/scenes/`
-2. Implement rendering logic using PIL/Pillow
-3. Register the scene in the display controller
-
-### Modifying Configuration
-1. Update `src/config.py` with new configuration constants
-2. Use uppercase naming convention for configuration values
-3. Provide sensible defaults
-
-## Dependencies and Security
-
-### External APIs
-- **adsb.lol**: ADSB flight data
-- **RapidAPI**: Geocoding services (requires API key)
-- **AWS Secrets Manager**: Secure credential storage
-
-### Security Considerations
-- API keys should never be committed to the repository
-- Use AWS Secrets Manager or environment variables for credentials
-- HTTP requests should have appropriate timeouts
-
-## Troubleshooting
-
-### Common Issues
-1. **Import Errors**: Ensure you're in the pipenv virtual environment
-2. **Display Not Working**: Check if using correct import (rgbmatrix vs RGBMatrixEmulator)
-3. **API Failures**: Verify AWS credentials and API keys are configured
-4. **Coordinates Not Found**: Use `LOCATION_COORDINATES_OVERRIDE` as fallback
-
-### Development Tips
-- Use the emulator for faster iteration during development
-- Check logs in `logs/plane-tracker.log` for debugging
-- Test with mock data to avoid API rate limits
+## Adding a New Scene
+1. Create scene class in `src/scenes/` with methods decorated via `@Animator.KeyFrame.add(...)`
+2. Add it to `Display`'s inheritance list in `src/display/__init__.py`
+3. The `Animator._register_keyframes()` introspection picks up decorated methods automatically
 
 ## Release Process
-
-### Promoting RC to main
-- See this file for more information: `.github/workflows/promote-rc-to-main.yml`
+See `.github/workflows/promote-rc-to-main.yml` for RC → main promotion.
