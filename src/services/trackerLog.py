@@ -26,6 +26,10 @@ class TrackerLog:
     if hasattr(self, '_initialized'):
       return
     self._initialized = True
+    
+    # Feature flag for emulator logging    
+    self._tracker_log_active = IS_RASPBERRY_PI or config.TRACKER_LOG_EMU_FLAG
+
     self.logger = logging.getLogger(config.APP_NAME)
     runtime = RuntimeService()
     self._table = boto3.resource(
@@ -36,32 +40,34 @@ class TrackerLog:
     ).Table(_DYNAMODB_TABLE_NAME)
 
   def update_log(self, entries: list[dict]):
-    current_timestamp = TimeUtils.current_time_milli()
-    expires_at = int(current_timestamp / 1000) + config.TRACKER_LOG_TTL_HOURS * 3600
+    if self._tracker_log_active:
+      current_timestamp = TimeUtils.current_time_milli()
+      expires_at = int(current_timestamp / 1000) + config.TRACKER_LOG_TTL_HOURS * 3600
 
-    items = []
-    for entry in entries:
-      try:
-        callsign = entry.get('flight') or entry.get('r')
-        callsign = callsign.strip()
-      except AttributeError:
-        self.logger.warning(f'Entry {entry} does not have an identifier. Flight will not be logged.')
-        continue
+      items = []
+      for entry in entries:
+        try:
+          callsign = entry.get('flight') or entry.get('r')
+          callsign = callsign.strip()
+        except AttributeError:
+          self.logger.warning(f'Entry {entry} does not have an identifier. Flight will not be logged.')
+          continue
 
-      item = _floats_to_decimal(entry)
-      item['callsign'] = callsign
-      item['timestamp'] = int(current_timestamp)
-      item['timestamp_readable'] = datetime.fromtimestamp(current_timestamp / 1000).isoformat()
-      item['expires_at'] = expires_at
-      items.append(item)
+        item = _floats_to_decimal(entry)
+        item['callsign'] = callsign
+        item['timestamp'] = int(current_timestamp)
+        item['timestamp_readable'] = datetime.fromtimestamp(current_timestamp / 1000).isoformat()
+        item['expires_at'] = expires_at
+        items.append(item)
 
-    self._batch_write(items)
+      self._batch_write(items)
 
   def _batch_write(self, items: list[dict]):
     try:
       with self._table.batch_writer() as batch:
         for item in items:
           batch.put_item(Item=item)
+      self.logger.info(f'Record written to DynamoDB table {self._table}')
     except Exception:
       self.logger.error('Failed to write entries to DynamoDB.', exc_info=True)
 

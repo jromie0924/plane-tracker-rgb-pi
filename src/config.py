@@ -5,8 +5,8 @@ LOGGING_LEVEL: int = logging.INFO
 APP_NAME = "plane-tracker"
 LOG_FILE = "logs/plane-tracker.log"
 
-TRACKER_LOG_FILE = "tracker_log/log.json"
 TRACKER_LOG_TTL_HOURS = 168 # 1 week
+TRACKER_LOG_EMU_FLAG = False
 
 DISTANCE_UNITS = "imperial"
 CLOCK_FORMAT = "24hr" #use 12hr or 24hr
