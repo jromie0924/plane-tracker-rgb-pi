@@ -275,3 +275,93 @@ def test_floats_to_decimal_converts_float_in_list():
 def test_floats_to_decimal_handles_nested_dict():
     result = _floats_to_decimal({'outer': {'inner': 3.14}})
     assert isinstance(result['outer']['inner'], Decimal)
+
+
+def test_floats_to_decimal_leaves_bool_unchanged():
+    assert _floats_to_decimal(True) is True
+    assert _floats_to_decimal(False) is False
+
+
+def test_floats_to_decimal_leaves_decimal_unchanged():
+    d = Decimal('3.14')
+    assert _floats_to_decimal(d) == d
+    assert isinstance(_floats_to_decimal(d), Decimal)
+
+
+def test_floats_to_decimal_handles_list_in_dict():
+    result = _floats_to_decimal({'speeds': [1.5, 2.5]})
+    assert isinstance(result['speeds'][0], Decimal)
+    assert isinstance(result['speeds'][1], Decimal)
+
+
+# --- feature flag: _tracker_log_active initialization ---
+
+def test_tracker_log_active_on_raspberry_pi(mock_config, mock_runtime, mock_boto3):
+    mock_config.TRACKER_LOG_EMU_FLAG = False
+    with patch('services.trackerLog.IS_RASPBERRY_PI', True):
+        t = TrackerLog()
+    assert t._tracker_log_active is True
+
+
+def test_tracker_log_active_in_emu_when_flag_enabled(mock_config, mock_runtime, mock_boto3):
+    mock_config.TRACKER_LOG_EMU_FLAG = True
+    with patch('services.trackerLog.IS_RASPBERRY_PI', False):
+        t = TrackerLog()
+    assert t._tracker_log_active is True
+
+
+def test_tracker_log_inactive_in_emu_when_flag_disabled(mock_config, mock_runtime, mock_boto3):
+    mock_config.TRACKER_LOG_EMU_FLAG = False
+    with patch('services.trackerLog.IS_RASPBERRY_PI', False):
+        t = TrackerLog()
+    assert t._tracker_log_active is False
+
+
+def test_tracker_log_active_on_pi_even_when_flag_disabled(mock_config, mock_runtime, mock_boto3):
+    mock_config.TRACKER_LOG_EMU_FLAG = False
+    with patch('services.trackerLog.IS_RASPBERRY_PI', True):
+        t = TrackerLog()
+    assert t._tracker_log_active is True
+
+
+# --- update_log: inactive feature flag ---
+
+def test_update_log_does_nothing_when_inactive(tracker, mock_time):
+    tracker._tracker_log_active = False
+    with patch.object(tracker, '_batch_write') as mock_write:
+        tracker.update_log([{'flight': 'AAL1', 'hex': 'a'}])
+    mock_write.assert_not_called()
+
+
+def test_update_log_inactive_does_not_call_batch_write_even_with_multiple_entries(tracker, mock_time):
+    tracker._tracker_log_active = False
+    with patch.object(tracker, '_batch_write') as mock_write:
+        tracker.update_log([
+            {'flight': 'AAL1', 'hex': 'a'},
+            {'flight': 'UAL2', 'hex': 'b'},
+        ])
+    mock_write.assert_not_called()
+
+
+# --- update_log: empty list ---
+
+def test_update_log_empty_list_calls_batch_write_with_empty_list(tracker, mock_time):
+    with patch.object(tracker, '_batch_write') as mock_write:
+        tracker.update_log([])
+    mock_write.assert_called_once_with([])
+
+
+# --- update_log: timestamp type ---
+
+def test_update_log_timestamp_is_int(tracker, mock_time):
+    with patch.object(tracker, '_batch_write') as mock_write:
+        tracker.update_log([{'flight': 'AAL1', 'hex': 'a'}])
+    assert isinstance(mock_write.call_args[0][0][0]['timestamp'], int)
+
+
+# --- _batch_write: empty list ---
+
+def test_batch_write_empty_list_calls_no_put_item(tracker):
+    tracker._batch_write([])
+    batch = tracker._table.batch_writer.return_value.__enter__.return_value
+    batch.put_item.assert_not_called()
