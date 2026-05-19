@@ -1,7 +1,9 @@
 #!/usr/bin/python3
+from datetime import datetime
 from display import Display
 from models.runtimeModel import RuntimeModel
 from services.runtime import RuntimeService
+from setup.screen import IS_RASPBERRY_PI
 from logging.handlers import TimedRotatingFileHandler
 
 import config
@@ -11,6 +13,8 @@ import os
 import csv
 import faulthandler
 import signal
+import boto3
+import watchtower
 
 def _init_logger():
   logger = logging.getLogger(config.APP_NAME)
@@ -37,6 +41,30 @@ def _init_logger():
   # Add handlers to the logger
   logger.addHandler(file_handler)
   logger.addHandler(stream_handler)
+
+
+def _add_cloudwatch_handler(access_key_id: str, secret_access_key: str, platform_is_pi: bool):
+  logger = logging.getLogger(config.APP_NAME)
+  log_group_name = f'plane-tracker-{"pi" if platform_is_pi else "emu"}'
+
+  session = boto3.Session(
+    aws_access_key_id=access_key_id,
+    aws_secret_access_key=secret_access_key,
+    region_name=config.AWS_REGION
+  )
+
+  stream_name = f'{"pi" if platform_is_pi else "emu"}-{datetime.now().strftime("%Y%m%dT%H%M%S")}'
+
+  cw_handler = watchtower.CloudWatchLogHandler(
+    log_group_name=log_group_name,
+    log_stream_name=stream_name,
+    boto3_client=session.client('logs'),
+    create_log_group=True,
+    log_group_retention_days=30,
+  )
+  cw_handler.setFormatter(logging.Formatter('[%(levelname)s] [%(module)s] %(message)s'))
+  logger.addHandler(cw_handler)
+
 
 def setup(aws_secret_loc: str):
   AWS_ACCESS_CREDS_FILENAME = 'flight_tracker_app_accessKeys.csv'
@@ -73,6 +101,7 @@ if __name__ == "__main__":
     runtime_service = RuntimeService()
     vars = setup(aws_secret_loc)
     runtime_service.set_runtime_vars(vars)
+    _add_cloudwatch_handler(vars._aws_access_key_id, vars._aws_secret_access_key, IS_RASPBERRY_PI)
   except KeyError as e:
     logger.error(f"Error: {e}")
     sys.exit(1)
