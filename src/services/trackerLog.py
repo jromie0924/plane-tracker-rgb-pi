@@ -2,6 +2,7 @@ import threading
 import config
 import logging
 import boto3
+from botocore.exceptions import ClientError
 
 from decimal import Decimal
 from datetime import datetime
@@ -67,7 +68,12 @@ class TrackerLog:
       with self._table.batch_writer() as batch:
         for item in items:
           batch.put_item(Item=item)
-      self.logger.info(f'Record written to DynamoDB table {self._table}')
+      self.logger.info(f'Record written to table {self._table}')
+    except ClientError as e:
+      if e.response['Error']['Code'] == 'ProvisionedThroughputExceededException':
+        self.logger.error('DynamoDB write throttled — provisioned WRU capacity exceeded. Entries dropped.')
+      else:
+        self.logger.error('Failed to write entries to DynamoDB.', exc_info=True)
     except Exception:
       self.logger.error('Failed to write entries to DynamoDB.', exc_info=True)
 
