@@ -50,7 +50,9 @@ class TrackerLog:
         try:
           callsign = entry.get('flight') or entry.get('r')
           callsign = callsign.strip()
-        except AttributeError:
+          if not callsign:
+            raise Exception("No callsign")
+        except Exception:
           self.logger.warning(f'Entry {entry} does not have an identifier. Flight will not be logged.')
           continue
 

@@ -169,6 +169,35 @@ def test_update_log_logs_warning_for_none_identifier(tracker, mock_time):
     mock_warn.assert_called_once()
 
 
+def test_update_log_skips_entry_with_empty_string_flight_and_r(tracker, mock_time):
+    # Regression: "" or "" evaluates to "" in Python — no AttributeError, so the original
+    # `except AttributeError` guard missed this case and wrote an empty callsign to DynamoDB.
+    with patch.object(tracker, '_batch_write') as mock_write:
+        tracker.update_log([{'flight': '', 'r': '', 'hex': 'xyz'}])
+    assert mock_write.call_args[0][0] == []
+
+
+def test_update_log_logs_warning_for_empty_string_identifiers(tracker, mock_time):
+    with patch.object(tracker, '_batch_write'):
+        with patch.object(tracker.logger, 'warning') as mock_warn:
+            tracker.update_log([{'flight': '', 'r': '', 'hex': 'xyz'}])
+    mock_warn.assert_called_once()
+
+
+def test_update_log_skips_entry_with_empty_flight_and_no_r(tracker, mock_time):
+    # "" or None → None → AttributeError on strip(), but worth being explicit
+    with patch.object(tracker, '_batch_write') as mock_write:
+        tracker.update_log([{'flight': '', 'hex': 'xyz'}])
+    assert mock_write.call_args[0][0] == []
+
+
+def test_update_log_skips_entry_with_whitespace_only_flight_and_empty_r(tracker, mock_time):
+    # "  " is truthy so or short-circuits, strip() yields "" — must still be rejected
+    with patch.object(tracker, '_batch_write') as mock_write:
+        tracker.update_log([{'flight': '   ', 'r': '', 'hex': 'xyz'}])
+    assert mock_write.call_args[0][0] == []
+
+
 def test_update_log_processes_valid_entries_after_invalid(tracker, mock_time):
     with patch.object(tracker, '_batch_write') as mock_write:
         tracker.update_log([{'hex': 'bad'}, {'flight': 'AAL1', 'hex': 'good'}])
