@@ -16,6 +16,7 @@ import signal
 import boto3
 import watchtower
 
+
 def _init_logger():
   logger = logging.getLogger(config.APP_NAME)
   logger.setLevel(config.LOGGING_LEVEL)
@@ -60,7 +61,7 @@ def _add_cloudwatch_handler(access_key_id: str, secret_access_key: str, platform
     log_stream_name=stream_name,
     boto3_client=session.client('logs'),
     create_log_group=True,
-    log_group_retention_days=30,
+    log_group_retention_days=config.CLOUDWATCH_RETENTION_DAYS,
   )
   cw_handler.setFormatter(logging.Formatter('[%(levelname)s] [%(module)s] %(message)s'))
   logger.addHandler(cw_handler)
