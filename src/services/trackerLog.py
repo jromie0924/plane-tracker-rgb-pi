@@ -70,14 +70,14 @@ class TrackerLog:
       with self._table.batch_writer() as batch:
         for item in items:
           batch.put_item(Item=item)
-      self.logger.info(f'Record written to table {self._table}')
+      self.logger.info(f'{len(items)} record(s) written to {_DYNAMODB_TABLE_NAME}')
     except ClientError as e:
       if e.response['Error']['Code'] == 'ProvisionedThroughputExceededException':
-        self.logger.error('DynamoDB write throttled — provisioned WRU capacity exceeded. Entries dropped.')
+        self.logger.error(f'DynamoDB write throttled — {len(items)} entries dropped.')
       else:
-        self.logger.error('Failed to write entries to DynamoDB.', exc_info=True)
+        self.logger.error(f'Failed to write {len(items)} entries to DynamoDB.', exc_info=True)
     except Exception:
-      self.logger.error('Failed to write entries to DynamoDB.', exc_info=True)
+      self.logger.error(f'Failed to write {len(items)} entries to DynamoDB.', exc_info=True)
 
 
 def _floats_to_decimal(obj):
