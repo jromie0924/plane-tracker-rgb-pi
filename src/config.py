@@ -4,6 +4,7 @@ LOGGING_LEVEL: int = logging.INFO
 
 APP_NAME = "plane-tracker"
 LOG_FILE = "logs/plane-tracker.log"
+CLOUDWATCH_RETENTION_DAYS = 30
 
 TRACKER_LOG_TTL_HOURS = 168 # 1 week
 TRACKER_LOG_EMU_FLAG = False
