@@ -54,7 +54,11 @@ class SsmService:
       self.logger.debug("SSM IP update disabled on this host. Skipping.")
       return
     self.logger.info("Updating allowed IP secret")
-    response = requests.get(GET_IP_URL, timeout=2)
-    response.raise_for_status()
+    try:
+      response = requests.get(GET_IP_URL, timeout=10)
+      response.raise_for_status()
+    except requests.exceptions.RequestException:
+      self.logger.error("Failed to retrieve public IP. Skipping update.", exc_info=True)
+      return
     public_ip = response.text.strip()
     self._upload_to_ssm(public_ip)
