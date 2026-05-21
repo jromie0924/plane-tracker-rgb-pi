@@ -46,8 +46,12 @@ def mock_boto3():
 
 @pytest.fixture
 def mock_requests():
+    import requests as real_requests
     with patch('services.ssmService.requests') as mr:
         mr.get.return_value.text = '203.0.113.7'
+        # Keep the real exception classes so production `except` clauses
+        # resolve to actual exception types, not Mock attributes.
+        mr.exceptions = real_requests.exceptions
         yield mr
 
 
@@ -184,7 +188,7 @@ def test_upload_does_not_set_last_update_on_exception(service, mock_boto3, mock_
 def test_update_allowed_ip_fetches_public_ip(service, mock_requests):
     with patch.object(service, '_upload_to_ssm'):
         service.update_allowed_ip_secret()
-    mock_requests.get.assert_called_once_with(GET_IP_URL, timeout=2)
+    mock_requests.get.assert_called_once_with(GET_IP_URL, timeout=10)
 
 
 def test_update_allowed_ip_raises_for_bad_status(service, mock_requests):
@@ -205,14 +209,6 @@ def test_update_allowed_ip_strips_whitespace_from_ip(service, mock_requests):
     with patch.object(service, '_upload_to_ssm') as mock_upload:
         service.update_allowed_ip_secret()
     mock_upload.assert_called_once_with('198.51.100.4')
-
-
-def test_update_allowed_ip_propagates_http_error(service, mock_requests):
-    mock_requests.get.return_value.raise_for_status.side_effect = Exception('500')
-    with patch.object(service, '_upload_to_ssm') as mock_upload:
-        with pytest.raises(Exception):
-            service.update_allowed_ip_secret()
-    mock_upload.assert_not_called()
 
 
 def test_update_allowed_ip_end_to_end_calls_put_parameter(service, mock_requests, mock_boto3, mock_datetime):
@@ -242,5 +238,53 @@ def test_update_allowed_ip_proceeds_when_host_enabled(service, mock_config, mock
     mock_config.SSM_IP_UPDATE_ENABLED = True
     with patch.object(service, '_upload_to_ssm') as mock_upload:
         service.update_allowed_ip_secret()
-    mock_requests.get.assert_called_once_with(GET_IP_URL, timeout=2)
+    mock_requests.get.assert_called_once_with(GET_IP_URL, timeout=10)
     mock_upload.assert_called_once()
+
+
+# --- update_allowed_ip_secret: network error handling ---
+
+def test_update_allowed_ip_swallows_connection_error(service, mock_requests):
+    # No network / DNS failure must not crash the caller.
+    mock_requests.get.side_effect = mock_requests.exceptions.ConnectionError('dns fail')
+    with patch.object(service, '_upload_to_ssm') as mock_upload:
+        service.update_allowed_ip_secret()  # must not raise
+    mock_upload.assert_not_called()
+
+
+def test_update_allowed_ip_swallows_timeout(service, mock_requests):
+    mock_requests.get.side_effect = mock_requests.exceptions.Timeout('timed out')
+    with patch.object(service, '_upload_to_ssm') as mock_upload:
+        service.update_allowed_ip_secret()  # must not raise
+    mock_upload.assert_not_called()
+
+
+def test_update_allowed_ip_swallows_http_error(service, mock_requests):
+    # raise_for_status() raises HTTPError, a RequestException subclass.
+    mock_requests.get.return_value.raise_for_status.side_effect = \
+        mock_requests.exceptions.HTTPError('500')
+    with patch.object(service, '_upload_to_ssm') as mock_upload:
+        service.update_allowed_ip_secret()  # must not raise
+    mock_upload.assert_not_called()
+
+
+def test_update_allowed_ip_logs_error_on_network_error(service, mock_requests):
+    mock_requests.get.side_effect = mock_requests.exceptions.ConnectionError('dns fail')
+    with patch.object(service.logger, 'error') as mock_error:
+        service.update_allowed_ip_secret()
+    mock_error.assert_called_once()
+
+
+def test_update_allowed_ip_does_not_set_last_update_on_network_error(service, mock_requests):
+    mock_requests.get.side_effect = mock_requests.exceptions.ConnectionError('dns fail')
+    service.update_allowed_ip_secret()
+    assert service._last_update is None
+
+
+def test_update_allowed_ip_propagates_non_request_error(service, mock_requests):
+    # A non-requests error is not a transient network failure -> must not be swallowed.
+    mock_requests.get.side_effect = ValueError('unexpected')
+    with patch.object(service, '_upload_to_ssm') as mock_upload:
+        with pytest.raises(ValueError):
+            service.update_allowed_ip_secret()
+    mock_upload.assert_not_called()
