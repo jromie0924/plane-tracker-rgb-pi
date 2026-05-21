@@ -50,6 +50,9 @@ class SsmService:
       self.logger.error("Failed to update allowed IP param", exc_info=True)
 
   def update_allowed_ip_secret(self):
+    if not config.SSM_IP_UPDATE_ENABLED:
+      self.logger.debug("SSM IP update disabled on this host. Skipping.")
+      return
     self.logger.info("Updating allowed IP secret")
     response = requests.get(GET_IP_URL, timeout=2)
     response.raise_for_status()
