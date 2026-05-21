@@ -225,3 +225,22 @@ def test_update_allowed_ip_end_to_end_calls_put_parameter(service, mock_requests
         Type='String',
         Overwrite=True,
     )
+
+
+# --- update_allowed_ip_secret: host gating ---
+
+def test_update_allowed_ip_skips_when_host_disabled(service, mock_config, mock_requests):
+    # Non-Pi hosts must not touch the allowlist — no IP fetch, no upload.
+    mock_config.SSM_IP_UPDATE_ENABLED = False
+    with patch.object(service, '_upload_to_ssm') as mock_upload:
+        service.update_allowed_ip_secret()
+    mock_requests.get.assert_not_called()
+    mock_upload.assert_not_called()
+
+
+def test_update_allowed_ip_proceeds_when_host_enabled(service, mock_config, mock_requests):
+    mock_config.SSM_IP_UPDATE_ENABLED = True
+    with patch.object(service, '_upload_to_ssm') as mock_upload:
+        service.update_allowed_ip_secret()
+    mock_requests.get.assert_called_once_with(GET_IP_URL, timeout=2)
+    mock_upload.assert_called_once()
