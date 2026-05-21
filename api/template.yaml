@@ -1,0 +1,112 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Read-only REST API to query the plane-tracker-rgb-pi DynamoDB flight log.
+  A single GET /flights endpoint, IP-allowlisted via an SSM parameter
+  (no API key). See api/README.md for deploy and operations notes.
+
+Parameters:
+
+  TableName:
+    Type: String
+    Default: tracker_log
+    Description: DynamoDB table to query (tracker_log in production).
+
+  AllowedIpsParam:
+    Type: String
+    Default: /plane-tracker/api/allowed-cidrs
+    Description: >
+      SSM parameter (String, comma-separated CIDRs) holding the IP allowlist.
+      Created out-of-band - see README - so deploys never clobber it.
+      Keep the leading slash.
+
+  WindowMinutes:
+    Type: Number
+    Default: 15
+    Description: Half-window, in minutes, on each side of a supplied timestamp.
+
+  MaxItems:
+    Type: Number
+    Default: 50
+    Description: Max items returned from a callsign-only query.
+
+  DefaultTimezone:
+    Type: String
+    Default: UTC
+    Description: >
+      IANA zone used to interpret timestamps with no offset
+      (e.g. America/Chicago). UTC by default.
+
+  StageName:
+    Type: String
+    Default: prod
+    Description: API Gateway stage name.
+
+  ThrottleRateLimit:
+    Type: Number
+    Default: 5
+    Description: Steady-state requests/sec cap (keeps load under the 1-2 RCU table).
+
+  ThrottleBurstLimit:
+    Type: Number
+    Default: 10
+    Description: Burst request cap.
+
+Resources:
+
+  FlightQueryApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: plane-tracker-flight-query
+      StageName: !Ref StageName
+      EndpointConfiguration:
+        Type: REGIONAL
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          ThrottlingRateLimit: !Ref ThrottleRateLimit
+          ThrottlingBurstLimit: !Ref ThrottleBurstLimit
+
+  FlightQueryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: plane-tracker-flight-query
+      Description: Queries tracker_log by callsign (+ optional time window).
+      Runtime: python3.13
+      Handler: handler.lambda_handler
+      CodeUri: .
+      Architectures:
+        - arm64
+      MemorySize: 128
+      Timeout: 10
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          ALLOWED_IPS_PARAM: !Ref AllowedIpsParam
+          WINDOW_MINUTES: !Ref WindowMinutes
+          MAX_ITEMS: !Ref MaxItems
+          DEFAULT_TZ: !Ref DefaultTimezone
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref TableName
+        - Statement:
+            - Effect: Allow
+              Action: ssm:GetParameter
+              Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${AllowedIpsParam}"
+      Events:
+        Query:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FlightQueryApi
+            Path: /flights
+            Method: get
+
+Outputs:
+
+  ApiUrl:
+    Description: Invoke URL for the flight-query endpoint.
+    Value: !Sub "https://${FlightQueryApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/flights"
+
+  FunctionName:
+    Description: Lambda function name.
+    Value: !Ref FlightQueryFunction

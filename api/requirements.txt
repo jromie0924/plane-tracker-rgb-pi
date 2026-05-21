@@ -1,0 +1,5 @@
+# Runtime dependencies for the flight-query Lambda.
+# boto3 is already provided by the Lambda runtime, so it is not listed here.
+# tzdata ensures zoneinfo can resolve IANA names (e.g. America/Chicago)
+# regardless of the base image's system timezone files.
+tzdata

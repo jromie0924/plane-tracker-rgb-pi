@@ -47,6 +47,9 @@ AWS_ACCESS_KEY_ID_NAME = 'ACCESS_KEY_ID'
 AWS_SECRET_ACCESS_KEY_NAME = 'SECRET_ACCESS_KEY'
 AWS_REGION = 'us-east-2' # Ohio
 
+ALLOWED_IP_UPDATE_FREQUENCY_MINUTES = 15
+SSM_API_ALLOWED_IP_NAME = '/plane-tracker/api/allowed-cidrs'
+
 ADSB_API_SECRET_NAME = '' # TODO: update this value to include the secret name from AWS secrets.
 ADSB_LOL_URL = 'api.adsb.lol'
 
