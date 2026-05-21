@@ -15,7 +15,7 @@ from urllib3.exceptions import NewConnectionError
 from urllib3.exceptions import MaxRetryError
 from datetime import datetime
 
-from services.ssmService import SSMService
+from services.ssmService import SsmService
 from services.trackerLog import TrackerLog
 
 
@@ -34,7 +34,7 @@ class Overhead:
     self._airline_lookup = AirlineLookupService()
     self._flight_logic = FlightLogic()
     self._tracker_log = TrackerLog()
-    self._ssm = SSMService()
+    self._ssm = SsmService()
     self._lock = Lock()
     self._data = []
     self._new_data = False

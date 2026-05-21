@@ -9,14 +9,14 @@ from services.runtime import RuntimeService
 
 GET_IP_URL = "https://checkip.amazonaws.com"
 
-class SSMService:
+class SsmService:
   _instance = None
   _lock = threading.Lock()
 
   def __new__(cls):
     with cls._lock:
       if not cls._instance:
-        cls._instance = super(SSMService, cls).__new__(cls)
+        cls._instance = super(SsmService, cls).__new__(cls)
         cls._instance.__init__()
       return cls._instance
 

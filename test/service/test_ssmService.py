@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 
-from services.ssmService import SSMService, GET_IP_URL
+from services.ssmService import SsmService, GET_IP_URL
 
 NOW = 1_000_000.0
 UPDATE_FREQ_MINUTES = 15
@@ -15,9 +15,9 @@ REGION = 'us-east-2'
 
 @pytest.fixture(autouse=True)
 def reset_singleton():
-    SSMService._instance = None
+    SsmService._instance = None
     yield
-    SSMService._instance = None
+    SsmService._instance = None
 
 
 @pytest.fixture
@@ -60,13 +60,13 @@ def mock_datetime():
 
 @pytest.fixture
 def service(mock_config, mock_runtime):
-    return SSMService()
+    return SsmService()
 
 
 # --- Singleton / __init__ ---
 
 def test_singleton_returns_same_instance(mock_config, mock_runtime):
-    assert SSMService() is SSMService()
+    assert SsmService() is SsmService()
 
 
 def test_init_sets_last_update_to_none(service):
@@ -74,14 +74,14 @@ def test_init_sets_last_update_to_none(service):
 
 
 def test_init_loads_runtime_service(mock_config, mock_runtime):
-    SSMService()
+    SsmService()
     mock_runtime.assert_called_once()
 
 
 def test_init_runs_only_once(service):
     # __init__ is guarded by _initialized; a second construction must not reset state
     service._last_update = 12345.0
-    SSMService()
+    SsmService()
     assert service._last_update == 12345.0
 
 
