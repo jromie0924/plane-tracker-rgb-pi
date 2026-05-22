@@ -101,6 +101,16 @@ Resources:
             Path: /flights
             Method: get
 
+  FlightQueryLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    # checkov:skip=CKV_AWS_158: low-sensitivity access logs,
+    # AWS-owned encryption is sufficient
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${FlightQueryFunction}"
+      RetentionInDays: 30
+
 Outputs:
 
   ApiUrl:
