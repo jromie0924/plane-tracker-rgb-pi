@@ -1,9 +1,7 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  Read-only REST API to query the plane-tracker-rgb-pi DynamoDB flight log.
-  A single GET /flights endpoint, IP-allowlisted via an SSM parameter
-  (no API key). See api/README.md for deploy and operations notes.
+Description: |
+  Read-only REST API to query the plane-tracker-rgb-pi DynamoDB flight log. A single GET /flights endpoint, IP-allowlisted via an SSM parameter (no API key). See api/README.md for deploy and operations notes.
 
 Parameters:
 
@@ -15,10 +13,8 @@ Parameters:
   AllowedIpsParam:
     Type: String
     Default: /plane-tracker/api/allowed-cidrs
-    Description: >
-      SSM parameter (String, comma-separated CIDRs) holding the IP allowlist.
-      Created out-of-band - see README - so deploys never clobber it.
-      Keep the leading slash.
+    Description: |
+      SSM parameter (String, comma-separated CIDRs) holding the IP allowlist. Created out-of-band - see README - so deploys never clobber it. Keep the leading slash.
 
   WindowMinutes:
     Type: Number
@@ -33,14 +29,21 @@ Parameters:
   DefaultTimezone:
     Type: String
     Default: UTC
-    Description: >
-      IANA zone used to interpret timestamps with no offset
-      (e.g. America/Chicago). UTC by default.
+    Description: |
+      IANA zone used to interpret timestamps with no offset (e.g. America/Chicago). UTC by default.
 
   StageName:
     Type: String
     Default: prod
     Description: API Gateway stage name.
+
+  AllowedOrigins:
+    Type: String
+    Default: ''
+    Description: |
+      Comma-separated browser origins allowed to read responses (CORS),
+      e.g. http://localhost:5173,https://flights.example.com. Use * to allow
+      any origin. Empty (default) sends no CORS headers.
 
   ThrottleRateLimit:
     Type: Number
@@ -62,8 +65,8 @@ Resources:
       EndpointConfiguration:
         Type: REGIONAL
       MethodSettings:
-        - ResourcePath: "/*"
-          HttpMethod: "*"
+        - ResourcePath: /*
+          HttpMethod: '*'
           ThrottlingRateLimit: !Ref ThrottleRateLimit
           ThrottlingBurstLimit: !Ref ThrottleBurstLimit
 
@@ -86,13 +89,14 @@ Resources:
           WINDOW_MINUTES: !Ref WindowMinutes
           MAX_ITEMS: !Ref MaxItems
           DEFAULT_TZ: !Ref DefaultTimezone
+          CORS_ALLOWED_ORIGINS: !Ref AllowedOrigins
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref TableName
         - Statement:
             - Effect: Allow
               Action: ssm:GetParameter
-              Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${AllowedIpsParam}"
+              Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${AllowedIpsParam}
       Events:
         Query:
           Type: Api
@@ -108,14 +112,14 @@ Resources:
     # checkov:skip=CKV_AWS_158: low-sensitivity access logs,
     # AWS-owned encryption is sufficient
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${FlightQueryFunction}"
+      LogGroupName: !Sub /aws/lambda/${FlightQueryFunction}
       RetentionInDays: 30
 
 Outputs:
 
   ApiUrl:
     Description: Invoke URL for the flight-query endpoint.
-    Value: !Sub "https://${FlightQueryApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/flights"
+    Value: !Sub https://${FlightQueryApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/flights
 
   FunctionName:
     Description: Lambda function name.
