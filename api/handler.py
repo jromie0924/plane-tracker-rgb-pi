@@ -2,18 +2,20 @@
 Read-only query endpoint for the plane-tracker DynamoDB flight log.
 
 Exposes GET /flights with query parameters:
+  key        (required)  Shared secret. Must match the value stored in the
+                         SSM parameter named by API_KEY_PARAM.
   callsign   (required)  Flight identifier, e.g. UAL123.
   timestamp  (optional)  A human-readable time. When given, results are
                          limited to a +/- WINDOW_MINUTES window around it.
 
-Access is restricted by source IP: the caller's address must fall within
-one of the CIDRs stored in the SSM parameter named by ALLOWED_IPS_PARAM.
+Responses carry CORS headers for any browser origin listed in the
+CORS_ALLOWED_ORIGINS environment variable (comma-separated; "*" for any).
 """
 
-import ipaddress
 import json
 import logging
 import os
+import secrets
 import time
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -27,11 +29,16 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 TABLE_NAME = os.environ["TABLE_NAME"]
-ALLOWED_IPS_PARAM = os.environ["ALLOWED_IPS_PARAM"]
+API_KEY_PARAM = os.environ["API_KEY_PARAM"]
 WINDOW_MINUTES = int(os.environ.get("WINDOW_MINUTES", "15"))
 MAX_ITEMS = int(os.environ.get("MAX_ITEMS", "50"))
-ALLOWLIST_CACHE_TTL = int(os.environ.get("ALLOWLIST_CACHE_TTL", "60"))
+KEY_CACHE_TTL = int(os.environ.get("KEY_CACHE_TTL", "60"))
 DEFAULT_TZ = os.environ.get("DEFAULT_TZ", "UTC")
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
 
 try:
     _default_tz = ZoneInfo(DEFAULT_TZ)
@@ -42,8 +49,8 @@ except Exception:
 _table = boto3.resource("dynamodb").Table(TABLE_NAME)
 _ssm = boto3.client("ssm")
 
-# Cache the allowlist across warm invocations so we don't hit SSM every request.
-_allowlist = {"networks": None, "fetched_at": 0.0}
+# Cache the expected key across warm invocations so we don't hit SSM every request.
+_api_key_cache = {"value": None, "fetched_at": 0.0}
 
 
 class _DecimalEncoder(json.JSONEncoder):
@@ -63,38 +70,46 @@ def _response(status, body):
     }
 
 
-def _allowed_networks():
-    """Load (and briefly cache) the CIDR allowlist from SSM Parameter Store."""
+def _request_origin(event):
+    """Pull the browser Origin header off the request, if present."""
+    headers = event.get("headers") or {}
+    return headers.get("origin") or headers.get("Origin")
+
+
+def _cors_headers(origin):
+    """CORS headers to merge into a response, echoing an allowlisted origin."""
+    if "*" in CORS_ALLOWED_ORIGINS:
+        return {"Access-Control-Allow-Origin": "*"}
+    if origin and origin in CORS_ALLOWED_ORIGINS:
+        return {"Access-Control-Allow-Origin": origin, "Vary": "Origin"}
+    return {}
+
+
+def _expected_key():
+    """Load (and briefly cache) the expected API key from SSM Parameter Store."""
     now = time.time()
     if (
-        _allowlist["networks"] is not None
-        and now - _allowlist["fetched_at"] < ALLOWLIST_CACHE_TTL
+        _api_key_cache["value"] is not None
+        and now - _api_key_cache["fetched_at"] < KEY_CACHE_TTL
     ):
-        return _allowlist["networks"]
+        return _api_key_cache["value"]
 
-    raw = _ssm.get_parameter(Name=ALLOWED_IPS_PARAM)["Parameter"]["Value"]
-    networks = [
-        ipaddress.ip_network(token.strip(), strict=False)
-        for token in raw.split(",")
-        if token.strip()
-    ]
-    _allowlist["networks"] = networks
-    _allowlist["fetched_at"] = now
-    return networks
+    value = _ssm.get_parameter(Name=API_KEY_PARAM)["Parameter"]["Value"].strip()
+    _api_key_cache["value"] = value
+    _api_key_cache["fetched_at"] = now
+    return value
 
 
-def _ip_allowed(source_ip):
-    try:
-        addr = ipaddress.ip_address(source_ip)
-    except ValueError:
+def _key_ok(supplied):
+    if not supplied:
         return False
     try:
-        networks = _allowed_networks()
+        expected = _expected_key()
     except Exception:
-        # Fail closed: if the allowlist can't be read, deny.
-        logger.exception("Could not load IP allowlist from SSM.")
+        # Fail closed: if the key can't be read, deny.
+        logger.exception("Could not load API key from SSM.")
         return False
-    return any(addr in net for net in networks)
+    return secrets.compare_digest(supplied, expected)
 
 
 def _parse_timestamp_to_ms(raw):
@@ -108,15 +123,12 @@ def _parse_timestamp_to_ms(raw):
     return int(dt.timestamp() * 1000)
 
 
-def lambda_handler(event, context):
-    source_ip = (
-        event.get("requestContext", {}).get("identity", {}).get("sourceIp", "")
-    )
-    if not _ip_allowed(source_ip):
-        logger.warning("Rejected request from %s", source_ip or "<unknown>")
-        return _response(403, {"error": "Forbidden"})
-
+def _handle(event, context):
     params = event.get("queryStringParameters") or {}
+
+    if not _key_ok((params.get("key") or "").strip()):
+        logger.warning("Rejected request: bad or missing key")
+        return _response(403, {"error": "Forbidden"})
 
     callsign = (params.get("callsign") or "").strip().upper()
     if not callsign:
@@ -168,3 +180,16 @@ def lambda_handler(event, context):
             "items": items,
         },
     )
+
+
+def lambda_handler(event, context):
+    """Entrypoint: run the query, then attach CORS headers to the result.
+
+    Headers go on every response (including 403/4xx/5xx) so the browser
+    surfaces the real status instead of masking it as a CORS failure.
+    """
+    response = _handle(event, context)
+    cors = _cors_headers(_request_origin(event))
+    if cors:
+        response.setdefault("headers", {}).update(cors)
+    return response

@@ -4,18 +4,18 @@ A read-only HTTP API over the `tracker_log` DynamoDB table. One endpoint —
 `GET /flights` — returns logged flights for a callsign, optionally narrowed to
 a time window.
 
-Access is restricted by **source IP**: the caller must fall inside a CIDR
-stored in an SSM parameter. No API key. Because a home IP is dynamic, the
-Raspberry Pi keeps that parameter current (see [IP allowlist](#ip-allowlist)).
+Access is gated by a **shared key** passed in the `key` query parameter. The
+expected value lives in an SSM parameter; the Lambda fetches it (with a short
+warm-cache) and compares against the request. This isn't real security — it
+just keeps the table from being trivially hammered by anyone who finds the URL.
 
 ## Layout
 
 | File | Purpose |
 |------|---------|
-| `handler.py` | Lambda function — IP check, query, JSON response. |
+| `handler.py` | Lambda function — key check, query, JSON response. |
 | `template.yaml` | SAM template — Lambda + REST API + IAM. |
 | `requirements.txt` | `tzdata`, so IANA zone names always resolve. |
-| `scripts/update-allowed-ip.sh` | Pi-side cron job that syncs the allowlist. |
 
 ## API
 
@@ -23,6 +23,7 @@ Raspberry Pi keeps that parameter current (see [IP allowlist](#ip-allowlist)).
 
 | Param | Required | Notes |
 |-------|----------|-------|
+| `key` | yes | Shared secret. Must match the SSM parameter value. |
 | `callsign` | yes | Flight identifier, e.g. `UAL123`. Upper-cased before lookup. |
 | `timestamp` | no | Human time; results limited to ±`WindowMinutes` around it. |
 
@@ -37,10 +38,10 @@ most recent first, capped at `MaxItems`.
 
 ```bash
 # all recent entries for a callsign
-curl "$API/flights?callsign=UAL123"
+curl "$API/flights?key=$KEY&callsign=UAL123"
 
 # entries within ~15 min of a time
-curl "$API/flights?callsign=UAL123&timestamp=2026-05-20T14:30:00"
+curl "$API/flights?key=$KEY&callsign=UAL123&timestamp=2026-05-20T14:30:00"
 ```
 
 ## Deploy
@@ -57,36 +58,22 @@ sam deploy --guided      # first time; writes samconfig.toml
 Accept `us-east-2` as the region. The stack prints the `ApiUrl` output.
 Later deploys: `sam build && sam deploy`.
 
-## IP allowlist
+## Key
 
-The allowlist lives in SSM parameter `/plane-tracker/api/allowed-cidrs`
-(comma-separated CIDRs). It is **not** managed by the template, so deploys
-never overwrite it. Create it once:
+The expected key lives in SSM parameter `/plane-tracker/api/key`. It is
+**not** managed by the template, so deploys never overwrite it. Create it
+once with any opaque value (a UUID is fine):
 
 ```bash
 aws ssm put-parameter \
-  --name /plane-tracker/api/allowed-cidrs \
+  --name /plane-tracker/api/key \
   --region us-east-2 --type String \
-  --value "$(curl -s https://checkip.amazonaws.com)/32"
+  --value "$(uuidgen)"
 ```
 
-### Keeping it current
-
-Your ISP rotates your home IP. Since all remote traffic is routed home over
-OpenVPN, the allowlist only ever needs that one address.
-`scripts/update-allowed-ip.sh` fetches the Pi's public IP and rewrites the
-parameter when it changes. Install it on the Pi via cron:
-
-```cron
-*/15 * * * * ALLOWED_IPS_PARAM=/plane-tracker/api/allowed-cidrs AWS_REGION=us-east-2 /path/to/api/scripts/update-allowed-ip.sh
-```
-
-The Pi needs AWS CLI credentials with `ssm:GetParameter` and `ssm:PutParameter`
-on that parameter. The script replaces the whole allowlist with the current
-`/32`; to keep extra static entries, manage the parameter by hand instead.
-
-The Lambda caches the allowlist for `ALLOWLIST_CACHE_TTL` seconds (default 60),
-so an IP change takes effect within a minute without a redeploy.
+To rotate, run the same command with `--overwrite`. The Lambda caches the
+value for `KEY_CACHE_TTL` seconds (default 60), so a rotation takes effect
+within a minute without a redeploy.
 
 ## Tuning (stack parameters)
 

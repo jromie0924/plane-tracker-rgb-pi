@@ -15,7 +15,6 @@ from urllib3.exceptions import NewConnectionError
 from urllib3.exceptions import MaxRetryError
 from datetime import datetime
 
-from services.ssmService import SsmService
 from services.trackerLog import TrackerLog
 
 
@@ -34,7 +33,6 @@ class Overhead:
     self._airline_lookup = AirlineLookupService()
     self._flight_logic = FlightLogic()
     self._tracker_log = TrackerLog()
-    self._ssm = SsmService()
     self._lock = Lock()
     self._data = []
     self._new_data = False
@@ -67,7 +65,6 @@ class Overhead:
   def _grab_data(self):
     # Mark data as old
     data = []
-    self._ssm.update_allowed_ip_secret()
 
     # Grab flight details
     try:
