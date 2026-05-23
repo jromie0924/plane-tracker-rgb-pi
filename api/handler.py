@@ -25,6 +25,8 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
+from api.filterengine import FilterEngine
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -169,7 +171,7 @@ def _handle(event, context):
         logger.exception("DynamoDB query failed.")
         return _response(502, {"error": "Database query failed."})
 
-    items = result.get("Items", [])
+    items = FilterEngine.filter_flights(result.get("Items", []))
     return _response(
         200,
         {
