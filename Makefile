@@ -1,21 +1,4 @@
-.PHONY: test test-coverage help run release-info
-
-# Default target
-help:
-	@echo "Available targets:"
-	@echo ""
-	@echo "Application:"
-	@echo "  make start            - Start the plane tracker application"
-	@echo ""
-	@echo "Testing:"
-	@echo "  make test             - Run all tests (24 tests)"
-	@echo ""
-	@echo "Release:"
-	@echo "  make release-info     - Show instructions for promoting RC to main"
-	@echo ""
-	@echo "Usage:"
-	@echo "  1. Ensure you're in pipenv shell: pipenv shell"
-	@echo "  2. Run desired target: make start or make test"
+.PHONY: test test-service test-api start release-info
 
 # Run all tests with verbose output
 test:
@@ -24,6 +7,9 @@ test:
 # Run service tests
 test-service:
 	pipenv run python -m pytest test/service/ -v
+
+test-api:
+	pipenv run python -m pytest test/api/ -v
 
 # Start tracking server
 start:
