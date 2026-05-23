@@ -7,7 +7,7 @@ s3_prefix = "plane-tracker-flight-query"
 region = "us-east-2"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "TableName=\"tracker_log\" AllowedIpsParam=\"/plane-tracker/api/allowed-cidrs\" WindowMinutes=\"15\" MaxItems=\"50\" DefaultTimezone=\"America/Chicago\" StageName=\"prod\" ThrottleRateLimit=\"5\" ThrottleBurstLimit=\"10\""
+parameter_overrides = "TableName=\"tracker_log\" ApiKeyParam=\"/plane-tracker/api/key\" WindowMinutes=\"15\" MaxItems=\"50\" DefaultTimezone=\"America/Chicago\" StageName=\"prod\" ThrottleRateLimit=\"5\" ThrottleBurstLimit=\"10\""
 image_repositories = []
 
 [default.global.parameters]
