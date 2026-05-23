@@ -1,5 +1,4 @@
 import logging
-import os
 
 LOGGING_LEVEL: int = logging.INFO
 
@@ -47,28 +46,6 @@ RAPIDAPI_TOKEN_KEYNAME = 'rapidapi_key'
 AWS_ACCESS_KEY_ID_NAME = 'ACCESS_KEY_ID'
 AWS_SECRET_ACCESS_KEY_NAME = 'SECRET_ACCESS_KEY'
 AWS_REGION = 'us-east-2' # Ohio
-
-ALLOWED_IP_UPDATE_FREQUENCY_MINUTES = 15
-SSM_API_ALLOWED_IP_NAME = '/plane-tracker/api/allowed-cidrs'
-
-# Only one host should own the API IP allowlist. SsmService writes it with a
-# single-value put_parameter(Overwrite=True), so two writers on different
-# networks would clobber each other on every update. The Pi is the source of
-# truth (it also writes the production tracker_log table). Auto-detected via
-# /proc/device-tree/model, which exists on the Pi but not on a generic Linux
-# host; override per-host with the SSM_IP_UPDATE env var (e.g. SSM_IP_UPDATE=true
-# to hand authority to the Linux box while the Pi is down).
-def _is_raspberry_pi() -> bool:
-  override = os.getenv('SSM_IP_UPDATE')
-  if override is not None:
-    return override.strip().lower() in ('1', 'true', 'yes')
-  try:
-    with open('/proc/device-tree/model') as f:
-      return 'Raspberry Pi' in f.read()
-  except OSError:
-    return False
-
-SSM_IP_UPDATE_ENABLED = _is_raspberry_pi()
 
 ADSB_API_SECRET_NAME = '' # TODO: update this value to include the secret name from AWS secrets.
 ADSB_LOL_URL = 'api.adsb.lol'

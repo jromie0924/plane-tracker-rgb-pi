@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: |
-  Read-only REST API to query the plane-tracker-rgb-pi DynamoDB flight log. A single GET /flights endpoint, IP-allowlisted via an SSM parameter (no API key). See api/README.md for deploy and operations notes.
+  Read-only REST API to query the plane-tracker-rgb-pi DynamoDB flight log. A single GET /flights endpoint, gated by a shared key passed as a query parameter and matched against an SSM parameter. See api/README.md for deploy and operations notes.
 
 Parameters:
 
@@ -10,11 +10,11 @@ Parameters:
     Default: tracker_log
     Description: DynamoDB table to query (tracker_log in production).
 
-  AllowedIpsParam:
+  ApiKeyParam:
     Type: String
-    Default: /plane-tracker/api/allowed-cidrs
+    Default: /plane-tracker/api/key
     Description: |
-      SSM parameter (String, comma-separated CIDRs) holding the IP allowlist. Created out-of-band - see README - so deploys never clobber it. Keep the leading slash.
+      SSM parameter (String) holding the shared API key. Created out-of-band - see README - so deploys never clobber it. Keep the leading slash.
 
   WindowMinutes:
     Type: Number
@@ -85,7 +85,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref TableName
-          ALLOWED_IPS_PARAM: !Ref AllowedIpsParam
+          API_KEY_PARAM: !Ref ApiKeyParam
           WINDOW_MINUTES: !Ref WindowMinutes
           MAX_ITEMS: !Ref MaxItems
           DEFAULT_TZ: !Ref DefaultTimezone
@@ -96,7 +96,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: ssm:GetParameter
-              Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${AllowedIpsParam}
+              Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ApiKeyParam}
       Events:
         Query:
           Type: Api
