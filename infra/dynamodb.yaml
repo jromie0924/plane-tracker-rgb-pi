@@ -1,9 +1,9 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
-  DynamoDB tables for plane-tracker-rgb-pi flight log archival.
+  DynamoDB table for plane-tracker-rgb-pi flight log archival.
   Partition key: callsign | Sort key: timestamp | TTL: expires_at
   Provisioned capacity with auto-scaling (~$1/month after free tier).
-  tracker_log: production (Raspberry Pi) | tracker_log_emu: emulator/dev
+  tracker_log: production (Raspberry Pi)
 
 Parameters:
   TTLHours:
@@ -117,80 +117,80 @@ Resources:
 
   # ── Emulator table (non-Raspberry Pi / dev) ───────────────────────────────
 
-  TrackerLogEmuTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: tracker_log_emu
-      BillingMode: PROVISIONED
-      ProvisionedThroughput:
-        ReadCapacityUnits: !Ref ReadCapacityMin
-        WriteCapacityUnits: !Ref WriteCapacityMin
-      AttributeDefinitions:
-        - AttributeName: callsign
-          AttributeType: S
-        - AttributeName: timestamp
-          AttributeType: "N"
-      KeySchema:
-        - AttributeName: callsign
-          KeyType: HASH
-        - AttributeName: timestamp
-          KeyType: RANGE
-      SSESpecification:
-        SSEEnabled: true
-      TimeToLiveSpecification:
-        AttributeName: expires_at
-        Enabled: true
-      PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: false
-      Tags:
-        - Key: Project
-          Value: plane-tracker-rgb-pi
+  # TrackerLogEmuTable:
+  #   Type: AWS::DynamoDB::Table
+  #   Properties:
+  #     TableName: tracker_log_emu
+  #     BillingMode: PROVISIONED
+  #     ProvisionedThroughput:
+  #       ReadCapacityUnits: !Ref ReadCapacityMin
+  #       WriteCapacityUnits: !Ref WriteCapacityMin
+  #     AttributeDefinitions:
+  #       - AttributeName: callsign
+  #         AttributeType: S
+  #       - AttributeName: timestamp
+  #         AttributeType: "N"
+  #     KeySchema:
+  #       - AttributeName: callsign
+  #         KeyType: HASH
+  #       - AttributeName: timestamp
+  #         KeyType: RANGE
+  #     SSESpecification:
+  #       SSEEnabled: true
+  #     TimeToLiveSpecification:
+  #       AttributeName: expires_at
+  #       Enabled: true
+  #     PointInTimeRecoverySpecification:
+  #       PointInTimeRecoveryEnabled: false
+  #     Tags:
+  #       - Key: Project
+  #         Value: plane-tracker-rgb-pi
 
-  EmuWriteScalableTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Properties:
-      ServiceNamespace: dynamodb
-      ResourceId: !Sub "table/${TrackerLogEmuTable}"
-      ScalableDimension: dynamodb:table:WriteCapacityUnits
-      MinCapacity: !Ref WriteCapacityMin
-      MaxCapacity: !Ref WriteCapacityMax
-      RoleARN: !GetAtt AutoScalingRole.Arn
+  # EmuWriteScalableTarget:
+  #   Type: AWS::ApplicationAutoScaling::ScalableTarget
+  #   Properties:
+  #     ServiceNamespace: dynamodb
+  #     ResourceId: !Sub "table/${TrackerLogEmuTable}"
+  #     ScalableDimension: dynamodb:table:WriteCapacityUnits
+  #     MinCapacity: !Ref WriteCapacityMin
+  #     MaxCapacity: !Ref WriteCapacityMax
+  #     RoleARN: !GetAtt AutoScalingRole.Arn
 
-  EmuWriteScalingPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: TrackerLogEmuWriteScalingPolicy
-      PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref EmuWriteScalableTarget
-      TargetTrackingScalingPolicyConfiguration:
-        TargetValue: !Ref TargetWriteUtilization
-        PredefinedMetricSpecification:
-          PredefinedMetricType: DynamoDBWriteCapacityUtilization
-        ScaleInCooldown: 60
-        ScaleOutCooldown: 60
+  # EmuWriteScalingPolicy:
+  #   Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #   Properties:
+  #     PolicyName: TrackerLogEmuWriteScalingPolicy
+  #     PolicyType: TargetTrackingScaling
+  #     ScalingTargetId: !Ref EmuWriteScalableTarget
+  #     TargetTrackingScalingPolicyConfiguration:
+  #       TargetValue: !Ref TargetWriteUtilization
+  #       PredefinedMetricSpecification:
+  #         PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  #       ScaleInCooldown: 60
+  #       ScaleOutCooldown: 60
 
-  EmuReadScalableTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Properties:
-      ServiceNamespace: dynamodb
-      ResourceId: !Sub "table/${TrackerLogEmuTable}"
-      ScalableDimension: dynamodb:table:ReadCapacityUnits
-      MinCapacity: !Ref ReadCapacityMin
-      MaxCapacity: !Ref ReadCapacityMax
-      RoleARN: !GetAtt AutoScalingRole.Arn
+  # EmuReadScalableTarget:
+  #   Type: AWS::ApplicationAutoScaling::ScalableTarget
+  #   Properties:
+  #     ServiceNamespace: dynamodb
+  #     ResourceId: !Sub "table/${TrackerLogEmuTable}"
+  #     ScalableDimension: dynamodb:table:ReadCapacityUnits
+  #     MinCapacity: !Ref ReadCapacityMin
+  #     MaxCapacity: !Ref ReadCapacityMax
+  #     RoleARN: !GetAtt AutoScalingRole.Arn
 
-  EmuReadScalingPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: TrackerLogEmuReadScalingPolicy
-      PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref EmuReadScalableTarget
-      TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 70
-        PredefinedMetricSpecification:
-          PredefinedMetricType: DynamoDBReadCapacityUtilization
-        ScaleInCooldown: 60
-        ScaleOutCooldown: 60
+  # EmuReadScalingPolicy:
+  #   Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #   Properties:
+  #     PolicyName: TrackerLogEmuReadScalingPolicy
+  #     PolicyType: TargetTrackingScaling
+  #     ScalingTargetId: !Ref EmuReadScalableTarget
+  #     TargetTrackingScalingPolicyConfiguration:
+  #       TargetValue: 70
+  #       PredefinedMetricSpecification:
+  #         PredefinedMetricType: DynamoDBReadCapacityUtilization
+  #       ScaleInCooldown: 60
+  #       ScaleOutCooldown: 60
 
   # IAM role that ApplicationAutoScaling uses to adjust DynamoDB capacity
   AutoScalingRole:
@@ -232,17 +232,17 @@ Outputs:
     Export:
       Name: TrackerLogTableArn
 
-  EmuTableName:
-    Description: DynamoDB table name (emulator)
-    Value: !Ref TrackerLogEmuTable
-    Export:
-      Name: TrackerLogEmuTableName
+  # EmuTableName:
+  #   Description: DynamoDB table name (emulator)
+  #   Value: !Ref TrackerLogEmuTable
+  #   Export:
+  #     Name: TrackerLogEmuTableName
 
-  EmuTableArn:
-    Description: DynamoDB table ARN (emulator)
-    Value: !GetAtt TrackerLogEmuTable.Arn
-    Export:
-      Name: TrackerLogEmuTableArn
+  # EmuTableArn:
+  #   Description: DynamoDB table ARN (emulator)
+  #   Value: !GetAtt TrackerLogEmuTable.Arn
+  #   Export:
+  #     Name: TrackerLogEmuTableArn
 
   TTLHours:
     Description: Configured TTL window in hours
