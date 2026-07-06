@@ -1,7 +1,8 @@
 """Shared setup for api tests.
 
 Sets env vars that handler.py reads at import time, and adds the project
-root to sys.path so `from api.<x> import ...` resolves.
+root to sys.path so `from api.<x> import ...` resolves, plus the api/ dir
+itself so handler.py's Lambda-style `from filterengine import ...` resolves.
 """
 
 import os
@@ -16,3 +17,4 @@ os.environ.setdefault("DEFAULT_TZ", "UTC")
 os.environ.setdefault("CORS_ALLOWED_ORIGINS", "https://example.com,https://other.com")
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../api')))
