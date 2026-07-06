@@ -115,10 +115,15 @@ class Overhead:
         if callsign.upper() in BLANK_FIELDS:
           callsign = ''
 
+        # Get owner icao
+        owner_icao = route.get('airline_code') or Overhead.tokenize_airline_code_from_callsign(callsign=callsign)
+
         if (route.get('airline_code')):
           airline = self._airline_lookup.lookup(route['airline_code'])
         else:
-          airline = ''
+          airline = self._airline_lookup.lookup(owner_icao)
+
+        owner_iata = airline or 'N/A'
 
         # Calculate distances using modified functions
         distance_origin = 0
@@ -126,10 +131,6 @@ class Overhead:
 
         distance_origin = FlightLogic.distance_from_flight_to_location(flight, [origin['lat'], origin['lon']])
         distance_destination = FlightLogic.distance_from_flight_to_location(flight, [destination['lat'], destination['lon']])
-
-        # Get owner icao
-        owner_icao = route.get('airline_code') or Overhead.tokenize_airline_code_from_callsign(callsign=callsign)
-        owner_iata = airline or 'N/A'
 
         try:
           vertical_speed = flight['baro_rate']
