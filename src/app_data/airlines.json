@@ -130,16 +130,6 @@
     "active": "Y"
   },
   {
-    "id": "14",
-    "name": "Abacus International",
-    "alias": "\\N",
-    "iata": "1B",
-    "icao": "",
-    "callsign": "",
-    "country": "Singapore",
-    "active": "Y"
-  },
-  {
     "id": "15",
     "name": "Abelag Aviation",
     "alias": "\\N",
@@ -7228,6 +7218,16 @@
     "callsign": "REMONT AIR",
     "country": "Russia",
     "active": "N"
+  },
+  {
+    "id": "19864",
+    "name": "ATP Flight School",
+    "alias": "\\N",
+    "iata": "",
+    "icao": "CXK",
+    "callsign": "ATP",
+    "country": "United States",
+    "active": "Y"
   },
   {
     "id": "724",
