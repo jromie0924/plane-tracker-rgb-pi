@@ -7220,6 +7220,16 @@
     "active": "N"
   },
   {
+    "id": "19864",
+    "name": "ATP Flight School",
+    "alias": "\\N",
+    "iata": "",
+    "icao": "CXK",
+    "callsign": "ATP",
+    "country": "United States",
+    "active": "Y"
+  },
+  {
     "id": "724",
     "name": "ATRAN Cargo Airlines",
     "alias": "\\N",
