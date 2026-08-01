@@ -16581,13 +16581,13 @@
   },
   {
     "id": "1660",
-    "name": "Caribair",
+    "name": "Skyshare",
     "alias": "\\N",
     "iata": "",
     "icao": "CBC",
-    "callsign": "CARIBAIR",
-    "country": "Dominican Republic",
-    "active": "N"
+    "callsign": "SKYSHARE",
+    "country": "United States",
+    "active": "Y"
   },
   {
     "id": "1661",
@@ -33751,12 +33751,12 @@
   },
   {
     "id": "3380",
-    "name": "Mali Air Express",
+    "name": "Avion Airlines",
     "alias": "\\N",
     "iata": "",
     "icao": "VXP",
     "callsign": "AVION EXPRESS",
-    "country": "Mali",
+    "country": "Puerto Rico",
     "active": "N"
   },
   {
