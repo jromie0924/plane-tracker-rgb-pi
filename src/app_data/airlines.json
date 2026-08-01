@@ -16581,13 +16581,13 @@
   },
   {
     "id": "1660",
-    "name": "Caribair",
+    "name": "Skyshare",
     "alias": "\\N",
     "iata": "",
     "icao": "CBC",
-    "callsign": "CARIBAIR",
-    "country": "Dominican Republic",
-    "active": "N"
+    "callsign": "SKYSHARE",
+    "country": "United States",
+    "active": "Y"
   },
   {
     "id": "1661",
