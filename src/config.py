@@ -49,6 +49,9 @@ AWS_REGION = 'us-east-2' # Ohio
 
 ADSB_API_SECRET_NAME = '' # TODO: update this value to include the secret name from AWS secrets.
 ADSB_LOL_URL = 'api.adsb.lol'
+# adsb.lol rejects requests with a missing or generic User-Agent (403).
+# Keep the contact URL current so they can reach out instead of blocking.
+ADSB_USER_AGENT = f'{APP_NAME}/1.0 (+https://github.com/jromie0924/plane-tracker-rgb-pi)'
 
 RAPIDAPI_KEY_NAME = 'plane_tracker_api_key'
 RAPIDAPI_HOST = 'forward-reverse-geocoding.p.rapidapi.com'

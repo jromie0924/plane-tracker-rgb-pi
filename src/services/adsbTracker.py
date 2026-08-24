@@ -25,12 +25,21 @@ class AdsbTrackerService():
       self.logger.error(f'Error decoding response payload: {e}')
       return None
   
+  def _close(self, conn):
+    if conn is None:
+      return
+    try:
+      conn.close()
+    except Exception:
+      pass
+
   def _get_headers(self):
     return {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
       'Origin': 'https://adsb.lol',
-      'Referer': 'https://adsb.lol/'
+      'Referer': 'https://adsb.lol/',
+      'User-Agent': config.ADSB_USER_AGENT
     }
   
   def _get_nearby_flight_url(self, lat, long, radius):
@@ -45,6 +54,7 @@ class AdsbTrackerService():
   def get_nearby_flights(self, lat, long, radius, timeout=15):
     self.logger.info(f'Getting nearby flights')
 
+    conn = None
     try:
       conn = http.client.HTTPSConnection(config.ADSB_LOL_URL, timeout=timeout)
       conn.request('GET',
@@ -54,14 +64,15 @@ class AdsbTrackerService():
       response = conn.getresponse()
 
       if response.status != HTTPStatus.OK:
-        self.logger.error(f'Error getting flights. Response code: {response.status}')
+        self.logger.error(f'Error getting flights. Response code: {response.status}. '
+                          f'Body: {response.read().decode("utf-8", errors="replace").strip()}')
         return None
-      
+
       data = self.decode_response_payload(response.read())
 
       if data is None or 'ac' not in data:
         return None
-      
+
       try:
         filter_field = 'alt_baro'
         data = [x for x in data['ac'] if filter_field in x and type(x[filter_field]) is int]
@@ -70,18 +81,15 @@ class AdsbTrackerService():
           json.dump(data, f)
         return None
 
-      conn.close()
-
       # return sorted(data, key=lambda x: x['dst'])
       return data
 
     except Exception as e:
       self.logger.error(f'Error getting nearby flights: {e}')
-      try: # attempt to close the connection if it's open
-        conn.close()
-      except Exception:
-        pass
       return None
+
+    finally: # always release the socket, including on the early returns above
+      self._close(conn)
 
 
   # Attempts to get the routes of a list of flights by callsign.
@@ -98,6 +106,7 @@ class AdsbTrackerService():
         'lng': long
       })
   
+    conn = None
     try:
       conn = http.client.HTTPSConnection(config.ADSB_LOL_URL, timeout=timeout)
       conn.request('POST',
@@ -108,17 +117,12 @@ class AdsbTrackerService():
       response = conn.getresponse()
       
       if response.status != HTTPStatus.OK:
-        self.logger.error(f'Error getting flight routeset. Response code: {response.status}')
-        try:
-          conn.close()
-        except Exception:
-          pass
+        self.logger.error(f'Error getting flight routeset. Response code: {response.status}. '
+                          f'Body: {response.read().decode("utf-8", errors="replace").strip()}')
         return EMPTY_ROUTESET
 
       data = self.decode_response_payload(response.read())
 
-      conn.close()
-      
       data = [x for x in data if x['_airports'] and len(x['_airports']) > 0]
       
       merged_data = []
@@ -134,8 +138,7 @@ class AdsbTrackerService():
       
     except Exception as e:
       self.logger.error(f'Error getting routeset: {e}')
-      try: # attempt to close the connection if it's open
-        conn.close()
-      except Exception:
-        pass
       return EMPTY_ROUTESET
+
+    finally: # always release the socket, including on the early returns above
+      self._close(conn)
