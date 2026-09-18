@@ -79,8 +79,8 @@ class GeoService():
     }
 
     endpoint = f'/v1/forward?format=json&postalcode={config.ZIP_CODE}&country={config.COUNTRY}'\
-                f'&accept-language=en&addressdetails=1&limit=1&bounded=0&polygon_text=0&polygon_kml=0'\
-                f'&polygon_svg=0&polygon_geojson=0&polygon_threshold=0.0'
+                '&accept-language=en&addressdetails=1&limit=1&bounded=0&polygon_text=0&polygon_kml=0'\
+                '&polygon_svg=0&polygon_geojson=0&polygon_threshold=0.0'
 
     try:
       conn = http.client.HTTPSConnection(config.RAPIDAPI_HOST)
