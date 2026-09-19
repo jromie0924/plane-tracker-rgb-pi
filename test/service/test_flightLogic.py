@@ -178,3 +178,42 @@ def test_choose_flight_all_invalid_flights_returns_none(mock_config, mock_geo_se
 
   assert result_flight is None
   assert result_route == {}
+
+
+# --- degrees_to_cardinal ---
+
+CARDINALS = ["N", "NNE", "NE", "ENE",
+             "E", "ESE", "SE", "SSE",
+             "S", "SSW", "SW", "WSW",
+             "W", "WNW", "NW", "NNW"]
+
+
+@pytest.mark.parametrize("index,expected", list(enumerate(CARDINALS)))
+def test_degrees_to_cardinal_sector_centers(index, expected):
+  """Each cardinal's center bearing (a multiple of 22.5) maps to that cardinal."""
+  assert FlightLogic.degrees_to_cardinal(index * 22.5) == expected
+
+
+@pytest.mark.parametrize("index", range(16))
+def test_degrees_to_cardinal_sector_boundaries(index):
+  """A sector's lower edge belongs to it; anything just below belongs to the previous sector."""
+  lower_edge = (index * 22.5 - 11.25) % 360
+  assert FlightLogic.degrees_to_cardinal(lower_edge) == CARDINALS[index]
+  assert FlightLogic.degrees_to_cardinal(lower_edge - 0.01) == CARDINALS[index - 1]
+
+
+@pytest.mark.parametrize("degrees", [348.75, 350, 355, 359.99, 360])
+def test_degrees_to_cardinal_wraps_to_north_near_360(degrees):
+  """Bearings in the top half of N's sector overflow to index 16 and must wrap back to N."""
+  assert FlightLogic.degrees_to_cardinal(degrees) == "N"
+
+
+@pytest.mark.parametrize("degrees,expected", [
+  (12, "NNE"),
+  (280, "W"),
+  (290, "WNW"),
+  (315, "NW"),
+  (337.5, "NNW"),
+])
+def test_degrees_to_cardinal_arbitrary_bearings(degrees, expected):
+  assert FlightLogic.degrees_to_cardinal(degrees) == expected

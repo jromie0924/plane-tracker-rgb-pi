@@ -61,12 +61,32 @@ class FlightLogic:
   @staticmethod
   def degrees_to_cardinal(d):
     '''
-    note: this is highly approximate...
+    The math:
+    
+    We have 16 cardinals defined below. Dividing 360º by 16 gives 22.5º,
+    so the compass is split into 16 sectors ("pizza slices"), each 22.5º wide.
+
+    Each cardinal is centered on its sector, so N covers 348.75º-11.25º
+    (i.e. ±11.25º, half a sector's width, around 0º).
+
+    To find the sector for a given degree:
+      1. Add 11.25º to shift the circle by half a sector's width, so each
+         sector starts on a multiple of 22.5º.
+      2. Divide by the sector width (22.5º) to get how many sectors in we are.
+      3. Drop the decimal to get the index into the array.
+
+    Example: 12º
+      12 + 11.25 = 23.25
+      23.25 / 22.5 = 1.03 => 1
+      Index 1 is the second cardinal in the array: NNE.
     '''
-    dirs = ["N", "NE", "E", "SE",
-        "S", "SW", "W", "NW", ]
-    ix = int((d + 22.5) / 45)
-    return dirs[ix % 8]
+    dirs = ["N", "NNE", "NE", "ENE",
+            "E", "ESE", "SE", "SSE",
+            "S", "SSW", "SW", "WSW",
+            "W", "WNW", "NW", "NNW"]
+    
+    ix = int((d + 11.25) / 22.5)
+    return dirs[ix % 16]
     
   # Cleanses the flight history mapping of expired entries
   # Helps prevent the mapping from taking up too much memory
