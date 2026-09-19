@@ -11,11 +11,7 @@ EMPTY_ROUTESET = []
 
 class AdsbTrackerService():
   def __init__(self):
-    self.logger = logging.getLogger(config.APP_NAME)
-    with open('src/app_data/routeset_default.json', 'r') as f:
-      self._default_routeset = json.load(f)
-    
-    self._routeset_timestamp = TimeUtils.current_time_milli()
+    self.logger = logging.getLogger(config.APP_NAME)    
 
   def decode_response_payload(self, data: bytes):
     try:
