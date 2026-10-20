@@ -1,5 +1,6 @@
 from services.adsbTracker import AdsbTrackerService
 from services.airlineLookup import AirlineLookupService
+from services.databaseManager import DatabaseManager
 from services.flightLogic import FlightLogic
 from threading import Thread, Lock
 from time import sleep
@@ -33,6 +34,7 @@ class Overhead:
     self._airline_lookup = AirlineLookupService()
     self._flight_logic = FlightLogic()
     self._tracker_log = TrackerLog()
+    self._database = DatabaseManager()
     self._lock = Lock()
     self._data = []
     self._new_data = False
@@ -43,6 +45,12 @@ class Overhead:
     while not len(self._geo_service.location):
       self.logger.info('Waiting for location data...')
       sleep(1)
+
+    # Rebuild the route database in the background when it's missing or due for a refresh
+    if self._database.needs_rebuild():
+      db_thread = Thread(target=self._database.rebuild)
+      db_thread.daemon = True
+      db_thread.start()
 
     with self._lock:
       if self._processing:
