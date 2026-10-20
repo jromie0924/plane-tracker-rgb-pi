@@ -22,6 +22,10 @@ class AuthenticationService:
       return cls._instance
   
   def __init__(self):
+    if hasattr(self, '_initialized'):
+      return
+    self._initialized = True
+
     self.logger = logging.getLogger(config.APP_NAME)
     self.error = False
     self.runtime_service = RuntimeService()
