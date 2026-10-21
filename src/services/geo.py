@@ -20,7 +20,7 @@ This is to prevent making unnecessary requests to the RapidAPI
 Geocoding service.
 '''
 
-filepath = 'src/app_data/geo_cache.json'
+filepath = 'app_data/geo_cache.json'
 
 '''
 Singleton class
@@ -108,7 +108,7 @@ class GeoService():
         self._location = config.LOCATION_COORDINATES_DEFAULT
         self.logger.error(f'Error getting location data. Falling back to default coordinates: {config.LOCATION_COORDINATES_DEFAULT}')
 
-    with open('src/app_data/geo_cache.json', 'w') as f:
+    with open('app_data/geo_cache.json', 'w') as f:
       json.dump({'location': self._location, 'timestamp': TimeUtils.current_time_milli()}, f)
     
   @property

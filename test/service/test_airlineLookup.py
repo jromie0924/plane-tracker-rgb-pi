@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 from services.airlineLookup import AirlineLookupService
 
 # Constants
-AIRLINES_JSON_PATH = 'src/app_data/airlines.json'
+AIRLINES_JSON_PATH = 'app_data/airlines.json'
 REQUIRED_FIELDS = ['id', 'name', 'alias', 'iata', 'icao', 'callsign', 'country', 'active']
 
 def test_airlines_json_valid():
