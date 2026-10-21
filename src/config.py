@@ -49,9 +49,19 @@ AWS_REGION = 'us-east-2' # Ohio
 
 ADSB_API_SECRET_NAME = '' # TODO: update this value to include the secret name from AWS secrets.
 ADSB_LOL_URL = 'api.adsb.lol'
+FEEDER_URL = '192.168.12.41:30152'
+# Source of routes.csv.gz and airports.csv.gz (VRS standing data), used to build the local route database
+ROUTE_DATA_URL = 'vrs-standing-data.adsb.lol'
+ROUTE_DATA_REFRESH_DAYS = 1 # how often to check the route data for changes
+ROUTE_DB_FILE = 'src/app_data/routes.db'
+
 # adsb.lol rejects requests with a missing or generic User-Agent (403).
 # Keep the contact URL current so they can reach out instead of blocking.
 ADSB_USER_AGENT = f'{APP_NAME}/1.0 (+https://github.com/jromie0924/plane-tracker-rgb-pi)'
+
+VRS_STANDING_DATA_URL = 'https://vrs-standing-data.adsb.lol'
+ROUTES_FILE = 'routes.csv.gz'
+AIRPORTS_FILE = 'airports.csv.gz'
 
 RAPIDAPI_KEY_NAME = 'plane_tracker_api_key'
 RAPIDAPI_HOST = 'forward-reverse-geocoding.p.rapidapi.com'
