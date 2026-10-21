@@ -7,7 +7,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 from services.adsbTracker import AdsbTrackerService
 
-SCHEMA_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src/app_data/routes_schema.sql'))
+SCHEMA_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../app_data/routes_schema.sql'))
 
 @pytest.fixture
 def mock_config():

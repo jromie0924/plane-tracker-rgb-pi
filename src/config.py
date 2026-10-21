@@ -53,7 +53,7 @@ FEEDER_URL = '192.168.12.41:30152'
 # Source of routes.csv.gz and airports.csv.gz (VRS standing data), used to build the local route database
 ROUTE_DATA_URL = 'vrs-standing-data.adsb.lol'
 ROUTE_DATA_REFRESH_DAYS = 1 # how often to check the route data for changes
-ROUTE_DB_FILE = 'src/app_data/routes.db'
+ROUTE_DB_FILE = 'app_data/routes.db'
 
 # adsb.lol rejects requests with a missing or generic User-Agent (403).
 # Keep the contact URL current so they can reach out instead of blocking.
