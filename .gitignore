@@ -163,6 +163,8 @@ cython_debug/
 #.idea/
 
 geo_cache.json
+routes.db
+routes.db.tmp
 settings.json
 logs/
 tracker_log/

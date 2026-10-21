@@ -32,7 +32,8 @@ def overhead():
   with patch('workers.overhead.AdsbTrackerService') as mock_adsb_cls, \
        patch('workers.overhead.GeoService') as mock_geo_cls, \
        patch('workers.overhead.FlightLogic') as mock_flight_logic_cls, \
-       patch('workers.overhead.TrackerLog') as mock_tracker_log_cls:
+       patch('workers.overhead.TrackerLog') as mock_tracker_log_cls, \
+       patch('workers.overhead.DatabaseManager') as mock_database_cls:
 
     mock_geo = mock_geo_cls.return_value
     mock_geo.location = [41.8781, -87.6298]

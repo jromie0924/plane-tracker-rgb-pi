@@ -33,10 +33,13 @@ class GeoService():
     with cls._lock:
       if not cls._instance:
         cls._instance = super(GeoService, cls).__new__(cls)
-        cls._instance.__init__()
       return cls._instance
   
   def __init__(self):
+    if hasattr(self, '_initialized'):
+      return
+    self._initialized = True
+    
     self.logger = logging.getLogger(config.APP_NAME)
     self._location = []
     if not config.LOCATION_COORDINATES_OVERRIDE:
