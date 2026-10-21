@@ -17,7 +17,7 @@ import config
 logger = logging.getLogger(config.APP_NAME)
 
 TEMP_DB_FILE = f'{config.ROUTE_DB_FILE}.tmp'
-SCHEMA_FILE = 'src/app_data/routes_schema.sql'
+SCHEMA_FILE = 'app_data/routes_schema.sql'
 
 AIRPORTS_FILE = 'airports.csv.gz'
 ROUTES_FILE = 'routes.csv.gz'

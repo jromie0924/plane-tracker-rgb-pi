@@ -1,6 +1,6 @@
 import json
 
-LOOKUP_FILE = 'src/app_data/airlines.json'
+LOOKUP_FILE = 'app_data/airlines.json'
 
 class AirlineLookupService:
   def __init__(self):
