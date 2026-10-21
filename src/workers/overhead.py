@@ -106,18 +106,13 @@ class Overhead:
         # Tidy up what we pass along
         plane = plane if not (plane.upper() in BLANK_FIELDS) else ""
 
-        try:
-          airport_details = route['_airports'][len(route['_airports']) - 2:]
-        except KeyError:
-          airport_details = ''
-
-        if len(airport_details):
-          origin = airport_details[0]
-          destination = airport_details[1]
+        # The leg the plane is on, from FlightLogic.analyze_route
+        if route.get('origin') and route.get('destination'):
+          origin = route['origin']
+          destination = route['destination']
         else:
-          # TODO: is this necessary?
-          origin = {'iata': '', 'icao': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
-          destination = {'iata': '', 'icao': '', 'lat': 0, 'lon': 0, 'alt_feet': 0}
+          origin = {'airport_iata': '', 'airport_icao': '', 'airport_lat': 0, 'airport_lon': 0}
+          destination = {'airport_iata': '', 'airport_icao': '', 'airport_lat': 0, 'airport_lon': 0}
 
         callsign: str = flight['flight']
         if callsign.upper() in BLANK_FIELDS:
@@ -137,8 +132,8 @@ class Overhead:
         distance_origin = 0
         distance_destination = 0
 
-        distance_origin = FlightLogic.distance_from_flight_to_location(flight, [origin['lat'], origin['lon']])
-        distance_destination = FlightLogic.distance_from_flight_to_location(flight, [destination['lat'], destination['lon']])
+        distance_origin = FlightLogic.distance_from_flight_to_location(flight, [origin['airport_lat'], origin['airport_lon']])
+        distance_destination = FlightLogic.distance_from_flight_to_location(flight, [destination['airport_lat'], destination['airport_lon']])
 
         try:
           vertical_speed = flight['baro_rate']
@@ -150,19 +145,21 @@ class Overhead:
             
         origin_str: str
         destination_str: str
-        if origin['iata']:
-          origin_str = origin['iata']
-        elif origin['icao']:
-          origin_str = origin['icao'][1:]
+        if origin['airport_iata']:
+          origin_str = origin['airport_iata']
+        elif origin['airport_icao']:
+          origin_str = origin['airport_icao'][1:]
         else:
           origin_str = ''
-          
-        if destination['iata']:
-          destination_str = destination['iata']
-        elif destination['icao']:
-          destination_str = destination['icao'][1:]
+
+        if destination['airport_iata']:
+          destination_str = destination['airport_iata']
+        elif destination['airport_icao']:
+          destination_str = destination['airport_icao'][1:]
         else:
           destination_str = ''
+          
+        bearing = FlightLogic.bearing((flight['lat'], flight['lon']), (self._geo_service.latitude, self._geo_service.longitude))
 
         try:
           data.append(
@@ -179,7 +176,7 @@ class Overhead:
               "distance_origin": distance_origin,
               "distance_destination": distance_destination,
               "distance": FlightLogic.distance_from_flight_to_location(flight, self._geo_service.location),
-              "direction": FlightLogic.degrees_to_cardinal(FlightLogic.plane_bearing(flight)),
+              "direction": FlightLogic.degrees_to_cardinal(bearing),
               "ground_speed": flight['gs'],
               "altitude": flight['alt_geom']
             }
@@ -188,10 +185,7 @@ class Overhead:
           format = "%Y-%m-%dT%H%M%S"
           date_time_formatted = flight_capture_timestamp.strftime(format)
           
-          try:
-            route_str = f'{route["_airports"][-2]["iata"]} -> {route["_airports"][-1]["iata"]}'
-          except:
-            route_str = 'Route not available'
+          route_str = f'{origin_str} -> {destination_str}' if route.get('origin') else 'Route not available'
           
           log = {
             "Time": date_time_formatted,
