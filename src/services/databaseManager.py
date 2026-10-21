@@ -249,7 +249,7 @@ class DatabaseManager:
 
   # A database is current if it exists, is a readable SQLite file, and was built
   # with the current schema version. A partially built database never ends up at
-  # DB_FILE (it's only swapped in once complete), so these checks are enough.
+  # ROUTE_DB_FILE (it's only swapped in once complete), so these checks are enough.
   def _database_is_current(self) -> bool:
     if not os.path.isfile(config.ROUTE_DB_FILE):
       return False

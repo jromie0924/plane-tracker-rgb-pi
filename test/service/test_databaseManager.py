@@ -35,10 +35,10 @@ def mock_config():
 
 
 @pytest.fixture
-def db_paths(tmp_path):
+def db_paths(mock_config, tmp_path):
   db_file = str(tmp_path / 'routes.db')
-  with patch.object(database_manager, 'DB_FILE', db_file), \
-       patch.object(database_manager, 'TEMP_DB_FILE', f'{db_file}.tmp'):
+  mock_config.ROUTE_DB_FILE = db_file
+  with patch.object(database_manager, 'TEMP_DB_FILE', f'{db_file}.tmp'):
     yield db_file
 
 

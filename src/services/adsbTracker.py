@@ -95,14 +95,16 @@ class AdsbTrackerService():
   # Looks up the routes of a list of flights by callsign in the local route database.
   # Returns {callsign: [stop, ...]} with each route's stops in order, so [0] is the
   # origin and [-1] is the final destination. Callsigns with no route are left out.
+  # Returns {} if the database can't be read, e.g. before it's first been built.
   def get_routeset(self, flights):
     callsigns = [flight['flight'].strip() for flight in flights if flight.get('flight')]
     if not callsigns:
       return {}
 
-    conn = sqlite3.connect(f'file:{config.ROUTE_DB_FILE}?mode=ro', uri=True)
-    conn.row_factory = sqlite3.Row
+    conn = None
     try:
+      conn = sqlite3.connect(f'file:{config.ROUTE_DB_FILE}?mode=ro', uri=True)
+      conn.row_factory = sqlite3.Row
       rows = conn.execute(f'''
         select
           rs.callsign     as callsign,
@@ -111,70 +113,22 @@ class AdsbTrackerService():
           a.iata          as airport_iata,
           a.name          as airport_name,
           a.lat           as airport_lat,
-          a.lon           as airport_lon
+          a.lon           as airport_lon,
+          a.alt_feet      as airport_alt_feet
         from route_stops rs
         inner join airports a on a.code = rs.airport_code
         where rs.callsign in ({','.join('?' * len(callsigns))})
         order by rs.callsign, rs.seq
       ''', callsigns).fetchall()
+    except sqlite3.Error as e:
+      self.logger.error(f'Error looking up routes: {e}')
+      return {}
     finally:
-      conn.close()
+      if conn is not None:
+        conn.close()
 
     routes = defaultdict(list)
     for row in rows:
       routes[row['callsign']].append(dict(row))
-    '''
-    TODO:
-    Need to work out feasibility of each route, and/or when a route has more then 1 or more stops (i.e. more than just two airports),
-    need to determine, if possible, which leg the plane is currently on.
-    '''
-    
+    return routes
 
-    # payload = {'planes': []}
-    
-    # for flight in flights[:20]:
-    #   callsign = flight['flight']
-    #   lat = flight['lat']
-    #   long = flight['lon']
-    #   payload['planes'].append({
-    #     'callsign': callsign.strip(),
-    #     'lat': lat,
-    #     'lng': long
-    #   })
-  
-    # conn = None
-    # try:
-    #   conn = http.client.HTTPSConnection(config.ADSB_LOL_URL, timeout=timeout)
-    #   conn.request('POST',
-    #                     self._get_routeset_url(),
-    #                     json.dumps(payload),
-    #                     self._get_headers())
-      
-    #   response = conn.getresponse()
-      
-    #   if response.status != HTTPStatus.OK:
-    #     self.logger.error(f'Error getting flight routeset. Response code: {response.status}. '
-    #                       f'Body: {response.read().decode("utf-8", errors="replace").strip()}')
-    #     return EMPTY_ROUTESET
-
-    #   data = self.decode_response_payload(response.read())
-
-    #   data = [x for x in data if x['_airports'] and len(x['_airports']) > 0]
-      
-    #   merged_data = []
-    #   for flight in flights:
-    #     for route in data:
-    #       if flight['flight'].strip() == route['callsign'].strip():
-    #         merged_data.append({
-    #           'flight': flight,
-    #           'route': route
-    #         })
-    #   return merged_data
-      
-      
-    # except Exception as e:
-    #   self.logger.error(f'Error getting routeset: {e}')
-    #   return EMPTY_ROUTESET
-
-    # finally: # always release the socket, including on the early returns above
-    #   self._close(conn)
