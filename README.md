@@ -7,30 +7,16 @@ This repo was initially forked from [c0wsaysmoo' repository](https://github.com/
 ![image](docs/images/display.jpg)
 
 #### The Emulator:
-![image](docs/images/emulator.png)
+![image](docs/images/emulator2.png)
 
 ## Getting Started: Install System Dependencies
 ### pipenv
 #### Ubuntu:
 `sudo apt install pipenv`
 
-#### Fedora:
-`sudo dnf install pipenv`
-
 ### pyenv
 #### Ubuntu:
 `sudo apt install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev`
-
-`curl https://pyenv.run | bash`
-
-`export PYENV_ROOT="$HOME/.pyenv"`
-
-`[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"`
-
-`eval "$(pyenv init -)"`
-
-#### Fedora:
-`sudo dnf builddep python3`
 
 `curl https://pyenv.run | bash`
 
@@ -49,23 +35,25 @@ This repo was initially forked from [c0wsaysmoo' repository](https://github.com/
 
 ## Configuration
 `src/config.py`
-* Update your ZIP and Country code to tell the app where you are. NOTE see the bottom of the file for a note regarding this.
-* For development purposes, you can emulate the RGB display with a browser emulator `RGBMatrixEmulator`. You'll want to search for all strings in the repo "from rgbmatrix" and replace it with "from RGBMatrixEmulator" to run in a browser.
+- Update your ZIP and Country code to tell the app where you are. NOTE see the bottom of the file for a note regarding this.
+- When this service is running on a system that is not a Raspberry PI, it will automatically emulate the matrix in a browser. It can be reached at `localhost:8888`.
+- The config has two data source options:
+  - `DataSource.API` - this will result in pulling from the [ADSB.fi API](https://github.com/adsbfi/opendata). This is the datasource for the [adsb.fi](https://globe.adsb.fi/) tracking site.
+  - `DataSource.FEEDER` - this will pull from a local [adsb.im](https://adsb.im/home) feeder. You'll likely not get as much data, but if the internet were to go out, as long as there are airplanes in the sky for the feeder to pick up, and the local network is up, you'll still get flights displayed.
+
 
 ### Display Scale Factor
 The `DISPLAY_SCALE_FACTOR` setting in `config.py` controls the size of the display when running on non-Raspberry Pi systems (like development environments).
 
-* **Options**: `1`, `2`, `3`, or `4`
+* **Options**: `1` OR `2`
 * **Default**: `1` (matches Pi native resolution)
 * **Effect**: Multiplies the base 64×32 matrix dimensions
   - `DISPLAY_SCALE_FACTOR = 1` → 64×32 display (same as Pi)
   - `DISPLAY_SCALE_FACTOR = 2` → 128×64 display
-  - `DISPLAY_SCALE_FACTOR = 3` → 192×96 display
-  - `DISPLAY_SCALE_FACTOR = 4` → 256×128 display
 
 This setting automatically:
 - Adjusts display dimensions
-- Loads appropriately scaled fonts (1x, 2x, 3x, or 4x)
+- Loads appropriately scaled fonts (1x or 2x)
 - Scales airline logos in real-time to match the display scale
 
 **Note**: This setting only affects non-Raspberry Pi systems. On actual Raspberry Pi hardware, the display always uses the native 64×32 resolution.
