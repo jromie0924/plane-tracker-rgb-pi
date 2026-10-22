@@ -20,7 +20,7 @@ DISTANCE_UNITS = "imperial"
 CLOCK_FORMAT = "24hr" #use 12hr or 24hr
 
 # Display scale factor for non-Pi systems (emulator)
-# Options: 1, 2, or 3 (default: 1)
+# Options: 1 or 2 (default: 2)
 # This controls the size of the display on non-Raspberry Pi systems
 DISPLAY_SCALE_FACTOR = 2
 MIN_ALTITUDE = 1000 #feet
@@ -61,7 +61,7 @@ API:    Use adsb.fi data. GitHub: https://github.com/adsbfi/opendata
 FEEDER: Use local ADSB.im feeder data. Requires a local feeder on the same network
         Update _feeder_url accordingly to the appropriate local IP address.
 '''
-ADSB_DATA_SOURCE=DataSource.FEEDER
+ADSB_DATA_SOURCE=DataSource.API
 
 _adsb_fi_url = 'opendata.adsb.fi'
 _feeder_url = '192.168.12.41:30152' # update to your local feeder IP address
