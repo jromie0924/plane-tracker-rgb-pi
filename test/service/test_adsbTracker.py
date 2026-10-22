@@ -5,23 +5,53 @@ from unittest.mock import patch, MagicMock
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
+from config import DataSource
 from services.adsbTracker import AdsbTrackerService
 
 SCHEMA_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../app_data/routes_schema.sql'))
 
+FEEDER_URL = '192.168.0.10:30152'
+API_URL = 'opendata.adsb.fi'
+
+@pytest.fixture(autouse=True)
+def reset_singleton():
+  '''AdsbTrackerService is a singleton; give each test a fresh instance.'''
+  AdsbTrackerService._instance = None
+  yield
+  AdsbTrackerService._instance = None
+
+def use_feeder(mock_config):
+  mock_config.ADSB_DATA_SOURCE = DataSource.FEEDER
+  mock_config.ADSB_DATA_URL = FEEDER_URL
+  mock_config.ADSB_PAYLOAD_ROOT_KEY = 'aircraft'
+
+def use_api(mock_config):
+  mock_config.ADSB_DATA_SOURCE = DataSource.API
+  mock_config.ADSB_DATA_URL = API_URL
+  mock_config.ADSB_PAYLOAD_ROOT_KEY = 'ac'
+
 @pytest.fixture
 def mock_config():
-  with patch('services.adsbTracker.config') as mock_config:
-    # Set APP_NAME to a string to avoid TypeError in logging.getLogger
-    mock_config.APP_NAME = 'test_app'
-    mock_config.FEEDER_URL = 'test_url'
-    mock_config.MIN_ALTITUDE = 1000
+  '''Patches config in both the service and the connection selector, defaulting to the feeder.'''
+  mock_config = MagicMock()
+  # Set APP_NAME to a string to avoid TypeError in logging.getLogger
+  mock_config.APP_NAME = 'test_app'
+  mock_config.ADSB_USER_AGENT = 'test-agent'
+  mock_config.MIN_ALTITUDE = 1000
+  use_feeder(mock_config)
+  with patch('services.adsbTracker.config', mock_config), \
+       patch('utils.httpConnectionSelector.config', mock_config):
     yield mock_config
 
 @pytest.fixture
 def mock_http_connection():
-  with patch('services.adsbTracker.http.client.HTTPConnection') as mock_http_connection:
+  with patch('utils.httpConnectionSelector.http.client.HTTPConnection') as mock_http_connection:
     yield mock_http_connection
+
+@pytest.fixture
+def mock_https_connection():
+  with patch('utils.httpConnectionSelector.http.client.HTTPSConnection') as mock_https_connection:
+    yield mock_https_connection
 
 @pytest.fixture
 def route_db(mock_config, tmp_path):
@@ -53,6 +83,12 @@ def make_response(status=200, body=b''):
   response.read.return_value = body
   return response
 
+def make_response(status=200, body=b''):
+  response = MagicMock()
+  response.status = status
+  response.read.return_value = body
+  return response
+
 # get_nearby_flights
 
 def test_get_nearby_flight_success(mock_config, mock_http_connection):
@@ -72,17 +108,44 @@ def test_get_nearby_flight_success(mock_config, mock_http_connection):
   assert result[0]['alt_baro'] == 10000
   assert result[1]['alt_baro'] == 15000
 
-def test_get_nearby_flights_queries_feeder_circle(mock_config, mock_http_connection):
+def test_get_nearby_flights_feeder_uses_http_and_circle_query(mock_config, mock_http_connection, mock_https_connection):
   mock_conn = mock_http_connection.return_value
   mock_conn.getresponse.return_value = make_response(200, json.dumps({'aircraft': []}).encode('utf-8'))
 
   service = AdsbTrackerService()
   service.get_nearby_flights(40.7128, -74.0060, 10)
 
-  mock_http_connection.assert_called_once_with('test_url', timeout=15)
+  mock_http_connection.assert_called_once_with(host=FEEDER_URL, timeout=15)
+  mock_https_connection.assert_not_called()
   path = mock_conn.request.call_args[0][1]
-  assert path == '?circle=40.7128,-74.006,10&above_alt_baro=1000'
+  assert path == '?circle=40.7128,-74.006,10'
   mock_conn.close.assert_called_once()
+
+def test_get_nearby_flights_api_uses_https_and_v3_path(mock_config, mock_http_connection, mock_https_connection):
+  use_api(mock_config)
+  mock_conn = mock_https_connection.return_value
+  mock_conn.getresponse.return_value = make_response(200, json.dumps({'ac': []}).encode('utf-8'))
+
+  service = AdsbTrackerService()
+  service.get_nearby_flights(40.7128, -74.0060, 10)
+
+  mock_https_connection.assert_called_once_with(host=API_URL, timeout=15)
+  mock_http_connection.assert_not_called()
+  path = mock_conn.request.call_args[0][1]
+  assert path == '/api/v3/lat/40.7128/lon/-74.006/dist/10'
+  mock_conn.close.assert_called_once()
+
+def test_get_nearby_flights_api_reads_ac_key(mock_config, mock_https_connection):
+  use_api(mock_config)
+  mock_conn = mock_https_connection.return_value
+  mock_conn.getresponse.return_value = make_response(200, json.dumps({
+    'ac': [{'alt_baro': 10000}, {'alt_baro': 'ground'}]
+  }).encode('utf-8'))
+
+  service = AdsbTrackerService()
+  result = service.get_nearby_flights(40.7128, -74.0060, 10)
+
+  assert result == [{'alt_baro': 10000}]
 
 def test_get_nearby_flights_drops_aircraft_without_numeric_altitude(mock_config, mock_http_connection):
   '''readsb reports 'ground' for alt_baro on the ground, and omits it when unknown.'''
@@ -109,8 +172,8 @@ def test_get_nearby_flights_no_aircraft_field(mock_config, mock_http_connection)
 
   assert result is None
 
-def test_get_nearby_flights_old_ac_key_is_not_read(mock_config, mock_http_connection):
-  '''adsb.lol's v2 API used 'ac'; readsb's API uses 'aircraft'.'''
+def test_get_nearby_flights_feeder_ignores_ac_key(mock_config, mock_http_connection):
+  '''The feeder (readsb) uses 'aircraft'; 'ac' belongs to the adsb.fi API.'''
   mock_conn = mock_http_connection.return_value
   mock_conn.getresponse.return_value = make_response(200, json.dumps({
     'ac': [{'alt_baro': 10000}]
@@ -120,6 +183,28 @@ def test_get_nearby_flights_old_ac_key_is_not_read(mock_config, mock_http_connec
   result = service.get_nearby_flights(40.7128, -74.0060, 10)
 
   assert result is None
+
+def test_get_nearby_flights_api_ignores_aircraft_key(mock_config, mock_https_connection):
+  use_api(mock_config)
+  mock_conn = mock_https_connection.return_value
+  mock_conn.getresponse.return_value = make_response(200, json.dumps({
+    'aircraft': [{'alt_baro': 10000}]
+  }).encode('utf-8'))
+
+  service = AdsbTrackerService()
+  result = service.get_nearby_flights(40.7128, -74.0060, 10)
+
+  assert result is None
+
+def test_get_nearby_flights_invalid_data_source_returns_none(mock_config, mock_http_connection, mock_https_connection):
+  mock_config.ADSB_DATA_SOURCE = 'bogus'
+
+  service = AdsbTrackerService()
+  result = service.get_nearby_flights(40.7128, -74.0060, 10)
+
+  assert result is None
+  mock_http_connection.assert_not_called()
+  mock_https_connection.assert_not_called()
 
 def test_get_nearby_flights_bad_status(mock_config, mock_http_connection):
   mock_conn = mock_http_connection.return_value
@@ -150,7 +235,7 @@ def test_get_nearby_flights_bad_status_logs_error(mock_config, mock_http_connect
     assert '503' in mock_error.call_args[0][0]
 
 def test_get_nearby_flights_connection_error_returns_none(mock_config, mock_http_connection):
-  '''The feeder being unreachable shouldn't raise into the grab thread.'''
+  '''The data source being unreachable shouldn't raise into the grab thread.'''
   mock_http_connection.return_value.request.side_effect = ConnectionRefusedError('refused')
 
   service = AdsbTrackerService()

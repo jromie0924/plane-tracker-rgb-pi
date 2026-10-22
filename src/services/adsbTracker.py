@@ -1,18 +1,32 @@
-import http.client
 import sqlite3
+import threading
 import config
 import json
 import logging
-import time
 
 from collections import defaultdict
+from config import DataSource
+from utils import httpConnectionSelector
 from utils.timeUtils import TimeUtils
 from http import HTTPStatus
 
 EMPTY_ROUTESET = []
 
 class AdsbTrackerService():
+  _instance = None
+  _lock = threading.Lock()
+  
+  def __new__(cls):
+    with cls._lock:
+      if not cls._instance:
+        cls._instance = super(AdsbTrackerService, cls).__new__(cls)
+      return cls._instance
+  
   def __init__(self):
+    if hasattr(self, '_initialized'):
+      return
+    self._initialized = True
+    
     self.logger = logging.getLogger(config.APP_NAME)    
 
   def decode_response_payload(self, data: bytes):
@@ -35,19 +49,17 @@ class AdsbTrackerService():
     return {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      'Origin': 'https://adsb.lol',
-      'Referer': 'https://adsb.lol/',
       'User-Agent': config.ADSB_USER_AGENT
     }
   
   def _get_nearby_flight_url(self, lat, lon, radius):
-    # return f'/v2/point/{lat}/{long}/{radius}'
-    return f"?circle={lat},{lon},{radius}&above_alt_baro={config.MIN_ALTITUDE}"
-  
-
-  def _get_routeset_url(self):
-    return '/api/0/routeset'
-  
+    match config.ADSB_DATA_SOURCE:
+      case DataSource.API:
+        return f'/api/v3/lat/{lat}/lon/{lon}/dist/{radius}'
+      case DataSource.FEEDER:
+        return f"?circle={lat},{lon},{radius}"
+      case _:
+        raise Exception("Invalid data source specified. Please update config.")
 
   # Gets nearby flights given a latitude, longitude, and radius in nautical miles.
   def get_nearby_flights(self, lat, long, radius, timeout=15):
@@ -55,8 +67,7 @@ class AdsbTrackerService():
 
     conn = None
     try:
-      # conn = http.client.HTTPSConnection(config.FEEDER_URL, timeout=timeout)
-      conn = http.client.HTTPConnection(config.FEEDER_URL, timeout=timeout)
+      conn = httpConnectionSelector.getHttpConnectionType(url=config.ADSB_DATA_URL, timeout=timeout)
       conn.request('GET',
                     self._get_nearby_flight_url(lat, long, radius),
                     '',
@@ -70,12 +81,12 @@ class AdsbTrackerService():
 
       data = self.decode_response_payload(response.read())
 
-      if data is None or 'aircraft' not in data:
+      if data is None or config.ADSB_PAYLOAD_ROOT_KEY not in data:
         return None
 
       try:
         filter_field = 'alt_baro'
-        data = [x for x in data['aircraft'] if filter_field in x and type(x[filter_field]) is int]
+        data = [x for x in data[config.ADSB_PAYLOAD_ROOT_KEY] if filter_field in x and type(x[filter_field]) is int]
       except KeyError as e:
         with open('error_log.json', 'w') as f:
           json.dump(data, f)
