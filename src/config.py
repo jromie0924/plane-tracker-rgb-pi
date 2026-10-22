@@ -1,6 +1,13 @@
+from enum import Enum, unique
 import logging
 
 LOGGING_LEVEL: int = logging.INFO
+
+@unique
+class DataSource(Enum):
+  API=1
+  FEEDER=2
+
 
 APP_NAME = "plane-tracker"
 LOG_FILE = "logs/plane-tracker.log"
@@ -41,25 +48,41 @@ LOCATION_COORDINATES_DEFAULT = [41.8755616, -87.6244212] # Chicago, IL
 DUPLICATION_AVOIDANCE_TTL = 3 # minutes
 ROUTESET_LIMIT_SECONDS = 1 # second
 
-# TODO: Once the adsb.lol API requires a key, update the secret with the key, and update this field accordingly.
 RAPIDAPI_TOKEN_KEYNAME = 'rapidapi_key'
 AWS_ACCESS_KEY_ID_NAME = 'ACCESS_KEY_ID'
 AWS_SECRET_ACCESS_KEY_NAME = 'SECRET_ACCESS_KEY'
 AWS_REGION = 'us-east-2' # Ohio
 
-ADSB_API_SECRET_NAME = '' # TODO: update this value to include the secret name from AWS secrets.
-ADSB_LOL_URL = 'api.adsb.lol'
-FEEDER_URL = '192.168.12.41:30152'
+'''
+Data source used for retrieving ADSB data
+
+API:    Use adsb.fi data. GitHub: https://github.com/adsbfi/opendata
+
+FEEDER: Use local ADSB.im feeder data. Requires a local feeder on the same network
+        Update _feeder_url accordingly to the appropriate local IP address.
+'''
+ADSB_DATA_SOURCE=DataSource.FEEDER
+
+_adsb_fi_url = 'opendata.adsb.fi'
+_feeder_url = '192.168.12.41:30152' # update to your local feeder IP address
+
+match ADSB_DATA_SOURCE:
+  case DataSource.API:
+    ADSB_DATA_URL = _adsb_fi_url
+  case DataSource.FEEDER:
+    ADSB_DATA_URL = _feeder_url
+  case _:
+    ADSB_DATA_URL = ""
+
+ADSB_PAYLOAD_ROOT_KEY = "aircraft" if ADSB_DATA_SOURCE == DataSource.FEEDER else "ac"
+
 # Source of routes.csv.gz and airports.csv.gz (VRS standing data), used to build the local route database
 ROUTE_DATA_URL = 'vrs-standing-data.adsb.lol'
 ROUTE_DATA_REFRESH_DAYS = 1 # how often to check the route data for changes
 ROUTE_DB_FILE = 'app_data/routes.db'
 
-# adsb.lol rejects requests with a missing or generic User-Agent (403).
-# Keep the contact URL current so they can reach out instead of blocking.
 ADSB_USER_AGENT = f'{APP_NAME}/1.0 (+https://github.com/jromie0924/plane-tracker-rgb-pi)'
 
-VRS_STANDING_DATA_URL = 'https://vrs-standing-data.adsb.lol'
 ROUTES_FILE = 'routes.csv.gz'
 AIRPORTS_FILE = 'airports.csv.gz'
 
