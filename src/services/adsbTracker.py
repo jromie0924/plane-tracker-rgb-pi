@@ -7,7 +7,6 @@ import logging
 from collections import defaultdict
 from config import DataSource
 from utils import httpConnectionSelector
-from utils.timeUtils import TimeUtils
 from http import HTTPStatus
 
 EMPTY_ROUTESET = []
