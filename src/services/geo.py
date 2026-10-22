@@ -41,6 +41,7 @@ class GeoService():
     self._initialized = True
     
     self.logger = logging.getLogger(config.APP_NAME)
+    self.logger.info(f'{self.__class__.__name__} successfully initialized.')
     self._location = []
     if not config.LOCATION_COORDINATES_OVERRIDE:
       try:

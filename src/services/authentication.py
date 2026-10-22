@@ -18,7 +18,6 @@ class AuthenticationService:
     with cls._lock:
       if not cls._instance:
         cls._instance = super(AuthenticationService, cls).__new__(cls)
-        cls._instance.__init__()
       return cls._instance
   
   def __init__(self):
@@ -58,9 +57,9 @@ class AuthenticationService:
           self.logger.error(f"Failed to get secret value after {retries} retries")
     
     if not self.error:
-      self.logger.info("Authentication service successfully initialized.")
+      self.logger.info(f"{self.__class__.__name__} successfully initialized.")
     else:
-      self.logger.error("Authentication service initialized with errors.")
+      self.logger.error(f"{self.__class__.__name__} initialized with errors.")
 
   @property
   def rapidapi_token(self):
