@@ -32,6 +32,9 @@ class TrackerLog:
     self._tracker_log_active = IS_RASPBERRY_PI or config.TRACKER_LOG_EMU_FLAG
 
     self.logger = logging.getLogger(config.APP_NAME)
+    self.logger.info(f'{self.__class__.__name__} successfully initialized.')
+    self.logger.info(f'DynamoDB tracker log service active: {self._tracker_log_active}')
+    
     runtime = RuntimeService()
     self._table = boto3.resource(
       'dynamodb',

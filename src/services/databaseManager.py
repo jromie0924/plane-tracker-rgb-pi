@@ -95,6 +95,8 @@ class DatabaseManager:
     if hasattr(self, '_initialized'):
       return
     self._initialized = True
+    
+    logger.info(f'{self.__class__.__name__} successfully initialized.')
 
     self._schema_version = _read_schema_version()
     self._rebuild_lock = threading.Lock()
