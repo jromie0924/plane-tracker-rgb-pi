@@ -70,8 +70,6 @@ The RGB matrix display is **64 pixels wide × 32 pixels tall** on Raspberry Pi h
   - Adjusts the visual size of the emulator window
   - With default 1x scale (64×32): pixel_size of 12-20 works well for most screens
   - With 2x scale (128×64): pixel_size of 8-12 works well
-  - With 3x scale (192×96): pixel_size of 5-8 works well
-  - With 4x scale (256×128): pixel_size of 4-6 works well
   - Formula: `browser_width = (64 × DISPLAY_SCALE_FACTOR) × pixel_size`
 * **`pixel_style`**: Visual style of LED pixels
   - `"circle"` - Rounded LED appearance (recommended)
