@@ -20,7 +20,13 @@ from services.trackerLog import TrackerLog
 
 
 EARTH_RADIUS_M = 6371000  # Earth's radius in m
-BLANK_FIELDS = ["", "N/A", "NONE", "UNKNOWN"]
+# BLANK_FIELDS = ["", "N/A", "NONE", "UNKNOWN"]
+BLANK_FIELDS: dict = {
+  "": 0,
+  "N/A": 1,
+  "NONE": 2,
+  "UNKNOWN": 3
+}
 NW = 315  # degrees
 SE = 135  # degrees
 
@@ -98,10 +104,7 @@ class Overhead:
       if flight:
         # Get plane type
         flight_capture_timestamp = datetime.now()
-        try:
-          plane = flight['t']
-        except (KeyError, TypeError):
-          plane = ""
+        plane = flight.get('t', "")
 
         # Tidy up what we pass along
         plane = plane if not (plane.upper() in BLANK_FIELDS) else ""
