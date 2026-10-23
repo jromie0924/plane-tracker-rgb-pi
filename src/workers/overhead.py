@@ -104,7 +104,7 @@ class Overhead:
       if flight:
         # Get plane type
         flight_capture_timestamp = datetime.now()
-        plane = flight.get('t', "")
+        plane: str = flight.get('t', "")
 
         # Tidy up what we pass along
         plane = plane if not (plane.upper() in BLANK_FIELDS) else ""
