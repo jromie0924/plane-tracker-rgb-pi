@@ -115,7 +115,7 @@ class FlightLogic:
 
   # Picks the nearest flight with a plausible route, returning (flight, route) where route
   # is from analyze_route. Falls back to (first flight, {}) if none has one.
-  def choose_flight(self, flights, get_routeset_func: callable):
+  def choose_flight(self, flights, get_routeset_func: callable) -> tuple[dict, dict]:
     flights = [f for f in flights if self.validate_flight(f)]
     self._cleanse_history_mapping()
 
