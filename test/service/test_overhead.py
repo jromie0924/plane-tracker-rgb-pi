@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
@@ -8,11 +8,11 @@ from workers.overhead import Overhead
 
 def make_flight(**overrides):
   flight = {
-    'flight': 'QTR8170',
+    'flight': 'UAL1234',
     't': 'B77W',
-    'r': 'A7-BEA',
+    'r': 'N700MS',
     'gs': 480,
-    'alt_geom': 38000,
+    'alt_baro': 38000,
     'baro_rate': 0,
     'lat': 41.9,
     'lon': -87.9,

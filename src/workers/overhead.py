@@ -61,7 +61,8 @@ class Overhead:
     with self._lock:
       if self._processing:
         return
-
+      
+      # Mark the current data as old
       self._new_data = False
       self._processing = True
 
@@ -77,7 +78,6 @@ class Overhead:
       
 
   def _grab_data(self):
-    # Mark data as old
     data = []
 
     # Grab flight details
@@ -181,7 +181,7 @@ class Overhead:
               "distance": FlightLogic.distance_from_flight_to_location(flight, self._geo_service.location),
               "direction": FlightLogic.degrees_to_cardinal(bearing),
               "ground_speed": flight['gs'],
-              "altitude": flight['alt_geom']
+              "altitude": flight['alt_baro']
             }
           )
           
@@ -196,7 +196,7 @@ class Overhead:
             "Flight": callsign,
             "Route": route_str,
             "Plane": plane,
-            "Altitude": f"{flight['alt_geom']} ft",
+            "Altitude": f"{flight['alt_baro']} ft",
             "Ground Speed": f"{flight['gs']} kts"
           }
           
@@ -208,7 +208,8 @@ class Overhead:
             self._new_data = len(data) > 0
             self._processing = False
             self._data = data
-        except KeyError:
+        except KeyError as e:
+          self.logger.error(f'Encountered an error when processing flight {callsign}: {str(e)}')
           with self._lock:
             self._new_data = False
             self._processing = False
