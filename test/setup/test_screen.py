@@ -1,10 +1,9 @@
 """
 Tests for the screen module's platform detection and scaling logic.
 """
-import pytest
 import sys
 import os
-from unittest.mock import patch, mock_open, MagicMock
+from unittest.mock import patch, mock_open
 
 # Add src to path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))

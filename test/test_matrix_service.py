@@ -1,4 +1,3 @@
-import pytest
 import sys
 import os
 from unittest.mock import patch, mock_open, MagicMock
