@@ -22,7 +22,7 @@ CLOCK_FORMAT = "24hr" #use 12hr or 24hr
 # Display scale factor for non-Pi systems (emulator)
 # Options: 1 or 2 (default: 2)
 # This controls the size of the display on non-Raspberry Pi systems
-DISPLAY_SCALE_FACTOR = 2
+DISPLAY_SCALE_FACTOR = 1
 MIN_ALTITUDE = 1000 #feet
 MAX_ALTITUDE = 70000  # feet
 BRIGHTNESS = 75

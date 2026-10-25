@@ -7,7 +7,6 @@ import logging
 from collections import defaultdict
 from config import DataSource
 from utils import httpConnectionSelector
-from utils.timeUtils import TimeUtils
 from http import HTTPStatus
 
 EMPTY_ROUTESET = []
@@ -28,9 +27,10 @@ class AdsbTrackerService():
     self._initialized = True
     
     self.logger = logging.getLogger(config.APP_NAME)
+    source = config.ADSB_DATA_SOURCE
     
     self.logger.info(f'{self.__class__.__name__} successfully initialized.')
-    self.logger.info(f'ADSB Source set to \'{config.ADSB_DATA_SOURCE.name}\'')
+    self.logger.info(f'ADSB Source set to \'{getattr(source, "name", source)}\'')
     self.logger.info(f'ADSB data will be retrieved from \'{config.ADSB_DATA_URL}\'')
 
   def decode_response_payload(self, data: bytes):

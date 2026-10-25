@@ -1,10 +1,9 @@
 """
 Tests for the fonts module's platform-aware font loading logic.
 """
-import pytest
 import sys
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # Add src to path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))

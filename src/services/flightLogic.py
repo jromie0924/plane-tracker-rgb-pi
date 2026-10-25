@@ -58,7 +58,7 @@ class FlightLogic:
   
   # Bearing in degrees (0-360) from a to b, both (lat, lon).
   @staticmethod
-  def bearing(a, b):
+  def bearing(a: tuple, b: tuple):
     lat1, lon1, lat2, lon2 = map(math.radians, (*a, *b))
     bearing = math.atan2(
       math.sin(lon2 - lon1) * math.cos(lat2),
@@ -68,7 +68,7 @@ class FlightLogic:
   
   
   @staticmethod
-  def degrees_to_cardinal(d):
+  def degrees_to_cardinal(deg: float):
     '''
     The math:
     
@@ -94,8 +94,8 @@ class FlightLogic:
             "S", "SSW", "SW", "WSW",
             "W", "WNW", "NW", "NNW"]
     
-    ix = int((d + 11.25) / 22.5)
-    return dirs[ix % 16]
+    idx = int((deg + 11.25) / 22.5)
+    return dirs[idx % 16]
     
   # Cleanses the flight history mapping of expired entries
   # Helps prevent the mapping from taking up too much memory
@@ -115,7 +115,7 @@ class FlightLogic:
 
   # Picks the nearest flight with a plausible route, returning (flight, route) where route
   # is from analyze_route. Falls back to (first flight, {}) if none has one.
-  def choose_flight(self, flights, get_routeset_func: callable):
+  def choose_flight(self, flights, get_routeset_func: callable) -> tuple[dict, dict]:
     flights = [f for f in flights if self.validate_flight(f)]
     self._cleanse_history_mapping()
 
@@ -188,23 +188,23 @@ class FlightLogic:
 
   # Scores how well one leg fits the plane, from 0 to 1, or None if it's ruled out.
   @staticmethod
-  def _score_leg(flight, plane, origin, destination):
-    a = (origin['airport_lat'], origin['airport_lon'])
-    b = (destination['airport_lat'], destination['airport_lon'])
+  def _score_leg(flight, plane_coords, origin, destination):
+    a: tuple = (origin['airport_lat'], origin['airport_lon'])
+    b: tuple = (destination['airport_lat'], destination['airport_lon'])
 
     leg_nm = FlightLogic._distance_nm(a, b)
     if leg_nm < ROUTE_MIN_LEG_NM:
       return None
 
-    cross_nm, along_nm = FlightLogic._cross_along_track(a, b, plane)
+    cross_nm, along_nm = FlightLogic._cross_along_track(a, b, plane_coords)
     cross_limit_nm = max(ROUTE_CROSS_TRACK_MIN_NM, ROUTE_CROSS_TRACK_FRACTION * leg_nm)
     if abs(cross_nm) > cross_limit_nm:
       return None
     if along_nm < -ROUTE_ENDPOINT_SLACK_NM or along_nm > leg_nm + ROUTE_ENDPOINT_SLACK_NM:
       return None
 
-    from_origin_nm = FlightLogic._distance_nm(a, plane)
-    to_destination_nm = FlightLogic._distance_nm(plane, b)
+    from_origin_nm = FlightLogic._distance_nm(a, plane_coords)
+    to_destination_nm = FlightLogic._distance_nm(plane_coords, b)
 
     if to_destination_nm <= ROUTE_TERMINAL_AREA_NM and to_destination_nm <= from_origin_nm:
       phase = ARRIVAL
@@ -221,7 +221,7 @@ class FlightLogic:
 
     scores = {
       'geometry': 1 - abs(cross_nm) / cross_limit_nm,
-      'heading': FlightLogic._heading_score(flight, plane, b, phase),
+      'heading': FlightLogic._heading_score(flight, plane_coords, b, phase),
       'vertical': FlightLogic._vertical_score(flight, phase),
     }
 
@@ -265,9 +265,9 @@ class FlightLogic:
   # from a, measured along the path, negative if p is behind a.
   # https://www.movable-type.co.uk/scripts/latlong.html#cross-track
   @staticmethod
-  def _cross_along_track(a, b, p):
-    a_to_p = FlightLogic._distance_nm(a, p) / EARTH_RADIUS_NM  # angular distance
-    angle = math.radians(FlightLogic.bearing(a, p) - FlightLogic.bearing(a, b))
+  def _cross_along_track(a: tuple, b: tuple, plane_coords: tuple):
+    a_to_p = FlightLogic._distance_nm(a, plane_coords) / EARTH_RADIUS_NM  # angular distance
+    angle = math.radians(FlightLogic.bearing(a, plane_coords) - FlightLogic.bearing(a, b))
 
     cross = math.asin(math.sin(a_to_p) * math.sin(angle))
     along = math.acos(max(-1.0, min(1.0, math.cos(a_to_p) / math.cos(cross))))
