@@ -101,7 +101,8 @@ class FlightLogic:
   # Helps prevent the mapping from taking up too much memory
   def _cleanse_history_mapping(self):
     start = len(self.flight_history_mapping)
-    self.flight_history_mapping = {k: v for k, v in self.flight_history_mapping.items() if round(TimeUtils.current_time_milli()) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
+    self.flight_history_mapping = {k: v for k, v in self.flight_history_mapping.items()
+                                   if round(TimeUtils.current_time_milli()) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
     end = len(self.flight_history_mapping)
     diff = start - end
     self.logger.debug(f'Cleansed {diff} {"entry" if diff == 1 else "entries"} from the history mapping.')
