@@ -6,6 +6,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 
 from services.trackerLog import TrackerLog, _floats_to_decimal
+from services.flightLogic import FlightLogic
 
 NOW_MS = 1_000_000_000
 TTL_HOURS = 168
@@ -15,8 +16,12 @@ EXPIRES_AT = int(NOW_MS / 1000) + TTL_HOURS * 3600
 @pytest.fixture(autouse=True)
 def reset_singleton():
     TrackerLog._instance = None
-    yield
+    FlightLogic._instance = None
+    # TrackerLog builds a FlightLogic, whose GeoService would otherwise call AWS for the location.
+    with patch('services.flightLogic.GeoService'):
+        yield
     TrackerLog._instance = None
+    FlightLogic._instance = None
 
 
 @pytest.fixture
@@ -51,7 +56,24 @@ def mock_boto3():
 
 @pytest.fixture
 def tracker(mock_config, mock_runtime, mock_boto3):
-    return TrackerLog()
+    t = TrackerLog()
+    # Keep tests off the real route database; route tests set their own.
+    with patch.object(t._adsb_service, 'get_routeset', return_value={}):
+        yield t
+
+
+def valid_entry(**overrides):
+    # Has every field FlightLogic.validate_flight requires
+    entry = {'flight': 'UAL123', 'hex': 'abc', 'lat': 41.9, 'lon': -87.7, 'alt_baro': 12000, 't': 'B738'}
+    entry.update(overrides)
+    return entry
+
+
+def stop(icao):
+    return {'airport_icao': icao, 'airport_iata': icao[1:], 'airport_lat': 0.0, 'airport_lon': 0.0}
+
+
+ORD, JFK, DEN = stop('KORD'), stop('KJFK'), stop('KDEN')
 
 
 # --- Singleton ---
@@ -240,6 +262,118 @@ def test_update_log_calls_batch_write_once_per_invocation(tracker, mock_time):
     with patch.object(tracker, '_batch_write') as mock_write:
         tracker.update_log([{'flight': 'AAL1', 'hex': 'a'}, {'flight': 'UAL2', 'hex': 'b'}])
     mock_write.assert_called_once()
+
+
+# --- update_log: origin and destination ---
+
+def written_items(tracker, entries, routes, analyze=None):
+    # Runs update_log with the given routeset and returns the items it would write.
+    # analyze stands in for FlightLogic.analyze_route when given.
+    tracker._adsb_service.get_routeset.return_value = routes
+    with patch.object(tracker, '_batch_write') as mock_write:
+        if analyze is None:
+            tracker.update_log(entries)
+        else:
+            with patch.object(tracker._flight_logic, 'analyze_route', side_effect=analyze):
+                tracker.update_log(entries)
+    return mock_write.call_args[0][0]
+
+
+def route_of(item):
+    return item['origin'], item['destination']
+
+
+def test_route_fields_are_origin_and_destination_icao(tracker, mock_time):
+    items = written_items(tracker, [valid_entry()], {'UAL123': [ORD, JFK]},
+                          analyze=lambda flight, stops: {'origin': ORD, 'destination': JFK})
+    assert route_of(items[0]) == ('KORD', 'KJFK')
+
+
+def test_route_fields_use_the_leg_analyze_route_picks(tracker, mock_time):
+    # Multi-stop route: the fields hold the current leg, not the first and last stops
+    items = written_items(tracker, [valid_entry()], {'UAL123': [DEN, ORD, JFK]},
+                          analyze=lambda flight, stops: {'origin': ORD, 'destination': JFK})
+    assert route_of(items[0]) == ('KORD', 'KJFK')
+
+
+def test_route_fields_empty_when_callsign_not_in_routeset(tracker, mock_time):
+    items = written_items(tracker, [valid_entry()], {})
+    assert route_of(items[0]) == ('', '')
+
+
+def test_route_fields_empty_when_route_not_plausible(tracker, mock_time):
+    items = written_items(tracker, [valid_entry()], {'UAL123': [ORD, JFK]},
+                          analyze=lambda flight, stops: None)
+    assert route_of(items[0]) == ('', '')
+
+
+def test_route_looked_up_by_stripped_callsign(tracker, mock_time):
+    # readsb pads callsigns with spaces, while the route database doesn't
+    items = written_items(tracker, [valid_entry(flight='UAL123  ')], {'UAL123': [ORD, JFK]},
+                          analyze=lambda flight, stops: {'origin': ORD, 'destination': JFK})
+    assert route_of(items[0]) == ('KORD', 'KJFK')
+
+
+def test_route_analysis_skipped_for_entry_without_position(tracker, mock_time):
+    entry = valid_entry()
+    del entry['lat'], entry['lon']
+    with patch.object(tracker._flight_logic, 'analyze_route') as mock_analyze:
+        items = written_items(tracker, [entry], {'UAL123': [ORD, JFK]})
+    mock_analyze.assert_not_called()
+    assert route_of(items[0]) == ('', '')
+
+
+def test_entry_without_position_is_still_logged(tracker, mock_time):
+    items = written_items(tracker, [{'flight': 'UAL123', 'hex': 'abc'}], {'UAL123': [ORD, JFK]})
+    assert len(items) == 1
+    assert items[0]['callsign'] == 'UAL123'
+
+
+def test_route_analysis_gets_each_flights_own_stops(tracker, mock_time):
+    ual, dal = valid_entry(flight='UAL123', hex='a'), valid_entry(flight='DAL5', hex='b')
+    with patch.object(tracker._flight_logic, 'analyze_route', return_value=None) as mock_analyze:
+        written_items(tracker, [ual, dal], {'UAL123': [ORD, JFK], 'DAL5': [DEN, ORD]})
+    mock_analyze.assert_any_call(flight=ual, stops=[ORD, JFK])
+    mock_analyze.assert_any_call(flight=dal, stops=[DEN, ORD])
+
+
+def test_routes_looked_up_once_per_batch(tracker, mock_time):
+    written_items(tracker, [valid_entry(hex='a'), valid_entry(flight='DAL5', hex='b')], {})
+    tracker._adsb_service.get_routeset.assert_called_once()
+
+
+def test_route_fields_empty_when_route_analysis_raises(tracker, mock_time):
+    def boom(flight, stops):
+        raise ValueError('bad route data')
+    items = written_items(tracker, [valid_entry()], {'UAL123': [ORD, JFK]}, analyze=boom)
+    assert route_of(items[0]) == ('', '')
+
+
+def test_route_fields_not_half_filled_when_destination_is_bad(tracker, mock_time):
+    # origin reads fine, then destination fails: neither field should be kept
+    items = written_items(tracker, [valid_entry()], {'UAL123': [ORD, JFK]},
+                          analyze=lambda flight, stops: {'origin': ORD, 'destination': {}})
+    assert route_of(items[0]) == ('', '')
+
+
+def test_route_analysis_error_is_logged(tracker, mock_time):
+    def boom(flight, stops):
+        raise ValueError('bad route data')
+    with patch.object(tracker.logger, 'error') as mock_error:
+        written_items(tracker, [valid_entry()], {'UAL123': [ORD, JFK]}, analyze=boom)
+    mock_error.assert_called_once()
+
+
+def test_route_analysis_error_does_not_drop_other_entries(tracker, mock_time):
+    def analyze(flight, stops):
+        if flight['flight'] == 'UAL123':
+            raise ValueError('bad route data')
+        return {'origin': DEN, 'destination': ORD}
+    items = written_items(tracker,
+                          [valid_entry(flight='UAL123', hex='a'), valid_entry(flight='DAL5', hex='b')],
+                          {'UAL123': [ORD, JFK], 'DAL5': [DEN, ORD]},
+                          analyze=analyze)
+    assert [route_of(i) for i in items] == [('', ''), ('KDEN', 'KORD')]
 
 
 # --- _batch_write ---

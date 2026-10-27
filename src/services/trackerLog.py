@@ -6,6 +6,8 @@ from botocore.exceptions import ClientError
 
 from decimal import Decimal
 from datetime import datetime
+from services.adsbTracker import AdsbTrackerService
+from services.flightLogic import FlightLogic
 from utils.timeUtils import TimeUtils
 from services.runtime import RuntimeService
 from setup.screen import IS_RASPBERRY_PI
@@ -27,6 +29,10 @@ class TrackerLog:
     if hasattr(self, '_initialized'):
       return
     self._initialized = True
+
+    self._adsb_service = AdsbTrackerService()
+    self._flight_logic = FlightLogic()
+    self._write_lock = threading.Lock()
     
     # Feature flag for emulator logging    
     self._tracker_log_active = IS_RASPBERRY_PI or config.TRACKER_LOG_EMU_FLAG
@@ -44,11 +50,16 @@ class TrackerLog:
     ).Table(_DYNAMODB_TABLE_NAME)
 
   def update_log(self, entries: list[dict]):
+    with self._write_lock:
+      self._update_log(entries=entries)
+
+  def _update_log(self, entries: list[dict]):
     if self._tracker_log_active:
       current_timestamp = TimeUtils.current_time_milli()
       expires_at = int(current_timestamp / 1000) + config.TRACKER_LOG_TTL_HOURS * 3600
 
       items = []
+      routes = self._adsb_service.get_routeset(entries)
       for entry in entries:
         try:
           callsign = entry.get('flight') or entry.get('r')
@@ -59,8 +70,21 @@ class TrackerLog:
           self.logger.warning(f'Entry {entry} does not have an identifier. Flight will not be logged.')
           continue
 
+        stops = routes.get(callsign)
+        origin, destination = '', ''
+        if stops and self._flight_logic.validate_flight(flt=entry):
+          try:
+            route = self._flight_logic.analyze_route(flight=entry, stops=stops)
+            if route:
+              origin = route['origin']['airport_icao']
+              destination = route['destination']['airport_icao']
+          except Exception:
+            self.logger.error(f'Error encountered analyzing route for flight {callsign}.', exc_info=True)
+            origin, destination = '', ''
         item = _floats_to_decimal(entry)
         item['callsign'] = callsign
+        item['origin'] = origin
+        item['destination'] = destination
         item['timestamp'] = int(current_timestamp)
         item['timestamp_readable'] = datetime.fromtimestamp(current_timestamp / 1000).isoformat()
         item['expires_at'] = expires_at
