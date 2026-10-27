@@ -17,6 +17,14 @@ VALID_FLIGHT = {
 }
 
 
+# FlightLogic is a singleton, so reset it to stop flight history leaking between tests.
+@pytest.fixture(autouse=True)
+def reset_flight_logic_singleton():
+  FlightLogic._instance = None
+  yield
+  FlightLogic._instance = None
+
+
 @pytest.fixture
 def mock_config():
   with patch('services.flightLogic.config') as mock_config:

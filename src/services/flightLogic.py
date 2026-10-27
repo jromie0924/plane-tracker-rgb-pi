@@ -1,3 +1,5 @@
+import threading
+
 import config
 import logging
 import math
@@ -26,7 +28,20 @@ ROUTE_TIE_MARGIN = 0.1  # if the top two legs are closer than this, it's too clo
 ARRIVAL, DEPARTURE, EN_ROUTE = 'arrival', 'departure', 'en route'
 
 class FlightLogic:
+  _lock = threading.Lock()
+  _instance = None
+  
+  def __new__(cls):
+    with cls._lock:
+      if not cls._instance:
+        cls._instance = super(FlightLogic, cls).__new__(cls)
+      return cls._instance
+  
   def __init__(self):
+    if hasattr(self, '_initialized'):
+      return
+    self._initialized = True
+    
     self.logger = logging.getLogger(config.APP_NAME)
     self.flight_history_mapping = {}
     self._geo_service = GeoService()
@@ -101,7 +116,8 @@ class FlightLogic:
   # Helps prevent the mapping from taking up too much memory
   def _cleanse_history_mapping(self):
     start = len(self.flight_history_mapping)
-    self.flight_history_mapping = {k: v for k, v in self.flight_history_mapping.items() if round(TimeUtils.current_time_milli()) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
+    self.flight_history_mapping = {k: v for k, v in self.flight_history_mapping.items()
+                                   if round(TimeUtils.current_time_milli()) - v < config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000}
     end = len(self.flight_history_mapping)
     diff = start - end
     self.logger.debug(f'Cleansed {diff} {"entry" if diff == 1 else "entries"} from the history mapping.')

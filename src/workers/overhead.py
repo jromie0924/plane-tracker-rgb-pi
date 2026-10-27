@@ -96,7 +96,11 @@ class Overhead:
         sleep(0.1)
         return
 
-      self._tracker_log.update_log(flights)
+      tracker_log_thread = Thread(target=self._tracker_log.update_log,
+                      kwargs={"entries": flights},
+                      daemon=True)
+      tracker_log_thread.start()
+
       self.logger.debug(f'Retrieved {len(flights)} flights')
 
       flight, route = self._flight_logic.choose_flight(flights, self._adsb_api.get_routeset)
