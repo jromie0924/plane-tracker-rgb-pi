@@ -5,6 +5,7 @@ import logging
 import math
 
 from services.geo import GeoService
+from services.singleton import Singleton
 from utils.timeUtils import TimeUtils
 
 EARTH_RADIUS_M = 6371000  # Earth's radius in m
@@ -27,16 +28,7 @@ ROUTE_TIE_MARGIN = 0.1  # if the top two legs are closer than this, it's too clo
 
 ARRIVAL, DEPARTURE, EN_ROUTE = 'arrival', 'departure', 'en route'
 
-class FlightLogic:
-  _lock = threading.Lock()
-  _instance = None
-  
-  def __new__(cls):
-    with cls._lock:
-      if not cls._instance:
-        cls._instance = super(FlightLogic, cls).__new__(cls)
-      return cls._instance
-  
+class FlightLogic(Singleton):
   def __init__(self):
     if hasattr(self, '_initialized'):
       return

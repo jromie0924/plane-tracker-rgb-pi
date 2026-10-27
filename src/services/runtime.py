@@ -1,19 +1,10 @@
-import threading
 import config
 import logging
 
 from models.runtimeModel import RuntimeModel
+from services.singleton import Singleton
 
-class RuntimeService:
-  _instance = None
-  _lock = threading.Lock()
-  
-  def __new__(cls):
-    with cls._lock:
-      if not cls._instance:
-        cls._instance = super(RuntimeService, cls).__new__(cls)
-      return cls._instance
-  
+class RuntimeService(Singleton):
   def __init__(self):
     if hasattr(self, '_initialized'):
       return
