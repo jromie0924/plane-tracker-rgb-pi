@@ -6,26 +6,14 @@ import logging
 
 from collections import defaultdict
 from config import DataSource
+from services.singleton import Singleton
 from utils import httpConnectionSelector
 from http import HTTPStatus
 
 EMPTY_ROUTESET = []
 
-class AdsbTrackerService():
-  _instance = None
-  _lock = threading.Lock()
-  
-  def __new__(cls):
-    with cls._lock:
-      if not cls._instance:
-        cls._instance = super(AdsbTrackerService, cls).__new__(cls)
-      return cls._instance
-  
+class AdsbTrackerService(Singleton):
   def __init__(self):
-    if hasattr(self, '_initialized'):
-      return
-    self._initialized = True
-    
     self.logger = logging.getLogger(config.APP_NAME)
     source = config.ADSB_DATA_SOURCE
     

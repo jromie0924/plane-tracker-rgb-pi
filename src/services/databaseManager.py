@@ -12,6 +12,7 @@ import time
 from http import HTTPStatus
 
 import config
+from services.singleton import Singleton
 
 
 logger = logging.getLogger(config.APP_NAME)
@@ -81,21 +82,8 @@ def _route_stop_rows(routes_csv: str, skipped: dict):
       yield (callsign, seq, airport_code)
 
 
-class DatabaseManager:
-  _instance = None
-  _lock = threading.Lock()
-
-  def __new__(cls):
-    with cls._lock:
-      if not cls._instance:
-        cls._instance = super(DatabaseManager, cls).__new__(cls)
-      return cls._instance
-
+class DatabaseManager(Singleton):
   def __init__(self):
-    if hasattr(self, '_initialized'):
-      return
-    self._initialized = True
-    
     logger.info(f'{self.__class__.__name__} successfully initialized.')
 
     self._schema_version = _read_schema_version()

@@ -8,6 +8,7 @@ from decimal import Decimal
 from datetime import datetime
 from services.adsbTracker import AdsbTrackerService
 from services.flightLogic import FlightLogic
+from services.singleton import Singleton
 from utils.timeUtils import TimeUtils
 from services.runtime import RuntimeService
 from setup.screen import IS_RASPBERRY_PI
@@ -15,21 +16,8 @@ from setup.screen import IS_RASPBERRY_PI
 _DYNAMODB_TABLE_NAME = 'tracker_log' if IS_RASPBERRY_PI else 'tracker_log_emu'
 
 
-class TrackerLog:
-  _instance = None
-  _lock = threading.Lock()
-
-  def __new__(cls):
-    with cls._lock:
-      if not cls._instance:
-        cls._instance = super(TrackerLog, cls).__new__(cls)
-      return cls._instance
-
+class TrackerLog(Singleton):
   def __init__(self):
-    if hasattr(self, '_initialized'):
-      return
-    self._initialized = True
-
     self._adsb_service = AdsbTrackerService()
     self._flight_logic = FlightLogic()
     self._write_lock = threading.Lock()
