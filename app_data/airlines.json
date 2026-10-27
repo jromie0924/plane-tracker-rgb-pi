@@ -60658,5 +60658,15 @@
     "callsign": "AIR PREMIA",
     "country": "South Korea",
     "active": "Y"
+  },
+  {
+    "id": "19864",
+    "name": "Endeavor Air",
+    "alias": "",
+    "iata": "9E",
+    "icao": "EDV",
+    "callsign": "Endeavor",
+    "country": "United States",
+    "active": "Y"
   }
 ]
