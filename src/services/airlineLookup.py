@@ -7,10 +7,6 @@ LOOKUP_FILE = 'app_data/airlines.json'
 
 class AirlineLookupService(Singleton):
   def __init__(self):
-    if hasattr(self, '_initialized'):
-      return
-    self._initialized = True
-    
     with open(LOOKUP_FILE, 'r') as f:
       self._data = json.load(f)
   

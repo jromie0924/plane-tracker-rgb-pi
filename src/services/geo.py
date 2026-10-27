@@ -28,10 +28,6 @@ Singleton class
 '''
 class GeoService(Singleton):
   def __init__(self):
-    if hasattr(self, '_initialized'):
-      return
-    self._initialized = True
-    
     self.logger = logging.getLogger(config.APP_NAME)
     self.logger.info(f'{self.__class__.__name__} successfully initialized.')
     self._location = []

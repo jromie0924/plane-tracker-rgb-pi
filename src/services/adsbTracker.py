@@ -14,10 +14,6 @@ EMPTY_ROUTESET = []
 
 class AdsbTrackerService(Singleton):
   def __init__(self):
-    if hasattr(self, '_initialized'):
-      return
-    self._initialized = True
-    
     self.logger = logging.getLogger(config.APP_NAME)
     source = config.ADSB_DATA_SOURCE
     

@@ -84,10 +84,6 @@ def _route_stop_rows(routes_csv: str, skipped: dict):
 
 class DatabaseManager(Singleton):
   def __init__(self):
-    if hasattr(self, '_initialized'):
-      return
-    self._initialized = True
-    
     logger.info(f'{self.__class__.__name__} successfully initialized.')
 
     self._schema_version = _read_schema_version()

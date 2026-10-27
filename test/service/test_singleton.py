@@ -9,10 +9,6 @@ from services.singleton import Singleton
 
 class A(Singleton):
   def __init__(self, initial_value: int = 0):
-    if hasattr(self, '_initialized'):
-      return
-    self._initialized = True
-    
     self.value = initial_value
 
 class B(A): pass

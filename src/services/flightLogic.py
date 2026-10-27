@@ -30,10 +30,6 @@ ARRIVAL, DEPARTURE, EN_ROUTE = 'arrival', 'departure', 'en route'
 
 class FlightLogic(Singleton):
   def __init__(self):
-    if hasattr(self, '_initialized'):
-      return
-    self._initialized = True
-    
     self.logger = logging.getLogger(config.APP_NAME)
     self.flight_history_mapping = {}
     self._geo_service = GeoService()

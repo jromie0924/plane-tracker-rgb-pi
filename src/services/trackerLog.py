@@ -18,10 +18,6 @@ _DYNAMODB_TABLE_NAME = 'tracker_log' if IS_RASPBERRY_PI else 'tracker_log_emu'
 
 class TrackerLog(Singleton):
   def __init__(self):
-    if hasattr(self, '_initialized'):
-      return
-    self._initialized = True
-
     self._adsb_service = AdsbTrackerService()
     self._flight_logic = FlightLogic()
     self._write_lock = threading.Lock()
