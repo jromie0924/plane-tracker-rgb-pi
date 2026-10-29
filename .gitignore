@@ -168,3 +168,4 @@ routes.db.tmp
 settings.json
 logs/
 tracker_log/
+*.sqbpro
