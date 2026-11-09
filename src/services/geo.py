@@ -6,6 +6,7 @@ import os
 import threading
 
 from http import HTTPStatus
+from services.singleton import Singleton
 from utils.timeUtils import TimeUtils
 from services.authentication import AuthenticationService
 
@@ -25,21 +26,8 @@ filepath = 'app_data/geo_cache.json'
 '''
 Singleton class
 '''
-class GeoService():
-  _instance = None
-  _lock = threading.Lock()
-  
-  def __new__(cls):
-    with cls._lock:
-      if not cls._instance:
-        cls._instance = super(GeoService, cls).__new__(cls)
-      return cls._instance
-  
+class GeoService(Singleton):
   def __init__(self):
-    if hasattr(self, '_initialized'):
-      return
-    self._initialized = True
-    
     self.logger = logging.getLogger(config.APP_NAME)
     self.logger.info(f'{self.__class__.__name__} successfully initialized.')
     self._location = []

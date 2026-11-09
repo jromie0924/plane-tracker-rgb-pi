@@ -7,24 +7,12 @@ import threading
 import time
 
 from services.runtime import RuntimeService
+from services.singleton import Singleton
 
 _retries_allowed = 5
 
-class AuthenticationService:
-  _instance = None
-  _lock = threading.Lock()
-  
-  def __new__(cls):
-    with cls._lock:
-      if not cls._instance:
-        cls._instance = super(AuthenticationService, cls).__new__(cls)
-      return cls._instance
-  
+class AuthenticationService(Singleton):
   def __init__(self):
-    if hasattr(self, '_initialized'):
-      return
-    self._initialized = True
-
     self.logger = logging.getLogger(config.APP_NAME)
     self.error = False
     self.runtime_service = RuntimeService()

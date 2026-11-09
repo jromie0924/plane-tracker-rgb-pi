@@ -5,6 +5,7 @@ import logging
 import math
 
 from services.geo import GeoService
+from services.singleton import Singleton
 from utils.timeUtils import TimeUtils
 
 EARTH_RADIUS_M = 6371000  # Earth's radius in m
@@ -25,23 +26,18 @@ ROUTE_SCORE_WEIGHTS = {'geometry': 1, 'heading': 2, 'vertical': 2}
 ROUTE_MIN_SCORE = 0.5  # the best leg must score at least this to be plausible
 ROUTE_TIE_MARGIN = 0.1  # if the top two legs are closer than this, it's too close to call
 
+# Repeated keys
+HEX = 'hex'
+FLIGHT = 'flight'
+LATITUDE = 'lat'
+LONGITUDE = 'lon'
+ALTITUDE = 'alt_baro'
+TYPE = 't'
+
 ARRIVAL, DEPARTURE, EN_ROUTE = 'arrival', 'departure', 'en route'
 
-class FlightLogic:
-  _lock = threading.Lock()
-  _instance = None
-  
-  def __new__(cls):
-    with cls._lock:
-      if not cls._instance:
-        cls._instance = super(FlightLogic, cls).__new__(cls)
-      return cls._instance
-  
+class FlightLogic(Singleton):
   def __init__(self):
-    if hasattr(self, '_initialized'):
-      return
-    self._initialized = True
-    
     self.logger = logging.getLogger(config.APP_NAME)
     self.flight_history_mapping = {}
     self._geo_service = GeoService()
@@ -53,7 +49,7 @@ class FlightLogic:
     if [0,0] == home:
       return 0
     
-    lat1, lon1 = flight['lat'], flight['lon']
+    lat1, lon1 = flight[LATITUDE], flight[LONGITUDE]
     lat2, lon2 = home[0], home[1]
 
     R = EARTH_RADIUS_M  # Earth's radius in meters
@@ -125,7 +121,7 @@ class FlightLogic:
     
   def validate_flight(self, flt):
     try:
-      return flt['flight'] and flt['lat'] and flt['lon'] and flt['alt_baro'] and flt['hex'] and flt['t']
+      return flt[FLIGHT] and flt[LATITUDE] and flt[LONGITUDE] and flt[ALTITUDE] and flt[HEX] and flt[TYPE]
     except KeyError:
       return False
 
@@ -134,14 +130,14 @@ class FlightLogic:
   def choose_flight(self, flights, get_routeset_func: callable) -> tuple[dict, dict]:
     flights = [f for f in flights if self.validate_flight(f)]
     self._cleanse_history_mapping()
+    timestamp = TimeUtils.current_time_milli()
 
     candidates = sorted(flights, key=lambda f: self.distance_from_flight_to_location(f, self._geo_service.location))
-    candidates = [f for f in candidates if config.MIN_ALTITUDE <= f['alt_baro'] <= config.MAX_ALTITUDE]
-
+    candidates = [f for f in candidates if config.MIN_ALTITUDE <= f[ALTITUDE] <= config.MAX_ALTITUDE]
     routes = get_routeset_func(candidates) if candidates else None
     if routes:
       for flight in candidates:
-        stops = routes.get(flight['flight'].strip())
+        stops = routes.get(flight[FLIGHT].strip())
         if not stops:
           continue
 
@@ -149,18 +145,19 @@ class FlightLogic:
         if route is None:
           continue
 
-        timestamp = TimeUtils.current_time_milli()
-        if flight['hex'] in self.flight_history_mapping:
-          if timestamp - self.flight_history_mapping[flight['hex']] >= config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000:
-            self.flight_history_mapping[flight['hex']] = timestamp
+        if flight[HEX] in self.flight_history_mapping:
+          if timestamp - self.flight_history_mapping[flight[HEX]] >= config.DUPLICATION_AVOIDANCE_TTL * 60 * 1000:
+            self.flight_history_mapping[flight[HEX]] = timestamp
             return flight, route
           else:
             continue
-        self.flight_history_mapping[flight['hex']] = timestamp
+        self.flight_history_mapping[flight[HEX]] = timestamp
         return flight, route
 
     if flights:
-      return flights[0], {}
+      flight = flights[0]
+      self.flight_history_mapping[flight[HEX]] = timestamp
+      return flight, {}
     return None, {}
 
   def analyze_route(self, flight, stops):
@@ -179,12 +176,12 @@ class FlightLogic:
     Returns {'origin': stop, 'destination': stop, 'leg': index, 'score': score} for the best
     leg, or None if no leg is plausible or the best two are too close to call.
     '''
-    plane = (flight['lat'], flight['lon'])
+    plane = (flight[LATITUDE], flight[LONGITUDE])
 
     scored = []
     for leg, (origin, destination) in enumerate(zip(stops, stops[1:])):
       score = self._score_leg(flight, plane, origin, destination)
-      self.logger.debug(f'{flight["flight"].strip()} leg {origin["airport_icao"]}->{destination["airport_icao"]}: '
+      self.logger.debug(f'{flight[FLIGHT].strip()} leg {origin["airport_icao"]}->{destination["airport_icao"]}: '
                         f'{"ruled out" if score is None else f"{score:.2f}"}')
       if score is not None:
         scored.append((score, leg, origin, destination))
@@ -232,7 +229,7 @@ class FlightLogic:
       phase = EN_ROUTE
       ceiling = None
 
-    if ceiling is not None and flight['alt_baro'] > ceiling + ROUTE_ALTITUDE_BUFFER_FT:
+    if ceiling is not None and flight[ALTITUDE] > ceiling + ROUTE_ALTITUDE_BUFFER_FT:
       return None
 
     scores = {
