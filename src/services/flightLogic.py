@@ -33,6 +33,7 @@ LATITUDE = 'lat'
 LONGITUDE = 'lon'
 ALTITUDE = 'alt_baro'
 TYPE = 't'
+REGISTRATION = 'r'
 
 ARRIVAL, DEPARTURE, EN_ROUTE = 'arrival', 'departure', 'en route'
 
@@ -121,7 +122,7 @@ class FlightLogic(Singleton):
     
   def validate_flight(self, flt):
     try:
-      return flt[FLIGHT] and flt[LATITUDE] and flt[LONGITUDE] and flt[ALTITUDE] and flt[HEX] and flt[TYPE]
+      return flt[FLIGHT] and flt[LATITUDE] and flt[LONGITUDE] and flt[ALTITUDE] and flt[HEX] and flt[TYPE] and flt[REGISTRATION]
     except KeyError:
       return False
 

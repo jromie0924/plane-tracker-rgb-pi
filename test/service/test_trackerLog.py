@@ -64,7 +64,7 @@ def tracker(mock_config, mock_runtime, mock_boto3):
 
 def valid_entry(**overrides):
     # Has every field FlightLogic.validate_flight requires
-    entry = {'flight': 'UAL123', 'hex': 'abc', 'lat': 41.9, 'lon': -87.7, 'alt_baro': 12000, 't': 'B738'}
+    entry = {'flight': 'UAL123', 'hex': 'abc', 'lat': 41.9, 'lon': -87.7, 'alt_baro': 12000, 't': 'B738', 'r': 'N12345'}
     entry.update(overrides)
     return entry
 
