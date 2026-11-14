@@ -68,8 +68,8 @@ def test_lookup_empty_string():
   service = AirlineLookupService()
   result = service.lookup('')
   
-  # The lookup returns a string (empty or not), not an error
-  assert isinstance(result, str)
+  # airlines.json has entries with a blank ICAO; an empty code must not match them
+  assert result == ''
 
 def test_air_premia_icao_unique_among_active():
   """Test that Air Premia's ICAO code (APZ) is unique among active airlines"""
