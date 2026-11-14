@@ -30,7 +30,7 @@ BLANK_FIELDS: dict = {
 NW = 315  # degrees
 SE = 135  # degrees
 
-AIRLINE_CODE_REG = r'^(?P<icao>[a-zA-Z]{3}+)+[0-9]*\s*$'
+AIRLINE_CODE_REG = r'^(?P<icao>[a-zA-Z]{3})[a-zA-Z0-9]*\s*$'
 
 class Overhead:
   def __init__(self):
@@ -126,7 +126,13 @@ class Overhead:
           callsign = ''
 
         # Get owner icao
-        owner_icao = route.get('airline_code') or Overhead.tokenize_airline_code_from_callsign(callsign=callsign)
+        registration: str = flight.get('r') or ''
+        is_registration = bool(registration) and callsign.strip().upper() == registration.replace('-', '').upper()
+        owner_icao = '' if is_registration else Overhead.tokenize_airline_code_from_callsign(callsign=callsign)
+
+        # Callsigns drop the hyphen from registrations (G-ABCD -> GABCD), so show the registration as written
+        if is_registration:
+          callsign = registration
 
         if (route.get('airline_code')):
           airline = self._airline_lookup.lookup(route['airline_code'])
